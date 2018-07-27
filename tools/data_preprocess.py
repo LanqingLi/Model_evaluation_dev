@@ -1,6 +1,7 @@
 # coding:utf-8
 import xlrd
 import pydicom as dicom
+import os
 
 def get_label_classes_from_xls(filename):
     '''
@@ -17,6 +18,7 @@ def get_label_classes_from_xls(filename):
 
     class_dict = dict()  # label to class
     conf_thresh = dict()
+    cls_weight_dict = dict()
     conf_thresh['__background__'] = 1.0
     class_list = []
     class_list.append('__background__')
@@ -32,14 +34,17 @@ def get_label_classes_from_xls(filename):
         class_list.append(class_name)
         class_dict[label_name] = class_name
 
-        if len(classDictSheet.row(i)) == 3:
-            thresh = classDictSheet.row(i)[2].value
-            assert isinstance(thresh, float), 'thresh must be float type, check xls'
-            conf_thresh[class_name] = thresh
+        thresh = classDictSheet.row(i)[2].value
+        assert isinstance(thresh, float), 'thresh must be float type, check xls'
+        conf_thresh[class_name] = thresh
+
+        weight = classDictSheet.row(i)[3].value
+        assert isinstance(weight, float), 'weight must be float type, check xls'
+        cls_weight_dict[class_name] = weight
     # remove repeat element in class
     class_list1 = sorted(set(class_list), key=class_list.index)
 
-    return class_list1, label_classes, class_dict, conf_thresh
+    return class_list1, label_classes, class_dict, conf_thresh, cls_weight_dict
 
 def get_instance_number(dcm_path):
     '''
@@ -49,3 +54,17 @@ def get_instance_number(dcm_path):
     '''
     df = dicom.read_file(dcm_path, stop_before_pixels=True)
     return df.InstanceNumber
+
+def rename_data(src_dir, src_name, tar_name):
+    print src_dir
+    for id in os.listdir(src_dir):
+        print id
+        os.rename(os.path.join(src_dir, id), os.path.join(src_dir, id.replace(src_name, tar_name)))
+
+
+if __name__ == '__main__':
+    src_dir = '/mnt/data2/model_evaluation_test/test_data/find_nodules/1000nodules/anno'
+    src_name = '52186031'
+    tar_name = '1.2.840.113619.2.334.3.2831181473.233.1525908990.436.4'
+    print src_dir
+    rename_data(src_dir, src_name, tar_name)

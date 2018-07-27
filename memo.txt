@@ -1,0 +1,30 @@
+CT评估系统开发记录：
+
+肺部（/mnt/data2/model_evaluation/lung）
+
+    测试数据路径：
+
+        find_nodules:
+        /mnt/data2/model_evaluation_test/test_data/find_nodules
+
+            1000+结节病人测试数据：
+                ./1000nodules
+
+    老的测试结果路径：
+    /mnt/data2/model_evaluation_test/test_result_old/lung/
+
+
+        1000+结节病人测试结果：
+        /mnt/data2/model_evaluation_test/test_result_old/lung/1000nodules
+
+        310病人大测试集测试结果：
+        /mnt/data2/model_evaluation_test/test_result_old/lung/test_gt
+
+        错误的测试数据:
+        /mnt/data2/model_evaluation_test/test_result_old/lung/wrong
+
+    最新的测试结果路径：
+    /mnt/data2/model_evaluation_test/test_result/lung
+
+    新的测试结果路径:
+    /mnt/data2/model_evaluation/excel_result

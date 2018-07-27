@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from tools.data_preprocess import get_instance_number
 
-from lung.find_nodules import find_nodules
+from lung.find_nodules_new import find_nodules
 
 # nodule_class = config.CLASSES
 PI = 3.141592654
@@ -46,7 +46,7 @@ def init_df_boxes(return_boxes, classes):
             for i_cls in range(len(return_boxes_slice)):
                 return_boxes_cls = return_boxes_slice[i_cls]
                 for bndbox in return_boxes_cls:
-                    print bndbox
+                    # print bndbox
                     # 尚未加入mask功能，暂存空，未来添加
                     mask = []
                     df_add_row = {'sliceId': i_slice, 'instanceNumber': instance_number,
@@ -123,7 +123,7 @@ def add_nodule_to_df(df_add_nodule, df_nodules, bndbox_list, slice_range, nodule
 
 
 def get_nodule_stat(dicom_names, return_boxes, prefix, classes, same_box_threshold=np.array([0.8, 0.8]), hu_img_array=None, img_spacing=None, if_dicom=True,
-                    focus_priority_array=None, skip_init=False, score_threshold = 0.8):
+                    focus_priority_array=None, skip_init=False, score_threshold = 0.8, z_threshold = 3.):
     '''
     调用find_nodules,把结节信息统计进DataFrame
     :param dicom_names: dicom序列路径，用于获取起始instanceNumber
@@ -151,8 +151,10 @@ def get_nodule_stat(dicom_names, return_boxes, prefix, classes, same_box_thresho
     #print "--------"
     #print df_boxes
 
-    # bbox_info, nodule_list = find_nodules(df_boxes, Z_THRESHOLD=3., SAME_BOX_THRESHOLD=same_box_threshold, SCORE_THRESHOLD=score_threshold)
-    bbox_info, nodule_list = find_nodules(df_boxes, Z_THRESHOLD=3.)
+    # find_nodules_new
+    bbox_info, nodule_list = find_nodules(df_boxes, Z_THRESHOLD=z_threshold, SAME_BOX_THRESHOLD=same_box_threshold, SCORE_THRESHOLD=score_threshold)
+    # old find_nodules
+    # bbox_info, nodule_list = find_nodules(df_boxes, Z_THRESHOLD=z_threshold)
     # print bbox_info
     # print nodule_list
 

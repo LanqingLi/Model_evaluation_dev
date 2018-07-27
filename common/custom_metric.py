@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from common.metric import EvalMetric, check_label_shapes
 
 
@@ -8,7 +9,7 @@ from common.metric import EvalMetric, check_label_shapes
 
 class ClassificationMetric(EvalMetric):
 
-    def __init__(self, name='ClsMetric', cls_num=1, allow_extra_outputs=False):
+    def __init__(self, name='ClsMetric', cls_num=1, allow_extra_outputs=False, if_binary=False):
         super(ClassificationMetric, self).__init__(name)
         self._allow_extra_outputs = allow_extra_outputs
         self.cls_num = cls_num
@@ -19,34 +20,42 @@ class ClassificationMetric(EvalMetric):
         self.sum = 0.0
         self.label_pos = 0.0
         self.pred_pos = 0.0
+        # whether it is binary classification
+        self.if_binary = if_binary
 
 
     def update(self, labels, preds):
         check_label_shapes(labels, preds)
 
         for pred, label in zip(preds, labels):
-            pred_label = pred
+            pred_label = np.asarray(pred)
+            label = np.asarray(label)
             check_label_shapes(label, pred_label)
+            # print "ind"
+            # print ind
+            # print "pred_label"
+            # print pred_label
+            # print "label"
+            # print label
             ind = self.cls_num
-            print "ind"
-            print ind
-            print "pred_label"
-            print pred_label
-            print "label"
-            print label
+            if self.if_binary:
+                label[label > 0] = 1
+                pred_label[pred_label > 0] = 1
+                ind = 1
+
 
             pred_pos = (pred_label == ind)
             label_pos = (label == ind)
             pred_neg = (pred_label == 0.)
             label_neg = (label == 0.)
-            print "pred_pos"
-            print pred_pos
-            print "label_pos"
-            print label_pos
-            print "pred_neg"
-            print pred_neg
-            print "label_neg"
-            print label_neg
+            # print "pred_pos"
+            # print pred_pos
+            # print "label_pos"
+            # print label_pos
+            # print "pred_neg"
+            # print pred_neg
+            # print "label_neg"
+            # print label_neg
             self.label_pos += np.asscalar(np.sum(label_pos))
             self.pred_pos += np.asscalar(np.sum(pred_pos))
             tp = np.asscalar(np.sum(pred_pos * label_pos))
@@ -128,7 +137,21 @@ class ClassificationMetric(EvalMetric):
             print ("fscore requires a float beta as input, not {}".format(beta))
             return ValueError
 
+def cls_avg(cls_weight, cls_value):
+    assert len(cls_weight) == len(cls_value), 'weight and value list should contain the same number of classes'
 
+    weight_sum = 0.
+    value_sum = 0.
+
+    # weight = np.asarray(cls_weight)
+    # value = np.asarray(cls_value)
+    for i in range(len(cls_weight)):
+        # we ignore nan result (typically caused by ZeroDivisionError)
+        if not math.isnan(cls_value[i]):
+            weight_sum += cls_weight[i]
+            value_sum += cls_value[i] * cls_weight[i]
+
+    return value_sum / weight_sum
 
 ########################
 # REGRESSION METRICS
