@@ -7,10 +7,10 @@ import argparse
 import shutil
 import matplotlib.pyplot as plt
 from collections import OrderedDict
-from common.custom_metric import ClassificationMetric, cls_avg
+from common.custom_metric import ClassificationMetric, ClusteringMetric, cls_avg
 
 from lung.get_df_nodules import init_df_boxes
-from lung.xml_tools import xml_to_boxeslist
+from lung.xml_tools import xml_to_boxeslist, xml_to_boxeslist_with_nodule_num, xml_to_boxeslist_without_nodule_cls
 from lung.config import config
 from lung.post_process import df_to_cls_label
 from lung.get_df_nodules import get_nodule_stat
@@ -20,28 +20,26 @@ from lung.get_df_nodules import get_nodule_stat
 class LungNoduleEvaluatorOffline(object):
     '''
     this class is designed for evaluation of our CT lung model offline. It can read anchor boxes from a selection of format (.json/.npy)
-    and generate spreadsheets of statistics (mAP etc.) for each nodule class under customized range of classification (softmax) probability
-
+    and generate spreadsheets of statistics (tp, fp, etc. see common/custom_metric) for each nodule class under customized range of classification (softmax) probability
     threshold, which can be used for plotting ROC curve and calculating AUC.
+
     :param data_dir: 存储预测出的框的信息的数据路径，我们读入数据的路径
-    :param data_type: 存储预测出的框的信息的数据格式，默认为.npy，我们读入数据的格式。对于FRCNN,我们将clean_box_new输出的框存成.npy供读取
-    :param anno_dir: 存储对应CT数据标记(annotation)的路径
+    :param data_type: 存储预测出的框的信息的数据格式，默认为.json，我们读入数据的格式。对于FRCNN,我们将clean_box_new输出的框存成.npy/.json供读取
+    :param anno_dir: 存储对应CT ground truth数据标记(annotation)的路径
     :param cls_name: 包含预测所有类别的列表，默认为config.CLASSES, 包含'__background__'类
     :param cls_dict: 包含'rcnn/classname_labelname_mapping.xls'中label_name到class_name映射的字典，不包含'__background__'类
     :param opt_thresh: 存储最终使得各类别模型预测结果最优的概率阈值及其对应tp,fp,score等信息的字典，index为预测的类别。每个index对应一个类似于
-    self.count_df的字典，最终存储在model_evaluation.xlsx/optimal threshold中
+    self.count_df的字典，最终存储在self.xlsx_name/optimal threshold中
     :param score_type: 模型评分的函数类型，默认为F_score
-    :param same_box_threshold: 当预测出的框被输入get_nodule_stat，会调用韦人的find_nodules()进行结节匹配，其中对于相似度高于某个same_box_threshold
-    的结节（任意类别）会只保留一个。在做多分类时我们必须设置其为1.0,因为相同结节的NMS已经在Predict类中做过了
-    :param count_df: 初始化的pandas.DataFrame,用于存储最终输出的model evaluation结果
+    :param count_df: 初始化的pandas.DataFrame,用于存储最终输出的evaluation结果
     :param xlsx_save_dir:　存储输出.xlsx结果的路径
     :param xlsx_name: 存储输出.xlsx文件的名字
-    :param conf_thresh:　自定义的概率阈值采样点，存在列表中，用于求最优阈值及画ROC曲线
+    :param conf_thresh:　自定义的置信度概率阈值采样点，存在列表中，用于求最优阈值及画ROC曲线
 
-    :param nodule_cls_weights:　不同结节种类对于模型综合评分的权重
+    :param nodule_cls_weights:　不同结节种类对于模型综合评分的权重，与结节分类信息一起从classname_labelname_mapping.xls中读取
     '''
-    def __init__(self, data_dir, data_type, anno_dir, score_type = 'fscore',  xlsx_save_dir = os.path.join(os.getcwd(), 'excel_result'),
-                 xlsx_name = 'LungModelEvaluation.xlsx', if_generate_nodule_json = True,
+    def __init__(self, data_dir, data_type, anno_dir, score_type = 'fscore',  xlsx_save_dir = os.path.join(os.getcwd(), 'LungNoduleEvaluation_result'),
+                 xlsx_name = 'LungNoduleEvaluation.xlsx', if_generate_nodule_json = True,
                  conf_thresh = np.linspace(0.1, 0.85, num=16).tolist() + np.linspace(0.9, 0.975, num=4).tolist()\
                            + np.linspace(0.99, 0.9975, num=4).tolist() + np.linspace(0.999, 0.99975, num=4).tolist(),
                  nodule_cls_weights = config.CLASS_WEIGHTS):
@@ -75,7 +73,7 @@ class LungNoduleEvaluatorOffline(object):
         # customized confidence threshold for plotting ROC curve
         self.conf_thresh = conf_thresh
         self.nodule_cls_weights = nodule_cls_weights
-        self.patient_dict = []
+        self.patient_list = []
         self.cls_weight = []
         self.cls_value = {'accuracy': [], 'recall': [], 'precision': [], self.score_type: []}
 
@@ -97,15 +95,18 @@ class LungNoduleEvaluatorOffline(object):
                 cls_predict_df_list = []
                 cls_gt_df_list = []
                 for index, key in enumerate(predict_df_boxes_dict):
-                    self.patient_dict.append(key)
+                    self.patient_list.append(key)
                     predict_df_boxes = predict_df_boxes_dict[key]
                     ground_truth_boxes = ground_truth_boxes_dict[key]
 
+                    print predict_df_boxes
+                    print cls
                     print ('processing %s' %key)
 
                     #　筛选probability超过规定阈值且预测为规定类别的框输入get_nodule_stat
                     if not predict_df_boxes_dict[key].empty:
                         filtered_predict_boxes = predict_df_boxes[predict_df_boxes["nodule_class"] == cls]
+                        print filtered_predict_boxes
                         filtered_predict_boxes = filtered_predict_boxes[filtered_predict_boxes["prob"] >= thresh]
                         filtered_predict_boxes = filtered_predict_boxes.reset_index(drop=True)
                     else:
@@ -114,6 +115,7 @@ class LungNoduleEvaluatorOffline(object):
 
                     if not ground_truth_boxes_dict[key].empty:
                         filtered_gt_boxes = ground_truth_boxes[ground_truth_boxes["nodule_class"] == cls]
+                        print filtered_gt_boxes
                         filtered_gt_boxes = filtered_gt_boxes[filtered_gt_boxes["prob"] >= thresh]
                         filtered_gt_boxes = filtered_gt_boxes.reset_index(drop=True)
                     else:
@@ -122,6 +124,7 @@ class LungNoduleEvaluatorOffline(object):
 
                     #　将模型预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
                     print "predict:"
+                    print filtered_predict_boxes
                     _, cls_predict_df = get_nodule_stat(dicom_names=None,
                                              hu_img_array=None,
                                              return_boxes=filtered_predict_boxes,
@@ -130,7 +133,7 @@ class LungNoduleEvaluatorOffline(object):
                                              classes=self.cls_name,
                                              same_box_threshold=config.FIND_NODULES.SAME_BOX_THRESHOLD_PRED,
                                              score_threshold=config.FIND_NODULES.SCORE_THRESHOLD_PRED,
-                                             z_threshold=config.FIND_NODULES.Z_THRESHOLD_PRED,
+                                             z_threshold=config.CLASS_Z_THRESHOLD_PRED,
                                              if_dicom=False,
                                              focus_priority_array=None,
                                              skip_init=True)
@@ -144,7 +147,7 @@ class LungNoduleEvaluatorOffline(object):
                                                      classes=self.cls_name,
                                                      same_box_threshold=config.FIND_NODULES.SAME_BOX_THRESHOLD_GT,
                                                      score_threshold=config.FIND_NODULES.SCORE_THRESHOLD_GT,
-                                                     z_threshold=config.FIND_NODULES.Z_THRESHOLD_GT,
+                                                     z_threshold=config.CLASS_Z_THRESHOLD_GT,
                                                      if_dicom=False,
                                                      focus_priority_array=None,
                                                      skip_init=True)
@@ -162,9 +165,6 @@ class LungNoduleEvaluatorOffline(object):
                 # initialize ClassificationMetric class and update with ground truth/predict labels
                 cls_metric = ClassificationMetric(cls_num=i_cls)
 
-                # convert labels list to np.ndarray to fit in the metric class
-                # cls_gt_labels = np.asarray(cls_gt_labels)
-                # cls_pred_labels = np.asarray(cls_pred_labels)
                 cls_metric.update(cls_gt_labels, cls_pred_labels)
 
                 if cls_metric.tp == 0:
@@ -213,7 +213,7 @@ class LungNoduleEvaluatorOffline(object):
                                                   'precision': cls_avg(self.cls_weight, self.cls_value['precision']),
                                                   'fp/tp': np.nan,
                                                   self.score_type: cls_avg(self.cls_weight, self.cls_value[self.score_type])},
-                                                 ignore_index=True)
+                                                  ignore_index=True)
         self.count_df = self.count_df.sort_values(['nodule_class', 'threshold'])
 
         self.cls_weight = []
@@ -237,7 +237,7 @@ class LungNoduleEvaluatorOffline(object):
                                               'fp/tp': np.nan,
                                               self.score_type: cls_avg(self.cls_weight,
                                                                        self.cls_value[self.score_type])},
-                                             ignore_index=True)
+                                              ignore_index=True)
 
         if not os.path.exists(self.xlsx_save_dir):
             os.makedirs(self.xlsx_save_dir)
@@ -268,7 +268,7 @@ class LungNoduleEvaluatorOffline(object):
             predict_df_list = []
             gt_df_list = []
             for index, key in enumerate(predict_df_boxes_dict):
-                self.patient_dict.append(key)
+                self.patient_list.append(key)
                 predict_df_boxes = predict_df_boxes_dict[key]
                 gt_df_boxes = gt_df_boxes_dict[key]
 
@@ -302,7 +302,7 @@ class LungNoduleEvaluatorOffline(object):
                                                     classes=self.cls_name,
                                                     same_box_threshold=config.FIND_NODULES.SAME_BOX_THRESHOLD_PRED,
                                                     score_threshold=config.FIND_NODULES.SCORE_THRESHOLD_PRED,
-                                                    z_threshold=config.FIND_NODULES.Z_THRESHOLD_PRED,
+                                                    z_threshold=config.CLASS_Z_THRESHOLD_PRED,
                                                     if_dicom=False,
                                                     focus_priority_array=None,
                                                     skip_init=True)
@@ -315,7 +315,7 @@ class LungNoduleEvaluatorOffline(object):
                                                classes=self.cls_name,
                                                same_box_threshold=config.FIND_NODULES.SAME_BOX_THRESHOLD_GT,
                                                score_threshold=config.FIND_NODULES.SCORE_THRESHOLD_GT,
-                                               z_threshold=config.FIND_NODULES.Z_THRESHOLD_GT,
+                                               z_threshold=config.CLASS_Z_THRESHOLD_GT,
                                                if_dicom=False,
                                                focus_priority_array=None,
                                                skip_init=True)
@@ -465,8 +465,9 @@ class LungNoduleEvaluatorOffline(object):
                                             img_spacing=None,
                                             prefix=PatientID,
                                             classes=self.cls_name,
-                                            same_box_threshold=self.same_box_threshold,
-                                            score_threshold=self.score_threshold_predict,
+                                            same_box_threshold=config.FIND_NODULES.SAME_BOX_THRESHOLD_PRED,
+                                            score_threshold=config.FIND_NODULES.SCORE_THRESHOLD_PRED,
+                                            z_threshold=config.CLASS_Z_THRESHOLD_PRED,
                                             if_dicom=False,
                                             focus_priority_array=None,
                                             skip_init=True)
@@ -478,8 +479,9 @@ class LungNoduleEvaluatorOffline(object):
                                        img_spacing=None,
                                        prefix=PatientID,
                                        classes=self.cls_name,
-                                       same_box_threshold=np.array([0., 0.]),
-                                       score_threshold=self.score_threshold_gt,
+                                       same_box_threshold=config.FIND_NODULES.SAME_BOX_THRESHOLD_GT,
+                                       score_threshold=config.FIND_NODULES.SCORE_THRESHOLD_GT,
+                                       z_threshold=config.CLASS_Z_THRESHOLD_GT,
                                        if_dicom=False,
                                        focus_priority_array=None,
                                        skip_init=True)
@@ -499,62 +501,243 @@ class LungNoduleEvaluatorOffline(object):
                 json.dump(js_gt, fp)
 
     # 筛选一定层厚以上的最终输出的结节（降假阳实验）
-    # def nodule_thickness_filter(self, thickness_thresh):
-    #     assert type(thickness_thresh) == int, "input thickness_thresh should be an integer, not %s" %thickness_thresh
-    #     for PatientID in os.listdir(self.data_dir):
-    #         if self.data_type == 'json':
-    #             predict_json_path = os.path.join(self.data_dir, PatientID, PatientID + '_nodule.json')
-    #         try:
-    #             # print predict_json_path
-    #             predict_df_boxes = pd.read_json(predict_json_path).T
-    #         except:
-    #             raise ("broken directory structure, maybe no prediction json file found: %s" % predict_json_path)
-    #         # print predict_df_boxes, predict_df_boxes.index
-    #         drop_list = []
-    #         for i, row in predict_df_boxes.iterrows():
-    #             if len(row['SliceRange']) <= thickness_thresh:
-    #                 # print row['SliceRange'], i
-    #                 drop_list.append(i)
-    #         predict_df_boxes = predict_df_boxes.drop(drop_list)
-    #         # print predict_df_boxes
-    #         generate_df_nodules_2_json(predict_df_boxes, 'json_for_auto_test', PatientID + "_nodule%s.json" %(thickness_thresh))
+    def nodule_thickness_filter(self, thickness_thresh):
+        assert type(thickness_thresh) == int, "input thickness_thresh should be an integer, not %s" %thickness_thresh
+        for PatientID in os.listdir(self.data_dir):
+            if self.data_type == 'json':
+                predict_json_path = os.path.join(self.data_dir, PatientID, PatientID + '_nodule.json')
+            try:
+                # print predict_json_path
+                predict_df_boxes = pd.read_json(predict_json_path).T
+            except:
+                raise ("broken directory structure, maybe no prediction json file found: %s" % predict_json_path)
+            # print predict_df_boxes, predict_df_boxes.index
+            drop_list = []
+            for i, row in predict_df_boxes.iterrows():
+                if len(row['SliceRange']) <= thickness_thresh:
+                    # print row['SliceRange'], i
+                    drop_list.append(i)
+            predict_df_boxes = predict_df_boxes.drop(drop_list)
+            # print predict_df_boxes
+            self.generate_df_nodules_2_json(predict_df_boxes, 'json_for_auto_test', PatientID + "_nodule%s.json" %(thickness_thresh))
 
 
-# def get_F_score(tp, fp, fn, recall, precision, precision_thresh=0.):
-#     if recall is np.nan or precision is np.nan:
-#         return np.nan
-#     else:
-#         if precision < precision_thresh:
-#             return 0.0
-#         else:
-#             return 2*precision*recall/(precision + recall)
+class FindNodulesEvaluator(object):
+    def __init__(self, gt_anno_dir, conf_thres = 1., xlsx_save_dir = os.path.join(os.getcwd(), 'FindNodulesEvaluator_result'),
+                 xlsx_name = 'FindNodulesEvaluation.xlsx',algorithm = 'find_nodules_new'):
+        assert os.path.isdir(gt_anno_dir), 'must initialize it with a valid directory of annotation data'
+        self.gt_anno_dir = gt_anno_dir
+        self.xlsx_save_dir = xlsx_save_dir
+        self.xlsx_name = xlsx_name
+        self.patient_list = []
+        self.cls_name = config.CLASSES
+        self.conf_thresh = conf_thres
+        self.algorithm = algorithm
+        self.result_df = pd.DataFrame(
+            columns=['patientid', 'algorithm', 'gt_nodule_count', 'nodule_count', 'threshold', 'adjusted_rand_index', 'adjusted_mutual_info_score',
+                     'normalized_mutual_info_score', 'homogeneity_completeness_v_measure', 'fowlkes_mallows_score', 'silhouette_score'])
+        self.nodule_count_df = pd.DataFrame(
+            columns=['patientid', 'nodule_count']
+        )
+
+    def evaluation_with_nodule_num(self):
+        # gt_boxes_list: list of patient, each of which contains list of all boxes of a patient
+        gt_df_boxes_dict, gt_boxes_list = self.load_data_xml_with_nodule_num()
+        gt_labels = []
+        post_find_nodules_labels = []
+
+        for index, key in enumerate(gt_df_boxes_dict):
+            self.patient_list.append(key)
+            gt_df_boxes = gt_df_boxes_dict[key]
+            gt_label = []
+            post_find_nodules_label = []
+
+            print ('processing %s' % key)
+
+            # 　筛选probability超过规定阈值且预测为规定类别的框输入get_nodule_stat
+            if not gt_df_boxes_dict[key].empty:
+                print gt_df_boxes
+                filtered_gt_boxes = gt_df_boxes[gt_df_boxes["prob"] >= self.conf_thresh]
+                filtered_gt_boxes = filtered_gt_boxes.reset_index(drop=True)
+            else:
+                filtered_gt_boxes = pd.DataFrame(
+                    {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
+                     'nodule_class': [], 'prob': [], 'Mask': []})
+
+            # 将预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
+            print "generating ground truth nodules:"
+            gt_boxes, gt_df = get_nodule_stat(dicom_names=None,
+                                            hu_img_array=None,
+                                            return_boxes=filtered_gt_boxes,
+                                            img_spacing=None,
+                                            prefix=key,
+                                            classes=self.cls_name,
+                                            same_box_threshold=config.FIND_NODULES.SAME_BOX_THRESHOLD_GT,
+                                            score_threshold=config.FIND_NODULES.SCORE_THRESHOLD_GT,
+                                            z_threshold=config.CLASS_Z_THRESHOLD_GT,
+                                            if_dicom=False,
+                                            focus_priority_array=None,
+                                            skip_init=True)
+            # print '------------after nodule boxes'
+            # print gt_boxes
+            # print '------------gt boxes'
+            # print gt_df_boxes_list
+
+            for gt_box_list in gt_boxes_list[index]:
+                print gt_box_list
+                print gt_box_list[-1]
+                print gt_boxes['sliceId']
+                box_lst = gt_boxes[gt_boxes['sliceId'] == gt_box_list[-1]]
+                for i in range(len(box_lst.index)):
+                    box1 = [box_lst.iloc[i]['xmin'], box_lst.iloc[i]['ymin'], box_lst.iloc[i]['xmax'], box_lst.iloc[i]['ymax']]
+                    box2 = gt_box_list[0:4]
+                    if box1 == box2:
+                        gt_label.append(box_lst.iloc[i]['nodule'])
+                        post_find_nodules_label.append(gt_box_list[6])
+            gt_labels.append(gt_label)
+            post_find_nodules_labels.append(post_find_nodules_label)
+        print '-----------'
+        print gt_labels
+        print '----------'
+        print post_find_nodules_labels
+
+        clus_metric = ClusteringMetric()
+        clus_metric.update(gt_labels, post_find_nodules_labels)
+        for index, key in enumerate(gt_df_boxes_dict):
+            self.result_df = self.result_df.append({'patientid': key,
+                               'algorithm': self.algorithm,
+                               'gt_nodule_count': len(set(gt_labels[index])),
+                               'nodule_count': len(set(post_find_nodules_labels[index])),
+                               'threshold': self.conf_thresh,
+                               'adjusted_rand_index': clus_metric.get_adjusted_rand_index()[index],
+                               'adjusted_mutual_info_score': clus_metric.get_adjusted_mutual_info_score()[index],
+                               'normalized_mutual_info_score': clus_metric.get_normalized_mutual_info_score()[index],
+                               'homogeneity_completeness_v_measure': clus_metric.get_homogeneity_completeness_v_measure()[index],
+                               'fowlkes_mallows_score': clus_metric.get_fowlkes_mallows_score()[index],
+                               'silhouette_score': clus_metric.get_silhouette_score()[index]}, ignore_index=True)
+
+        if not os.path.exists(self.xlsx_save_dir):
+            os.makedirs(self.xlsx_save_dir)
+        print ("saving %s" % os.path.join(self.xlsx_save_dir, self.xlsx_name))
+
+        # 　如果已存在相同名字的.xlsx文件，默认删除该文件并重新生成同名的新文件
+        if os.path.isfile(os.path.join(self.xlsx_save_dir, self.xlsx_name)):
+            os.remove(os.path.join(self.xlsx_save_dir, self.xlsx_name))
+        writer = pd.ExcelWriter(os.path.join(self.xlsx_save_dir, self.xlsx_name))
+        self.result_df.to_excel(writer, 'eval_with_nodule_num', index=False)
+        writer.save()
+        # print 'get_adjusted_rand_index'
+        # a = clus_metric.get_adjusted_rand_index()
+        # print a
+        # b = clus_metric.get_adjusted_mutual_info_score()
+        # print b
+        # c = clus_metric.get_normalized_mutual_info_score()
+        # print c
+        # d = clus_metric.get_homogeneity_completeness_v_measure()
+        # print d
+        # e = clus_metric.get_fowlkes_mallows_score()
+        # print e
+        # f = clus_metric.get_silhouette_score()
+        # print f
+
+    # testing cfda_modified_anno_box_size in comparison with ORIGINDATA, ground truth labels only
+    def evaluation_without_nodule_cls(self):
+        gt_df_boxes_dict = self.load_data_xml_without_nodule_cls()
+        tot_nodule_count = 0
+        for index, key in enumerate(gt_df_boxes_dict):
+            self.patient_list.append(key)
+            gt_df_boxes = gt_df_boxes_dict[key]
+            gt_label = []
+            post_find_nodules_label = []
+
+            print ('processing %s' % key)
+
+            # 　筛选probability超过规定阈值且预测为规定类别的框输入get_nodule_stat
+            if not gt_df_boxes_dict[key].empty:
+                # print gt_df_boxes
+                filtered_gt_boxes = gt_df_boxes[gt_df_boxes["prob"] >= self.conf_thresh]
+                filtered_gt_boxes = filtered_gt_boxes.reset_index(drop=True)
+            else:
+                filtered_gt_boxes = pd.DataFrame(
+                    {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
+                     'nodule_class': [], 'prob': [], 'Mask': []})
+
+            # 将预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
+            print "generating ground truth nodules:"
+            _, gt_df = get_nodule_stat(dicom_names=None,
+                                              hu_img_array=None,
+                                              return_boxes=filtered_gt_boxes,
+                                              img_spacing=None,
+                                              prefix=key,
+                                              classes=self.cls_name,
+                                              same_box_threshold=config.FIND_NODULES.SAME_BOX_THRESHOLD_GT,
+                                              score_threshold=config.FIND_NODULES.SCORE_THRESHOLD_GT,
+                                              z_threshold=config.CLASS_Z_THRESHOLD_GT,
+                                              if_dicom=False,
+                                              focus_priority_array=None,
+                                              skip_init=True)
+            print gt_df
+            tot_nodule_count += len(gt_df.index)
+            print ('nodule_count = %s' %(len(gt_df.index)))
+            self.nodule_count_df = self.nodule_count_df.append({'patientid': key,
+                                                                'nodule_count': len(gt_df.index)}, ignore_index=True)
+        if not os.path.exists(self.xlsx_save_dir):
+            os.makedirs(self.xlsx_save_dir)
+        print ("saving %s" % os.path.join(self.xlsx_save_dir, self.xlsx_name))
+
+        # 　如果已存在相同名字的.xlsx文件，默认删除该文件并重新生成同名的新文件
+        if os.path.isfile(os.path.join(self.xlsx_save_dir, self.xlsx_name)):
+            os.remove(os.path.join(self.xlsx_save_dir, self.xlsx_name))
+
+        # 　如果已存在相同名字的.xlsx文件，默认删除该文件并重新生成同名的新文件
+        if os.path.isfile(os.path.join(self.xlsx_save_dir, self.xlsx_name)):
+            os.remove(os.path.join(self.xlsx_save_dir, self.xlsx_name))
+        writer = pd.ExcelWriter(os.path.join(self.xlsx_save_dir, self.xlsx_name))
+        self.nodule_count_df.to_excel(writer, 'eval_without_nodule_cls', index=False)
+        writer.save()
+
+        print ('total_nodule_count = %s' %(tot_nodule_count))
+
+    def load_data_xml_with_nodule_num(self):
+        ground_truth_boxes_dict = {}
+        ground_truth_boxes_list = []
+        for PatientID in os.listdir(self.gt_anno_dir):
+            ground_truth_path = os.path.join(self.gt_anno_dir, PatientID)
+            try:
+                # 对于ground truth boxes,我们直接读取其xml标签。因为几乎所有CT图像少于1000个层，故我们在这里选择1000
+                ground_truth_boxes, ground_truth_boxes_all_slice= xml_to_boxeslist_with_nodule_num(ground_truth_path, 1000)
+            except:
+                print ("broken directory structure, maybe no ground truth xml file found: %s" % ground_truth_path)
+                ground_truth_boxes = [[[[]]]]
+
+            ground_truth_boxes_list.append(ground_truth_boxes_all_slice)
+            ground_truth_boxes = init_df_boxes(return_boxes=ground_truth_boxes, classes=self.cls_name)
+            ground_truth_boxes = ground_truth_boxes.sort_values(by=['prob'])
+            ground_truth_boxes = ground_truth_boxes.reset_index(drop=True)
+
+            ground_truth_boxes_dict[PatientID] = ground_truth_boxes
 
 
+        return ground_truth_boxes_dict, ground_truth_boxes_list
 
+    def load_data_xml_without_nodule_cls(self):
+        ground_truth_boxes_dict = {}
+        for PatientID in os.listdir(self.gt_anno_dir):
+            ground_truth_path = os.path.join(self.gt_anno_dir, PatientID)
+            # try:
+            #     # 对于ground truth boxes,我们直接读取其xml标签。因为几乎所有CT图像少于1000个层，故我们在这里选择1000
+            ground_truth_boxes = xml_to_boxeslist_without_nodule_cls(ground_truth_path, 1000)
+            # except:
+            #     print ("broken directory structure, maybe no ground truth xml file found: %s" % ground_truth_path)
+            #     ground_truth_boxes = [[[[]]]]
 
-# def save_json_2_df(json_path):
-#     """
-#     将json文件转换为DataFrame
-#     :param json_path: 具体json文件的路径
-#     :return: pandas的DataFrame
-#             'bbox'字段：bbox的坐标，[xmax,ymax,xmin,ymin]，list类型
-#             'pid'字段：病人的PatientID，unicode类型
-#             'slice':这个bbox所在的slice，float类型
-#             'nodule_class':这个结节的分类，unicode类型
-#             'nodule_id':归属于哪一个结节，属于同一结节的记录nodule_id相同，float类型
-#     """
-#     df = pd.read_json(json_path)
-#     df = df.T
-#     ret_df = pd.DataFrame({'bbox': [], 'pid': [], 'slice': [], 'nodule_class': [], 'nodule_id': []})
-#     for index, row in df.iterrows():
-#         df_add_row = {'bbox': [bbox for bbox in row['Bndbox List']],
-#                       'pid': row['Pid'],
-#                       'slice': row['SliceRange'],
-#                       'nodule_class': row['Type'],
-#                       'nodule_id': row['Nodule Id'],
-#                       'prob': row['prob']}
-#         ret_df = ret_df.append(df_add_row, ignore_index=True)
-#    return ret_df
+            ground_truth_boxes = init_df_boxes(return_boxes=ground_truth_boxes, classes=self.cls_name)
+            ground_truth_boxes = ground_truth_boxes.sort_values(by=['prob'])
+            ground_truth_boxes = ground_truth_boxes.reset_index(drop=True)
+
+            ground_truth_boxes_dict[PatientID] = ground_truth_boxes
+
+        return ground_truth_boxes_dict
 
 def json_df_2_df(df):
     ret_df = pd.DataFrame({'bbox': [], 'pid': [], 'slice': [], 'nodule_class': [], 'nodule_id': []})
@@ -575,11 +758,11 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Infervision auto test')
     parser.add_argument('--data_dir',
                         help='predict result stored dir, .npy by default',
-                        default='./npy_for_auto_test',
+                        default='./json_for_auto_test',
                         type=str)
     parser.add_argument('--data_type',
                         help='type of data that store prediction result',
-                        default='npy',
+                        default='json',
                         type=str
                         )
     parser.add_argument('--xlsx_save_dir',
@@ -630,7 +813,8 @@ if __name__ == '__main__':
                                   xlsx_save_dir=args.xlsx_save_dir,
                                   xlsx_name=args.xlsx_name)
                                   #conf_thresh=np.linspace(0.7,0.7,num=1).tolist())
-    # model_eval.generate_df_nodules_2_json()
+    # # if model_eval.if_generate_nodule_json:
+    # #     model_eval.generate_df_nodules_2_json()
     if args.multi_class:
         model_eval.multi_class_evaluation()
         print model_eval.opt_thresh
@@ -639,24 +823,7 @@ if __name__ == '__main__':
     else:
         model_eval.binary_class_evaluation()
 
-    # model_eval.ROC_plot(os.path.join(os.getcwd(), 'excel_result'), 'multi_class_evaluation_FJDH.xlsx', 'multi-class evaluation')
-    # thickness_thresh = [1., 2.]
-    # #
-    # for i in thickness_thresh:
-    #     model_eval.nodule_thickness_filter(thickness_thresh=i)
-    #
-    #     auto_test(json_dir='./json_for_auto_test',
-    #                             xlsx_save_dir='./excel_result',
-    #                             image_dir=args.image_dir,
-    #                             image_save_dir='./auto_test/NMS%s' %i,
-    #                             if_dicom=args.dicom,
-    #                             if_normalization=config.NORMALIZATION,
-    #                             xlsx_name=args.xlsx_name,
-    #                             json_name=('_nodule%s.json'%i),
-    #                             if_save_image=True)
+    # find_nodules_eval = FindNodulesEvaluator(gt_anno_dir=args.gt_anno_dir)
+    # find_nodules_eval.evaluation_without_nodule_cls()
+    #find_nodules_eval.evaluation_with_nodule_num()
 
-    # df = pd.read_excel(os.path.join(args.xlsx_save_dir, 'model_evaluation.xlsx'), sheet_name='optimal threshold')
-    # mAP = Model_evaluation.get_mAP(df)
-    # multi_class_score = Model_evaluation.multi_class_model_score(df)
-    # print ('mAP for oprimal threshold is %f' %(mAP))
-    # print ('multi_class_score for optimal threshold is %f' %(multi_class_score))

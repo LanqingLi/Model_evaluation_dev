@@ -9,6 +9,8 @@ CT评估系统开发记录：
 
             1000+结节病人测试数据：
                 ./1000nodules
+            医生标记：./anno
+            模型预测框:./json
 
     老的测试结果路径：
     /mnt/data2/model_evaluation_test/test_result_old/lung/
@@ -28,3 +30,26 @@ CT评估系统开发记录：
 
     新的测试结果路径:
     /mnt/data2/model_evaluation/excel_result
+
+find_nodules第一次测试结果：
+    find_nodules_new:
+    adjusted_rand_index: [0.92854375404774014]
+    adjusted_mutual_info_score: [0.94211485954813834]
+    normalized_mutual_info_score: [0.993732759001689]
+    homogeneity_completeness_v_measure: [(0.99572566086389691, 0.99174384584639963, 0.99373076465223231)]
+    fowlkes_mallows_score: [0.92893131414320906]
+
+
+
+find_nodules:
+    adjusted_rand_index: [0.91913598562635535]
+    adjusted_mutual_info_score: [0.92992787527280762]
+    normalized_mutual_info_score: [0.99270861055585891]
+    homogeneity_completeness_v_measure: [(0.99553672866136622, 0.98988852656078519, 0.99270459351689744)]
+    fowlkes_mallows_score: [0.91975774001140587]
+
+cfda测试数据集：
+
+    １．同一个结节存在多框嵌套的情况
+    ２．结节某些层面框标得较歪或者形状不匹配
+    ３．同一个结节出现了断层标记情况（所以z_threshold设为１对于这种情况肯定会分错）

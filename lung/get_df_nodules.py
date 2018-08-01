@@ -46,7 +46,6 @@ def init_df_boxes(return_boxes, classes):
             for i_cls in range(len(return_boxes_slice)):
                 return_boxes_cls = return_boxes_slice[i_cls]
                 for bndbox in return_boxes_cls:
-                    # print bndbox
                     # 尚未加入mask功能，暂存空，未来添加
                     mask = []
                     df_add_row = {'sliceId': i_slice, 'instanceNumber': instance_number,
@@ -122,8 +121,8 @@ def add_nodule_to_df(df_add_nodule, df_nodules, bndbox_list, slice_range, nodule
     return df_nodules.append(df_add_nodule, ignore_index=True)
 
 
-def get_nodule_stat(dicom_names, return_boxes, prefix, classes, same_box_threshold=np.array([0.8, 0.8]), hu_img_array=None, img_spacing=None, if_dicom=True,
-                    focus_priority_array=None, skip_init=False, score_threshold = 0.8, z_threshold = 3.):
+def get_nodule_stat(dicom_names, return_boxes, prefix, classes, z_threshold, same_box_threshold=np.array([0.8, 0.8]), hu_img_array=None, img_spacing=None, if_dicom=True,
+                    focus_priority_array=None, skip_init=False, score_threshold = 0.8):
     '''
     调用find_nodules,把结节信息统计进DataFrame
     :param dicom_names: dicom序列路径，用于获取起始instanceNumber
@@ -142,10 +141,13 @@ def get_nodule_stat(dicom_names, return_boxes, prefix, classes, same_box_thresho
                                 "GGN": 3,
                                 "0-3nodule": 2,
                                 "nodule": 1}
+    print "return:"
+    print return_boxes
     if skip_init:
         df_boxes = return_boxes
     else:
         df_boxes = init_df_boxes(dicom_names, return_boxes, classes, if_dicom)
+
     # 调用find_nodules计算结节和获取结节编号
     # df_boxes.to_excel("/home/tx-eva-008/Desktop/df_boxes.xls") 测试用行
     #print "--------"
@@ -154,11 +156,19 @@ def get_nodule_stat(dicom_names, return_boxes, prefix, classes, same_box_thresho
     # find_nodules_new
     bbox_info, nodule_list = find_nodules(df_boxes, Z_THRESHOLD=z_threshold, SAME_BOX_THRESHOLD=same_box_threshold, SCORE_THRESHOLD=score_threshold)
     # old find_nodules
-    # bbox_info, nodule_list = find_nodules(df_boxes, Z_THRESHOLD=z_threshold)
-    # print bbox_info
+    #bbox_info, nodule_list = find_nodules(df_boxes, Z_THRESHOLD=z_threshold)
+    print "bbox"
+    print bbox_info['nodule']
     # print nodule_list
 
     # 结节编号排序
+    #如果df_boxes已有结节信息，例如ssd的数据，则需要先删掉'nodule'这一列才能添加find_nodules生成的结节信息,对于'minusNamePriority', 'minusProb'亦同理
+    try:
+        df_boxes = df_boxes.drop(columns=['nodule', 'minusNamePriority', 'minusProb'])
+    except:
+        print ("no 'nodule', 'minusNamePriority', or 'minusProb' in df_boxes")
+    print "df_boxes"
+    print df_boxes
     df_boxes.insert(0, 'nodule', bbox_info['nodule'])
     # df_boxes = clean_redundant_boxes(df_boxes)
     list_name = list(df_boxes["nodule_class"])
@@ -181,7 +191,7 @@ def get_nodule_stat(dicom_names, return_boxes, prefix, classes, same_box_thresho
     i_row = 0
     len_df = len(df_boxes)
     last_nodule = -1
-    print df_boxes
+    #print df_boxes
     while i_row <= len_df:
         # 判断存储
         if i_row != len_df:

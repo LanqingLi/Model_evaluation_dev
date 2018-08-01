@@ -103,7 +103,7 @@ def add_nodule(nodules, cur_nodule):
     nodules[-1]["id"] = len(nodules)
 
 
-def find_nodules(bboxInfo, Z_THRESHOLD=3., SAME_BOX_THRESHOLD=np.array([1., 1.]), SCORE_THRESHOLD=1.,
+def find_nodules(bboxInfo, Z_THRESHOLD, SAME_BOX_THRESHOLD=np.array([1., 1.]), SCORE_THRESHOLD=1.,
                  nodule_cls_weights={
                           'solid nodule': 1.,
                           'calcific nodule': 1.,
@@ -171,12 +171,9 @@ def find_nodules(bboxInfo, Z_THRESHOLD=3., SAME_BOX_THRESHOLD=np.array([1., 1.])
                       "bndbox": get_bounding_box_nparray(bboxInfo.loc[k["noduleList"][-1]]),
                       "nodule_class": bboxInfo.loc[k["noduleList"][-1]]["nodule_class"],
                       "prob": bboxInfo.loc[k["noduleList"][-1]]["prob"]}
-                     for k in nodules if 0 < curZ - bboxInfo.loc[k["noduleList"][-1]]["instanceNumber"] <= Z_THRESHOLD]
+                      for k in nodules if 0 < curZ - bboxInfo.loc[k["noduleList"][-1]]["instanceNumber"] <= \
+                            Z_THRESHOLD[bboxInfo.loc[k["noduleList"][-1]]["nodule_class"]]]
 
-        # curBoxes = [{"boxID": k,
-        #              "bndbox": get_bounding_box_nparray(bboxInfo.loc[k]),
-        #              "nodule_class": bboxInfo.loc[k]["nodule_class"]}
-        #             for k in noduleSlices[curZ] if bboxInfo.loc[k]["unionFindSet"] == k]
         # 枚举本层面所有bounding box，每个框的评分为类别评分*置信度概率
         curBoxes = [{"matched": False,
                      "boxID": k,
@@ -283,8 +280,8 @@ def find_nodules(bboxInfo, Z_THRESHOLD=3., SAME_BOX_THRESHOLD=np.array([1., 1.])
                         # print [curBoxes_union["boxID"]== box_union1]
                         box_union_index1 = [i for i in range(len(curBoxes_union)) if bboxInfo.loc[curBoxes_union[i]["boxID"]]["unionFindSet"]== box_union1]
                         box_union_index2 = [i for i in range(len(curBoxes_union)) if bboxInfo.loc[curBoxes_union[i]["boxID"]]["unionFindSet"]== box_union2]
-                        print "box_union_index1:%s" %box_union_index1
-                        print "box_union_index2:%s" %box_union_index2
+                        #print "box_union_index1:%s" %box_union_index1
+                        #print "box_union_index2:%s" %box_union_index2
                         if len(box_union_index1) != 1 or len(box_union_index2) != 1:
                             print ('there should be one and only one box for the same equivalent class in curBoxes_union')
                             raise  IndexError
@@ -300,7 +297,7 @@ def find_nodules(bboxInfo, Z_THRESHOLD=3., SAME_BOX_THRESHOLD=np.array([1., 1.])
 
         # 对于已经匹配上的bounding box，加入对应的noduleList中
         for i in reduced_matched_nodule_list:
-            print curZ, i, matchRes[i]
+            #print curZ, i, matchRes[i]
             nodules[i - 1]["noduleList"].append(matchRes[i] - BOXID_VALUE)
             # unmatched.remove(matchRes[i] - BOXID_VALUE)
         #print 'curBoxes_union'

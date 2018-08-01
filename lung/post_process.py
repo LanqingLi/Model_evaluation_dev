@@ -87,6 +87,10 @@ def df_to_cls_label(cls_predict_df_list, cls_gt_df_list, cls_list):
     # print "cls_gt"
     # print cls_gt_labels
     return cls_predict_labels, cls_gt_labels
+#
+# def df_to_clus_label(gt_all_slice_list, gt_df_list):
+#     for box_list in gt_all_slice_list:
+#         for box in box_list:
 
 
 

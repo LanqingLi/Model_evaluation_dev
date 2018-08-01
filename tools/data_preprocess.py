@@ -19,6 +19,8 @@ def get_label_classes_from_xls(filename):
     class_dict = dict()  # label to class
     conf_thresh = dict()
     cls_weight_dict = dict()
+    cls_z_threshold_pred_dict = dict()
+    cls_z_threshold_gt_dict = dict()
     conf_thresh['__background__'] = 1.0
     class_list = []
     class_list.append('__background__')
@@ -40,11 +42,19 @@ def get_label_classes_from_xls(filename):
 
         weight = classDictSheet.row(i)[3].value
         assert isinstance(weight, float), 'weight must be float type, check xls'
+
+        z_threshold_pred = classDictSheet.row(i)[4].value
+        assert isinstance(z_threshold_pred, float), 'z_threshold_pred must be float type, check xls'
+
+        z_threshold_gt = classDictSheet.row(i)[5].value
+        assert isinstance(z_threshold_gt, float), 'z_threshold_gt must be float type, check xls'
         cls_weight_dict[class_name] = weight
+        cls_z_threshold_pred_dict[class_name] = z_threshold_pred
+        cls_z_threshold_gt_dict[class_name] = z_threshold_gt
     # remove repeat element in class
     class_list1 = sorted(set(class_list), key=class_list.index)
 
-    return class_list1, label_classes, class_dict, conf_thresh, cls_weight_dict
+    return class_list1, label_classes, class_dict, conf_thresh, cls_weight_dict, cls_z_threshold_pred_dict, cls_z_threshold_gt_dict
 
 def get_instance_number(dcm_path):
     '''

@@ -33,9 +33,8 @@ config.RCNN_FEAT_STRIDE = [4, 8, 16, 32]
 # config.FIXED_PARAMS_SHARED = ['conv1', 'conv2', 'conv3', 'conv4', 'conv5']
 
 # for multi_class loader for training or single class loader for training,see pasco_voc.py.
-config.CLASSES_LABELS_XLS_FILE_NAME = 'lung/classname_labelname_mapping.xls'
-config.CLASSES, config.NODULE_CLASSES, config.CLASS_DICT, config.CONF_THRESH, config.CLASS_WEIGHTS, config.CLASS_Z_THRESHOLD_PRED,\
-    config.CLASS_Z_THRESHOLD_GT= get_label_classes_from_xls(config.CLASSES_LABELS_XLS_FILE_NAME)
+CLASSES_LABELS_XLS_FILE_NAME = 'lung/classname_labelname_mapping.xls'
+config.CLASSES, config.NODULE_CLASSES, config.CLASS_DICT, config.CONF_THRESH, config.CLASS_WEIGHTS = get_label_classes_from_xls(CLASSES_LABELS_XLS_FILE_NAME)
 config.NUM_CLASSES = len(config.CLASSES)
 
 
@@ -105,8 +104,8 @@ config.FIND_NODULES.SAME_BOX_THRESHOLD_GT = np.array([0., 0.])
 
 # 对于不同层面两个框的匹配，将其视为二分图中一条边的中心点偏移阈值，对于ground truth一般应设置得更小
 config.FIND_NODULES.SCORE_THRESHOLD_PRED = 0.8
-config.FIND_NODULES.SCORE_THRESHOLD_GT = 2.
+config.FIND_NODULES.SCORE_THRESHOLD_GT = 0.6
 
-# # 对于逐层匹配的贪心算法，我们每次只找前z_threshold个层面，对于ground truth一般应设置为1-2, 假设医生不标断层结节，则应该设置成１
-# config.FIND_NODULES.Z_THRESHOLD_PRED = 3.
-# config.FIND_NODULES.Z_THRESHOLD_GT = 3.
+# 对于逐层匹配的贪心算法，我们每次只找前z_threshold个层面，对于ground truth一般应设置为1-2, 假设医生不标断层结节，则应该设置成１
+config.FIND_NODULES.Z_THRESHOLD_PRED = 3.
+config.FIND_NODULES.Z_THRESHOLD_GT = 1.
