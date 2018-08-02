@@ -140,9 +140,9 @@ def get_nodule_stat(dicom_names, return_boxes, prefix, classes, z_threshold, sam
                                 "solid nodule": 4,
                                 "GGN": 3,
                                 "0-3nodule": 2,
-                                "nodule": 1}
-    print "return:"
-    print return_boxes
+                                 "nodule": 1}
+    # print "return:"
+    # print return_boxes
     if skip_init:
         df_boxes = return_boxes
     else:
@@ -157,8 +157,8 @@ def get_nodule_stat(dicom_names, return_boxes, prefix, classes, z_threshold, sam
     bbox_info, nodule_list = find_nodules(df_boxes, Z_THRESHOLD=z_threshold, SAME_BOX_THRESHOLD=same_box_threshold, SCORE_THRESHOLD=score_threshold)
     # old find_nodules
     #bbox_info, nodule_list = find_nodules(df_boxes, Z_THRESHOLD=z_threshold)
-    print "bbox"
-    print bbox_info['nodule']
+    # print "bbox"
+    # print bbox_info['nodule']
     # print nodule_list
 
     # 结节编号排序
