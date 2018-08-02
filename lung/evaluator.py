@@ -9,11 +9,10 @@ import matplotlib.pyplot as plt
 from collections import OrderedDict
 from common.custom_metric import ClassificationMetric, ClusteringMetric, cls_avg
 
-from lung.get_df_nodules import init_df_boxes
 from lung.xml_tools import xml_to_boxeslist, xml_to_boxeslist_with_nodule_num, xml_to_boxeslist_without_nodule_cls
 from lung.config import config
 from lung.post_process import df_to_cls_label
-from lung.get_df_nodules import get_nodule_stat
+from lung.get_df_nodules import get_nodule_stat, init_df_boxes
 
 # from common.utils import generate_df_nodules_2_json
 
