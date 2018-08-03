@@ -105,7 +105,7 @@ config.FIND_NODULES.SAME_BOX_THRESHOLD_GT = np.array([0., 0.])
 
 # 对于不同层面两个框的匹配，将其视为二分图中一条边的中心点偏移阈值，对于ground truth一般应设置得更小
 config.FIND_NODULES.SCORE_THRESHOLD_PRED = 0.8
-config.FIND_NODULES.SCORE_THRESHOLD_GT = 2.
+config.FIND_NODULES.SCORE_THRESHOLD_GT = 1.5
 
 # # 对于逐层匹配的贪心算法，我们每次只找前z_threshold个层面，对于ground truth一般应设置为1-2, 假设医生不标断层结节，则应该设置成１
 # config.FIND_NODULES.Z_THRESHOLD_PRED = 3.

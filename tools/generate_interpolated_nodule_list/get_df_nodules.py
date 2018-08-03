@@ -1,9 +1,8 @@
 # coding:utf-8
 import numpy as np
 import pandas as pd
-from tools.data_preprocess import get_instance_number
 
-from lung.find_nodules_new import find_nodules
+from find_nodules_new import find_nodules
 
 # nodule_class = config.CLASSES
 PI = 3.141592654
@@ -167,8 +166,8 @@ def get_nodule_stat(dicom_names, return_boxes, prefix, classes, z_threshold, sam
         df_boxes = df_boxes.drop(columns=['nodule', 'minusNamePriority', 'minusProb'])
     except:
         print ("no 'nodule', 'minusNamePriority', or 'minusProb' in df_boxes")
-    print "df_boxes"
-    print df_boxes
+    #print "df_boxes"
+    #print df_boxes
     df_boxes.insert(0, 'nodule', bbox_info['nodule'])
     # df_boxes = clean_redundant_boxes(df_boxes)
     list_name = list(df_boxes["nodule_class"])

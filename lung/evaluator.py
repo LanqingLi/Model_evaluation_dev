@@ -9,11 +9,10 @@ import matplotlib.pyplot as plt
 from collections import OrderedDict
 from common.custom_metric import ClassificationMetric, ClusteringMetric, cls_avg
 
-from lung.get_df_nodules import init_df_boxes
 from lung.xml_tools import xml_to_boxeslist, xml_to_boxeslist_with_nodule_num, xml_to_boxeslist_without_nodule_cls
 from lung.config import config
 from lung.post_process import df_to_cls_label
-from lung.get_df_nodules import get_nodule_stat
+from lung.get_df_nodules import get_nodule_stat, init_df_boxes
 
 # from common.utils import generate_df_nodules_2_json
 
@@ -806,24 +805,24 @@ if __name__ == '__main__':
     args = parse_args()
 
     print config.CLASSES
-    model_eval = LungNoduleEvaluatorOffline(data_dir=args.data_dir,
-                                  data_type=args.data_type,
-                                  anno_dir=args.gt_anno_dir,
-                                  score_type=args.score_type,
-                                  xlsx_save_dir=args.xlsx_save_dir,
-                                  xlsx_name=args.xlsx_name)
-                                  #conf_thresh=np.linspace(0.7,0.7,num=1).tolist())
-    # # if model_eval.if_generate_nodule_json:
-    # #     model_eval.generate_df_nodules_2_json()
-    if args.multi_class:
-        model_eval.multi_class_evaluation()
-        print model_eval.opt_thresh
+    # model_eval = LungNoduleEvaluatorOffline(data_dir=args.data_dir,
+    #                               data_type=args.data_type,
+    #                               anno_dir=args.gt_anno_dir,
+    #                               score_type=args.score_type,
+    #                               xlsx_save_dir=args.xlsx_save_dir,
+    #                               xlsx_name=args.xlsx_name)
+    #                               #conf_thresh=np.linspace(0.7,0.7,num=1).tolist())
+    # # # if model_eval.if_generate_nodule_json:
+    # # #     model_eval.generate_df_nodules_2_json()
+    # if args.multi_class:
+    #     model_eval.multi_class_evaluation()
+    #     print model_eval.opt_thresh
+    #
+    #
+    # else:
+    #     model_eval.binary_class_evaluation()
 
-
-    else:
-        model_eval.binary_class_evaluation()
-
-    # find_nodules_eval = FindNodulesEvaluator(gt_anno_dir=args.gt_anno_dir)
-    # find_nodules_eval.evaluation_without_nodule_cls()
+    find_nodules_eval = FindNodulesEvaluator(gt_anno_dir=args.gt_anno_dir)
+    find_nodules_eval.evaluation_without_nodule_cls()
     #find_nodules_eval.evaluation_with_nodule_num()
 
