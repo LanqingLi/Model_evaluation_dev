@@ -1,3 +1,6 @@
+
+
+
 from common.threeD_test_tools import *
 from plaqify_boxes import Plaque, plaqify
 import os
@@ -40,10 +43,14 @@ def print_conclusion(output_path, conc):
     df['fp/tp'] = df.apply(lambda row: float(row.fp_count / max(row.tp_count, 1)), axis=1)
     recall_plq = df.at['sum', 'Sensitivity']
     fp_plq = df.at['sum', 'fp/tp']
+    tp = df.at['sum', 'tp_count']
+    fp = df.at['sum', 'fp_count']
+    fn = df.at['sum', 'fn_count']
     print 'Plaque: recall = ', recall_plq, ' fp/tp = ', fp_plq
     writer2 = pd.ExcelWriter(output_path)
     df.to_excel(writer2, 'sheet1')
     writer2.save()
+    return(tp, fp, fn)
 
 
 def print_conclusion2(output_path, conc):
@@ -66,8 +73,8 @@ def print_conclusion2(output_path, conc):
 def print_result(list1, list2, xlsx_name, writeout_path):
     '''
     #save plaque information to dataframes
-    :param list1:
-    :param list2:
+    :param list1: gt list
+    :param list2: pt list
     :return:
     '''
     output = []
@@ -106,6 +113,26 @@ def print_result(list1, list2, xlsx_name, writeout_path):
     txt_file.close()
 
 
+def print_specific(output_path, stats_dict):
+    '''
+    :param output_path: xlsx path
+    :param stats_dict: {segment + type : {'tp' : tp_count, ...}
+    :return: print xlsx file about specific results.
+    '''
+    spec_conc = []
+    all_class = list(set_class2)
+    all_class.sort()
+    all_class.extend(['cP', 'ncP', 'mP'])
+    for item in all_class:
+        spec_conc.append([item, stats_dict[item]['tp'], stats_dict[item]['fn'], stats_dict[item]['fp'],
+                          float(stats_dict[item]['tp']) / max(stats_dict[item]['tp'] + stats_dict[item]['fn'], 1),
+                          float(stats_dict[item]['fp']) / max(stats_dict[item]['tp'], 1)])
+    df = pd.DataFrame(spec_conc, columns=
+                      ['Seg/Type', 'tp_count', 'fn_count', 'fp_count', 'recall', 'fp/tp'])
+    writer = pd.ExcelWriter(output_path)
+    df.to_excel(writer, 'sheet1')
+    writer.save()
+
 
 class Auto_test:
 
@@ -130,7 +157,7 @@ class Auto_test:
 
     def print_plaque_xls(self):
         xlsx_path = os.path.join(self.output, 'conclusion.xlsx')
-        print_conclusion(xlsx_path, self.conclusion)
+        self.tp, self.fp, self.fn = print_conclusion(xlsx_path, self.conclusion)
 
     def print_plaque_boxes(self):
         for patient in self.patient_list:
@@ -139,9 +166,54 @@ class Auto_test:
             print_result(patient.gt_list, patient.pt_list, xlsx_name, patient_path)
 
     def print_segment_xls(self):
-        xlsx_path = os.path.join(self.output, 'conclusion_segment.xlsx')
+        for patient in self.patient_list:
+            set_fp = set()
+            set_p = set()
+            set_fn = set()
+            for plaque in patient.gt_list:
+                set_p.add(plaque.pos)
+                if plaque.max_matching < VOL_THRESHOLD:
+                    set_fn.add(plaque.pos)
+            for plaque in patient.pt_list:
+                if plaque.max_matching < VOL_THRESHOLD:
+                    set_fp.add(plaque.pos)
+            set_tp = set_p.difference(set_fn)
+            set_fp = set_fp.difference(set_tp)
+            # tn number is based on current segment classification, i.e. there are 45 segments.
+            self.conclusion2.append(
+                [patient.name, len(set_tp), len(set_fp), 45 - len(set_tp) - len(set_fp), len(set_fn)])
+        xlsx_path = os.path.join(self.output, 'seg_conclusion.xlsx')
         print_conclusion2(xlsx_path, self.conclusion2)
 
-auto = Auto_test(pt_path, gt_path, output_path, 'SSD_0.99_result')
-auto.print_plaque_xls()
-auto.print_plaque_boxes()
+    def print_specific_stats(self):
+        specifics = {'cP': {'tp': 0, 'fp': 0, 'fn': 0}, 'ncP': {'tp': 0, 'fp': 0, 'fn': 0},
+                     'mP': {'tp': 0, 'fp': 0, 'fn': 0}}
+        for segment in set_class2:
+            specifics[segment] = {'tp': 0, 'fp': 0, 'fn': 0}
+        for patient in self.patient_list:
+            for plaque in patient.gt_list:
+                pos = plaque.pos
+                ptype = plaque.plaque_type()
+                label = plaque.res
+                specifics[pos][label] = specifics[pos][label] + 1
+                specifics[ptype][label] = specifics[ptype][label] + 1
+            for plaque in patient.pt_list:
+                if plaque.res == 'fp':
+                    pos = plaque.pos
+                    ptype = plaque.plaque_type()
+                    label = plaque.res
+                    specifics[pos][label] = specifics[pos].get(label, 0) + 1
+                    specifics[ptype][label] = specifics[ptype].get(label, 0) + 1
+        xlsx_path = os.path.join(self.output, 'specific_conclusion.xlsx')
+        print_specific(xlsx_path, specifics)
+
+    def print_all_conclusions(self):
+        self.print_plaque_xls()
+        self.print_specific_stats()
+        self.print_segment_xls()
+        self.print_plaque_boxes()
+
+
+if __name__ == '__main__':
+    auto = Auto_test(pt_path, gt_path, output_path, model_name)
+    auto.print_all_conclusions()

@@ -1,0 +1,26 @@
+<annotation>
+  <folder>anno</folder>
+  <filename>BJFW35284S6_038</filename>
+  <path>/home/tx-deepocean/Desktop/2018_01_19_linan/anno/BJFW35284S6_038.xml</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>0</width>
+    <height>0</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <name>LAD_P_cP</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <bndbox>
+      <xmin>320</xmin>
+      <ymin>240</ymin>
+      <xmax>345</xmax>
+      <ymax>266</ymax>
+    </bndbox>
+  </object>
+</annotation>

@@ -1,0 +1,11 @@
+代码包括了心脏的后处理和auto_test
+
+在common.threeD_test_tools.py定义了class ThreedObject，可以应用于所有从2D框提取的3D物体，除了适用于心脏结节也可以适用于肺部斑块。同时也定义了class Patient，存储了病人的pt_object_list和gt_object_list之后，可以调用Patient.matching对斑块（或结节）进行匹配，打上tp,fp或者fn的标签，比较两个3D物体（pt and gt)是否相同的metric可以自己定义，默认为3D物体的miov(类似iou，我自己定义的metric）。
+
+后处理的基本思路是把一个层面一个层面的建立斑块，先把之前建立的斑块和当前层面的框进行匹配（如果斑块的最终层面离当前层面足够近的话，相关超参LAYER_TOLERANCE），找到互相最匹配的框加入斑块，并删除所有其他和此框相似的框（del_sim_boxes)。剩下没被匹配的框再反复找出置信度最高的框建立斑块并删除相似框。最后计算每一个斑块作为3D斑块的accuracy（is_reliable_plaque,自定义的函数，很大调整空间，可以影响模型结果），大于MIN_ACCURACY的才加入最终结果。
+
+因为后处理最终的删除操作，在test里面不同阈值筛选的框输出的结果通常差异不大。如果想去除这个功能，把MIN_ACCURACY改成0即可
+
+auto_test中，比较pt和gt是否是同一个的函数可以自行定义，具体用法见Patient.matching。建议组内跑模型都用我现在写的heart_comparison_metric（要求两个斑块位置相同，标签模糊了mP和cP，同时体积交集足够大，要求相对肺部是更高的），因为之前的结果都是按照这个来的，可以和过去的模型有个对比。但是有需要的话可以写个新的。
+
+如有任何问题请联系wjinyi@infervision.com

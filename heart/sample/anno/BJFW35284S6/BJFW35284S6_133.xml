@@ -1,0 +1,26 @@
+<annotation>
+  <folder>anno</folder>
+  <filename>BJFW35284S6_133</filename>
+  <path>/home/tx-deepocean/Desktop/2018_01_19_linan/anno/BJFW35284S6_133.xml</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>0</width>
+    <height>0</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <name>disorder</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <bndbox>
+      <xmin>106</xmin>
+      <ymin>216</ymin>
+      <xmax>134</xmax>
+      <ymax>244</ymax>
+    </bndbox>
+  </object>
+</annotation>

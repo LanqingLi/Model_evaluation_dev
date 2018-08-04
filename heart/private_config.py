@@ -2,7 +2,7 @@
 from common.xml_tools import get_label_classes_from_xls
 
 # Plaqify_boxes.py
-# A box would only considered as Plaque A only if its iou with plaque A's last box > MIN_ADJBOXES_IOU
+# A box would only be considered as Plaque A only if its iou with plaque A's last box > MIN_ADJBOXES_IOU
 MIN_ADJBOXES_IOU = 0.3
 # i_w, a_w and t_w are weights of each variable in the calculation of similarity index
 I_W = 2.0
@@ -14,10 +14,10 @@ MIOV_MAX = 0.6
 # constant used in plqify_boxes.py: is_reliable_plaque
 MIN_ACCURACY = 0.9
 # paths of input and output files
-pt_path = '/home/tx-deepocean/Desktop/tmp2/SSD_pt_0.5'
-gt_path = '/home/tx-deepocean/Desktop/tmp2/anno'
-output_path = '/home/tx-deepocean/Desktop/result'
-
+pt_path = '/home/tx-deepocean/jy/model_evaluation/heart/sample/SSD_pt_0.99'
+gt_path = '/home/tx-deepocean/jy/model_evaluation/heart/sample/anno'
+output_path = '/home/tx-deepocean/jy/model_evaluation/heart/sample/result'
+model_name = pt_path.rsplit('/')[-1]
 
 # make it a global constant so modules in this program can be exported
 # class_list = ['PLV_mP', 'Diag_ncP', 'PLV_cP', 'LAD_M_ncP', 'OM_ncP', 'PLV_ncP', 'PDA_ncP', 'RCA_P_mP', 'LAD_D_cP',
@@ -50,6 +50,9 @@ class_list.remove('disorder')
 class_list.remove('myocardial_bridge')
 class_list.remove('stenting')
 class_list.remove('__background__')
+set_class2 = set([])
+for item in class_list:
+    set_class2.add(item.rsplit('_', 1)[0])
 
 # Auto test params
 # Max distance between layers that can be considered as one plaque
