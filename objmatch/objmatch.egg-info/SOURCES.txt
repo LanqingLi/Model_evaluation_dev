@@ -1,0 +1,7 @@
+README.md
+setup.py
+objmatch.egg-info/PKG-INFO
+objmatch.egg-info/SOURCES.txt
+objmatch.egg-info/dependency_links.txt
+objmatch.egg-info/entry_points.txt
+objmatch.egg-info/top_level.txt

@@ -63,7 +63,7 @@ def get_label_classes_from_xls(filename):
 
 config = edict()
 
-config.CLASSES_LABELS_XLS_FILE_NAME = 'classname_labelname_mapping.xls'
+config.CLASSES_LABELS_XLS_FILE_NAME = 'tools/generate_interpolated_nodule_list/classname_labelname_mapping.xls'
 config.CLASSES, config.NODULE_CLASSES, config.CLASS_DICT, config.CONF_THRESH, config.CLASS_WEIGHTS, config.CLASS_Z_THRESHOLD_PRED,\
     config.CLASS_Z_THRESHOLD_GT= get_label_classes_from_xls(config.CLASSES_LABELS_XLS_FILE_NAME)
 

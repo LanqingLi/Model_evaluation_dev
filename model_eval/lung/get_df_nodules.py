@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from tools.data_preprocess import get_instance_number
 
-from ObjMatch.ObjMatch.find_nodules import find_nodules
+from objmatch.objmatch.find_nodules import find_nodules
 
 # nodule_class = config.CLASSES
 PI = 3.141592654
@@ -141,40 +141,26 @@ def get_nodule_stat(dicom_names, return_boxes, prefix, classes, z_threshold, sam
                                 "GGN": 3,
                                 "0-3nodule": 2,
                                  "nodule": 1}
-    # print "return:"
-    # print return_boxes
+
     if skip_init:
         df_boxes = return_boxes
     else:
         df_boxes = init_df_boxes(dicom_names, return_boxes, classes, if_dicom)
 
     # 调用find_nodules计算结节和获取结节编号
-    # df_boxes.to_excel("/home/tx-eva-008/Desktop/df_boxes.xls") 测试用行
-    #print "--------"
-    #print df_boxes
-
-    # find_nodules_new
-    #bbox_info, nodule_list = find_nodules(df_boxes, Z_THRESHOLD=z_threshold, SAME_BOX_THRESHOLD=same_box_threshold, SCORE_THRESHOLD=score_threshold)
-    # old find_nodules
     bbox_info, nodule_list = find_nodules(df_boxes, SAME_BOX_THRESHOLD=same_box_threshold, Z_THRESHOLD=z_threshold,
                                           SCORE_THRESHOLD=score_threshold, nodule_cls_weights=nodule_cls_weights)
-    # print "bbox"
-    # print bbox_info['nodule']
-    # print nodule_list
-
     # 结节编号排序
     #如果df_boxes已有结节信息，例如ssd的数据，则需要先删掉'nodule'这一列才能添加find_nodules生成的结节信息,对于'minusNamePriority', 'minusProb'亦同理
     try:
         df_boxes = df_boxes.drop(columns=['nodule', 'minusNamePriority', 'minusProb'])
     except:
         print ("no 'nodule', 'minusNamePriority', or 'minusProb' in df_boxes")
-    # print "df_boxes"
-    # print df_boxes
+
     df_boxes.insert(0, 'nodule', bbox_info['nodule'])
-    # df_boxes = clean_redundant_boxes(df_boxes)
+
     list_name = list(df_boxes["nodule_class"])
-    #from collections import defaultdict
-    #df_boxes["nodule_class"].apply(lambda x: priority[x])
+
     series_minus_priority = calc_series_minus_priority(list_name)
     series_minus_prob = -df_boxes["prob"]
     df_boxes.insert(0, 'minusNamePriority', series_minus_priority)
@@ -192,7 +178,7 @@ def get_nodule_stat(dicom_names, return_boxes, prefix, classes, z_threshold, sam
     i_row = 0
     len_df = len(df_boxes)
     last_nodule = -1
-    #print df_boxes
+
     while i_row <= len_df:
         # 判断存储
         if i_row != len_df:

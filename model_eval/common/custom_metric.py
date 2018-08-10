@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import numpy as np
 import math
 from common.metric import EvalMetric, check_label_shapes
@@ -39,12 +40,7 @@ class ClassificationMetric(EvalMetric):
             pred_label = np.asarray(pred)
             label = np.asarray(label)
             check_label_shapes(label, pred_label)
-            # print "ind"
-            # print ind
-            # print "pred_label"
-            # print pred_label
-            # print "label"
-            # print label
+
             ind = self.cls_num
             if self.if_binary:
                 label[label > 0] = 1
@@ -56,14 +52,7 @@ class ClassificationMetric(EvalMetric):
             label_pos = (label == ind)
             pred_neg = (pred_label == 0.)
             label_neg = (label == 0.)
-            # print "pred_pos"
-            # print pred_pos
-            # print "label_pos"
-            # print label_pos
-            # print "pred_neg"
-            # print pred_neg
-            # print "label_neg"
-            # print label_neg
+
             self.label_pos += np.asscalar(np.sum(label_pos))
             self.pred_pos += np.asscalar(np.sum(pred_pos))
             tp = np.asscalar(np.sum(pred_pos * label_pos))

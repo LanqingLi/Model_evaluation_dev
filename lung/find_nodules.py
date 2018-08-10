@@ -57,7 +57,7 @@ def add_nodule(nodules, cur_nodule):
     nodules.append({"noduleList": [cur_nodule]})
     nodules[-1]["id"] = len(nodules)
                 
-def find_nodules(bboxInfo, Z_THRESHOLD = 3, SAME_BOX_THRESHOLD = 0.7, SCORE_THRESHOLD = 0.6):
+def find_nodules(bboxInfo, Z_THRESHOLD = 3, SAME_BOX_THRESHOLD = 1., SCORE_THRESHOLD = 0.2):
     """将boundingbox转换为结节。
     :param bboxInfo: Bounding Box表格（pandas.DataFrame类型）。
                      每一行代表一个预测出来的bounding box，包含下面的列：

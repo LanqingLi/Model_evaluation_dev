@@ -109,10 +109,9 @@ config.TEST.NMS = 0.01
 config.TEST.IOU_THRESHOLD = 0.5
 
 # customized softmax threshold for model evaluator
-# config.TEST.CONF_THRESHOLD = np.linspace(0.1, 0.85, num=16).tolist() + np.linspace(0.9, 0.975, num=4).tolist()\
-#                            + np.linspace(0.99, 0.9975, num=4).tolist() + np.linspace(0.999, 0.99975, num=4).tolist()
+config.TEST.CONF_THRESHOLD = np.linspace(0.1, 0.85, num=16).tolist() + np.linspace(0.9, 0.975, num=4).tolist()\
+                           + np.linspace(0.99, 0.9975, num=4).tolist() + np.linspace(0.999, 0.99975, num=4).tolist()
 
-config.TEST.CONF_THRESHOLD = np.linspace(0.1, 0.9, num=9).tolist()
 #########################
 # CONFIG FOR FIND_NODULES
 #########################

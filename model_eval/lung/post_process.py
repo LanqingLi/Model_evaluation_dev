@@ -1,17 +1,8 @@
 # -- coding: utf-8 --
 import pandas as pd
-import os
-import argparse
-import json
 import numpy as np
-import cv2
-import shutil
-import copy
-import find_nodules_new
 from lung.config import config
 
-from scipy import stats
-import math
 def df_to_cls_label(cls_predict_df_list, cls_gt_df_list, cls_list, thresh=config.TEST.IOU_THRESHOLD):
     """Convert list of pandas dataframe to list of list of cls labels, as input for custom_metric.ClassificationMetric
 

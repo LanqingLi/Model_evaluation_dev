@@ -2,10 +2,10 @@
 import pandas as pd
 import numpy as np
 import networkx as nx
-from lung.config import config
 # this script was written based on networkx version <= 2.0, and cannot be applied to networkx version later than 2.0
 # one but not the only significant difference is that, networkx.algorithms.max_weight_matching <= 2.0 returns a dict,
 # whereas networkx.algorithms.max_weight_matching > 2.0 returns a set
+
 
 def overlap1D(x, y):
     """
@@ -13,13 +13,16 @@ def overlap1D(x, y):
     :params x: 1d np array of 2 elements. [st, ed]
     :params y: 1d np array of 2 elements. [st ,ed]
     """
-    st = np.max([x[0], y[0]])
-    ed = np.min([x[1], y[1]])
-    return np.array([st, ed])
-
+    lower_end = np.max([x[0], y[0]])
+    higher_end = np.min([x[1], y[1]])
+    if lower_end >= higher_end:
+        return [0, 0]
+    else:
+        return np.array([lower_end, higher_end])
 
 def overlapND(x, y):
     """
+    Returns the overlap of n-d segment, returns [0, 0] in any dimension where x, y do not overlap
     :params x: 2*n np array
     :params y: 2*n np array
     """
@@ -30,17 +33,18 @@ def overlapND(x, y):
         res.append(overlap1D(x[:, i], y[:, i]))
     return np.vstack(res).T
 
-
 def calcDICE(box1, box2):
+    """
+    Returns the dice between two boxes, defined as 2* union(A, B) / (area(A) + area(B))
+    :params x: [xmin, ymin, xmax, ymax] np array
+    :params y: [xmin, ymin, xmax, ymax] np array
+    """
     box1 = box1.copy().reshape([2, 2])
     box2 = box2.copy().reshape([2, 2])
     if np.any(box1[1] - box1[0] <= 0) or np.any(box2[1] - box2[0] <= 0):
         raise ValueError(
             "Boxes should be represented as [xmin, ymin, xmax, ymax]. Box1: %s. Box2: %s. " % (str(box1), str(box2)))
-    # box1[1] += 1
-    # box2[1] += 1
     res = overlapND(box1, box2)
-    # return res
     if np.any(res[1] - res[0] <= 0):
         return 0.0
     return 2 * float(np.prod(res[1] - res[0])) / (np.prod(box1[1] - box1[0]) + np.prod(box2[1] - box2[0]))
@@ -50,12 +54,15 @@ def get_center(box):
     return np.mean(box, axis=0)
 
 def sim_metric_2d(box1, box2):
+    """
+    Returns the similarity metric between two boxes in a 2d ct slice, defined as the box center displacement divided by
+    the greatest half-width of the two boxes in each dimension (x and y)
+    :params x: [xmin, ymin, xmax, ymax] np array
+    :params y: [xmin, ymin, xmax, ymax] np array
+    """
     box1 = (box1.copy().reshape([2, 2])).astype('float32')
     box2 = (box2.copy().reshape([2, 2])).astype('float32')
-    # print box1
-    # print box2
-    # print box1[1] - box1[0]
-    # print box2[1] - box2[0]
+
     if np.any(box1[1] - box1[0] < 0) or np.any(box2[1] - box2[0] < 0):
         raise ValueError(
             "Boxes should be represented as [xmin, ymin, xmax, ymax]. Box1: %s. Box2: %s. " % (str(box1), str(box2)))
@@ -63,10 +70,15 @@ def sim_metric_2d(box1, box2):
     size2 = (box2[1] - box2[0]) / 2
     center1 = get_center(box1)
     center2 = get_center(box2)
-    # print np.absolute(center1 - center2), np.maximum(size1, size2)
     return np.absolute(center1 - center2) / np.maximum(size1, size2)
 
 def sim_metric_3d(box1, box2):
+    """
+    Returns the similarity metric between two boxes in different ct slices, defined as the Euclidean distance between
+    the box centers divided by the greatest half-width of the two boxes in each dimension (x and y)
+    :params x: [xmin, ymin, xmax, ymax] np array
+    :params y: [xmin, ymin, xmax, ymax] np array
+    """
     box1 = (box1.copy().reshape([2, 2])).astype('float32')
     box2 = (box2.copy().reshape([2, 2])).astype('float32')
     if np.any(box1[1] - box1[0] < 0) or np.any(box2[1] - box2[0] < 0):
@@ -82,7 +94,6 @@ def sim_metric_3d(box1, box2):
 def get_bounding_box_nparray(bbox):
     return np.array([[bbox["xmin"], bbox["ymin"]], [bbox["xmax"], bbox["ymax"]]])
 
-
 def find_parent(id1, union_find_set):
     # 并查集用，查找功能
     # print id1
@@ -91,21 +102,18 @@ def find_parent(id1, union_find_set):
     else:
         return find_parent(union_find_set[id1], union_find_set)
 
-
 def union(id1, id2, union_find_set):
     # 并查集用，合并功能
     #if find_parent(id1, union_find_set) != find_parent(id2, union_find_set):
     union_find_set[find_parent(id1, union_find_set)] = find_parent(id2, union_find_set)
-
 
 def add_nodule(nodules, cur_nodule):
     # 增加一个新结节
     nodules.append({"noduleList": [cur_nodule]})
     nodules[-1]["id"] = len(nodules)
 
-
-def find_nodules(bboxInfo, Z_THRESHOLD, SAME_BOX_THRESHOLD=np.array([1., 1.]), SCORE_THRESHOLD=1.,
-                 nodule_cls_weights=config.CLASS_WEIGHTS, same_cls_boost = 2.):
+def find_nodules(bboxInfo, Z_THRESHOLD, SAME_BOX_THRESHOLD=np.array([1.6, 1.6]), SCORE_THRESHOLD=0.6,
+                 nodule_cls_weights={}, same_cls_boost = 2.):
 
     """将boundingbox转换为结节。
     :param bboxInfo: Bounding Box表格（pandas.DataFrame类型）,index必须为自然顺序。
@@ -117,10 +125,16 @@ def find_nodules(bboxInfo, Z_THRESHOLD, SAME_BOX_THRESHOLD=np.array([1., 1.]), S
                      * 'ymax'列：表示当前bounding box的右下角y坐标（左右[W]方向）。
                      * 'nodule_class'列：表示当前bounding box的预测类别（如'nodule', 'mass'等）。
                      * 'prob'里：表示当前bounding box的预测概率。
+    :param Z_THRESHOLD： 每个新层面向前做贪心匹配时往前找的最大层面数
+    :param SAME_BOX_THRESHOLD: 判断同一层面两个框是否为等价类的中心点偏移阈值
+    :param SCORE_THRESHOLD: 判断不同层面两个框是否匹配的sim_metric_3d阈值
+    :param nodule_cls_weights:　检出框的类别的权重
+    :param same_cls_boost: 当不同层面两个框匹配时，如果类别相同的奖励系数
     :return noduleInfo: 在bnd上附加一列'nodule'，取值为-1, 1..n。
                         -1代表当前Bounding box不属于任何一个nodule;
                         1..n代表当前bounding box所属的结节编号。
                         我们不允许一个结节在同一个层面内存在多个重合的bounding box(一个等价类中没有匹配上的框设为-1)。
+    ":return nodules: 结节信息的列表，每个元素为一个字典
     """
     # 首先计算同一层面内dice coefficient比较高的， 并且认为这些bounding box标记了同一个结节
     bboxInfo = bboxInfo.copy()
@@ -128,30 +142,19 @@ def find_nodules(bboxInfo, Z_THRESHOLD, SAME_BOX_THRESHOLD=np.array([1., 1.]), S
     unionFindSet = bboxInfo.index.tolist()
     noduleSlices = {}
     for i in bboxInfo["instanceNumber"].unique():
-        # print i
         lst = bboxInfo.query("instanceNumber == @i")
-        #print lst
-        #print lst['prob'][lst.index[0]]
         if len(lst) > 1:
             for j1 in range(len(lst.index)):
                 for j2 in range(j1 + 1, len(lst.index)):
-                    # if calcDICE(get_bounding_box_nparray(lst.iloc[j1]),
-                    #             get_bounding_box_nparray(lst.iloc[j2])) > SAME_BOX_THRESHOLD:
                     # 如果两个box中心点相对位移小于SAME_BOX_THRESHOLD，那么认为这两个box表示同一个结节
                     iou = calcDICE(get_bounding_box_nparray(lst.iloc[j1]), get_bounding_box_nparray(lst.iloc[j2]))
                     if iou > 0 and np.all(sim_metric_2d(get_bounding_box_nparray(lst.iloc[j1]),
-                                            get_bounding_box_nparray(lst.iloc[j2])) / iou < SAME_BOX_THRESHOLD):
-                        # if lst['prob'][lst.index[j1]] < lst['prob'][lst.index[j2]]:
-                        #     union(lst.index[j1], lst.index[j2], unionFindSet)
-                        # else:
-                        #     union(lst.index[j2], lst.index[j1], unionFindSet)
+                                  get_bounding_box_nparray(lst.iloc[j2]))/iou < SAME_BOX_THRESHOLD):
                         # 将两个box插入一颗等价类树
                         union(lst.index[j1], lst.index[j2], unionFindSet)
         noduleSlices[i] = lst.index.tolist()
 
-    # print unionFindSet
     for i in range(len(unionFindSet)):
-        # print i, unionFindSet[i]
         unionFindSet[i] = find_parent(unionFindSet[i], unionFindSet)
     # unionFindSet保存了当前bounding box与本层面内其他bounding box的归属关系
     # 对于bounding box i，如果bboxInfo.loc[i]["unionFindSet"] != i，
@@ -168,7 +171,6 @@ def find_nodules(bboxInfo, Z_THRESHOLD, SAME_BOX_THRESHOLD=np.array([1., 1.]), S
                       "prob": bboxInfo.loc[k["noduleList"][-1]]["prob"]}
                       for k in nodules if 0 < curZ - bboxInfo.loc[k["noduleList"][-1]]["instanceNumber"] <= \
                             Z_THRESHOLD[bboxInfo.loc[k["noduleList"][-1]]["nodule_class"]]]
-
         # 枚举本层面所有bounding box，每个框的评分为类别评分*置信度概率
         curBoxes = [{"matched": False,
                      "boxID": k,
@@ -185,18 +187,12 @@ def find_nodules(bboxInfo, Z_THRESHOLD, SAME_BOX_THRESHOLD=np.array([1., 1.]), S
                      "nodule_class": bboxInfo.loc[k]["nodule_class"],
                      "prob": bboxInfo.loc[k]["prob"]}
                      for k in noduleSlices[curZ] if bboxInfo.loc[k]["unionFindSet"] == k]
-
-        # print 'curBoxes_root'
-        # print curBoxes_root
         # 选取每个等价类中评分最高的框，"matched"记录该框是否与前层结节相匹配（最大权匹配），若没有则视为新结节插入。
         curBoxes_union = []
         for i in curBoxes_root:
             Boxes_union = [j for j in curBoxes if bboxInfo.loc[j["boxID"]]["unionFindSet"] == i["boxID"]]
             Boxes_union = sorted(Boxes_union, key=lambda  k: k["score"])
             curBoxes_union.append(Boxes_union[-1])
-            # print curZ, curBoxes_union
-        # print 'curBoxes_union'
-        # print curBoxes_union
         #　如果在之前层面（Z_THRESHOLD以内）没有结节，将新的等价类插入作为新结节的开始
         if len(lastBoxes) == 0:
             for k in curBoxes_union:
@@ -210,7 +206,6 @@ def find_nodules(bboxInfo, Z_THRESHOLD, SAME_BOX_THRESHOLD=np.array([1., 1.]), S
             for j in curBoxes:
                 # 定义不同层面的3D中心点相对偏移（sim_metric），因为结节在３D上移动很少，只对中心点相对偏移在一定阈值内的两个结节做匹配
                 evalScore = sim_metric_3d(i["bndbox"], j["bndbox"])
-                # # print i , j, evalScore, SCORE_THRESHOLD
                 if evalScore < SCORE_THRESHOLD:
                     if i["nodule_class"] not in nodule_cls_weights or j["nodule_class"] not in nodule_cls_weights:
                         print "nodule class not found in nodules_cls_weights"
@@ -225,14 +220,8 @@ def find_nodules(bboxInfo, Z_THRESHOLD, SAME_BOX_THRESHOLD=np.array([1., 1.]), S
                     else:
                         matchingScore = nodule_weight * box_weight * misalign_suppress
                     g.add_weighted_edges_from([[i["noduleID"], j["boxID"] + BOXID_VALUE, matchingScore]])
-                # evalScore = calcDICE(i["bndbox"], j["bndbox"])
-                # if evalScore > SCORE_THRESHOLD:
-                #     #  只有DICE超过SCORE_THRESHOLD的会被作为备选匹配加入二分图中
-                #     g.add_weighted_edges_from([[i["noduleID"], j["boxID"] + BOXID_VALUE, evalScore]])
         # 求出最大权匹配,networkx2.0之后nx.algorithms.max_weight_matching返回set,之前版本都是字典（本代码默认用较低版本运行）
         matchRes = nx.algorithms.max_weight_matching(g)
-        # print matchRes
-        # unmatched = set([k for k in noduleSlices[curZ]])
         matched_nodule_list = []
         reduced_matched_nodule_list = []
         for i in matchRes.keys():
@@ -255,28 +244,18 @@ def find_nodules(bboxInfo, Z_THRESHOLD, SAME_BOX_THRESHOLD=np.array([1., 1.]), S
                 print ('there should be one and only one box for the same equivalent class in curBoxes_union')
                 raise IndexError
             curBoxes_union[box_union_index[0]]["matched"] = True
-        # len(matched_nodule_list) > 1
         # 检查最大权匹配出的框有没有在一个等价类中，如果有，舍弃边权较低的那条边
         else:
             for j in range(len(matched_nodule_list)):
                 if j < len(matched_nodule_list) - 1:
                     for k in range(len(matched_nodule_list)-j-1):
                         # 两个匹配了的框的等价类ID
-                        #print matchRes[matched_nodule_list[j]]-BOXID_VALUE, get_bounding_box_nparray(bboxInfo.loc[matchRes[matched_nodule_list[j]]-BOXID_VALUE])
-                        #print matchRes[matched_nodule_list[j+k+1]]-BOXID_VALUE, get_bounding_box_nparray(bboxInfo.loc[matchRes[matched_nodule_list[j+k+1]]-BOXID_VALUE])
                         box_union1 = bboxInfo.loc[matchRes[matched_nodule_list[j]]-BOXID_VALUE]["unionFindSet"]
                         box_union2 = bboxInfo.loc[matchRes[matched_nodule_list[j+k+1]]-BOXID_VALUE]["unionFindSet"]
-                        #print ("box_union1=%s" %box_union1)
-                        #print ("box_union2=%s" %box_union2)
-                        # print ('j=%s' %j)
-                        # print ("box_union1 = %s" %box_union1)
-                        # print ('j+k+1=%s' %(j+k+1))
-                        # print ("box_union2 = %s" %box_union2)
-                        # print [curBoxes_union["boxID"]== box_union1]
+
                         box_union_index1 = [i for i in range(len(curBoxes_union)) if bboxInfo.loc[curBoxes_union[i]["boxID"]]["unionFindSet"]== box_union1]
                         box_union_index2 = [i for i in range(len(curBoxes_union)) if bboxInfo.loc[curBoxes_union[i]["boxID"]]["unionFindSet"]== box_union2]
-                        #print "box_union_index1:%s" %box_union_index1
-                        #print "box_union_index2:%s" %box_union_index2
+
                         if len(box_union_index1) != 1 or len(box_union_index2) != 1:
                             print ('there should be one and only one box for the same equivalent class in curBoxes_union')
                             raise  IndexError
@@ -292,11 +271,9 @@ def find_nodules(bboxInfo, Z_THRESHOLD, SAME_BOX_THRESHOLD=np.array([1., 1.]), S
 
         # 对于已经匹配上的bounding box，加入对应的noduleList中
         for i in reduced_matched_nodule_list:
-            #print curZ, i, matchRes[i]
+
             nodules[i - 1]["noduleList"].append(matchRes[i] - BOXID_VALUE)
-            # unmatched.remove(matchRes[i] - BOXID_VALUE)
-        #print 'curBoxes_union'
-        #print curBoxes_union
+
         for i in curBoxes_union:
             # 对于没有匹配上的bounding box，认为是一个新结节的开始
             if i["matched"] == False:
@@ -306,8 +283,6 @@ def find_nodules(bboxInfo, Z_THRESHOLD, SAME_BOX_THRESHOLD=np.array([1., 1.]), S
     for i in nodules:
         for j in i["noduleList"]:
             nodule_result[j] = i["id"]
-    # for i in bboxInfo.index:
-    #     if bboxInfo.loc[i]["unionFindSet"] != i:
-    #         nodule_result[i] = nodule_result[bboxInfo.loc[i]["unionFindSet"]]  # 如果需要把重复的box设成-1，把这里改成-1
+
     bboxInfo["nodule"] = nodule_result
     return bboxInfo[["instanceNumber", "xmin", "ymin", "xmax", "ymax", "nodule_class", "prob", "nodule"]], nodules

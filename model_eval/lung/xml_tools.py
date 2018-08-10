@@ -16,7 +16,6 @@ def read_xml(xml_path, restrict_name_list=None):
     :param restrict_name_list: 结节种类表（list），一般为config.CLASSES
     :return:boxes的list，每个box [xmin,ymin,xmax,ymax,概率（gt为1）,结节种类]
     '''
-    # 如果用不了请联系ylifeng帮你改
     tree = ET.parse(xml_path)
     objs = tree.findall('object')
     boxes = []
@@ -118,12 +117,10 @@ def read_xml_with_nodule_num_without_nodule_cls(xml_path, xml_name, restrict_nam
     :param restrict_name_list: 结节种类表（list），一般为config.CLASSES
     :return:boxes的list，每个box [xmin,ymin,xmax,ymax,概率（gt为1）,结节种类,结节编号，层面数]
     '''
-    # 如果用不了请联系ylifeng帮你改
     tree = ET.parse(xml_path)
     objs = tree.findall('object')
     boxes = []
     slice_id = int(xml_name.split("_")[-1].split(".")[0]) - 1
-    print slice_id
     for ix, obj in enumerate(objs):
         name = '0-3nodule'
         nodule_num = int(obj.find('lobe_pos').text)
@@ -156,7 +153,6 @@ def read_xml_for_multi_classes(xml_path, restrict_name_list=None):
     :param restrict_name_list: 结节种类表（list），一般为config.CLASSES
     :return:boxes的list，每个box [xmin,ymin,xmax,ymax,概率（gt为1）,结节种类]
     '''
-    # 如果用不了请联系ylifeng帮你改
     tree = ET.parse(xml_path)
     objs = tree.findall('object')
     boxes = []

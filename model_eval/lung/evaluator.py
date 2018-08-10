@@ -8,12 +8,11 @@ import shutil
 from collections import OrderedDict
 from common.custom_metric import ClassificationMetric, ClusteringMetric, cls_avg
 
-from lung.xml_tools import xml_to_boxeslist, xml_to_boxeslist_with_nodule_num, xml_to_boxeslist_without_nodule_cls, \
+from xml_tools import xml_to_boxeslist, xml_to_boxeslist_with_nodule_num, xml_to_boxeslist_without_nodule_cls, \
     xml_to_boxeslist_with_nodule_num_without_nodule_cls, generate_xml
-from lung.config import config
-from lung.post_process import df_to_cls_label
-from lung.get_df_nodules import get_nodule_stat, init_df_boxes
-from tools.generate_interpolated_nodule_list.generate_interpolated_nodule_list import slice_num_to_three_digit_str
+from config import config
+from post_process import df_to_cls_label
+from get_df_nodules import get_nodule_stat, init_df_boxes
 
 class LungNoduleEvaluatorOffline(object):
     '''
@@ -36,7 +35,7 @@ class LungNoduleEvaluatorOffline(object):
     :param json_name: 存储输出.json文件的名字，不带后缀
     :param if_nodule_json:　是否根据ground truth annotation生成匹配后结节信息的.json文件
     :param conf_thresh:　自定义的置信度概率阈值采样点，存在列表中，用于求最优阈值及画ROC曲线
-    :param nodule_cls_weights:　不同结节种类对于模型综合评分以及ObjMatch.ObjMatch.find_nodules算法中的权重，默认与结节分类信息一起从classname_labelname_mapping.xls中读取,类型为dict
+    :param nodule_cls_weights:　不同结节种类对于模型综合评分以及objmatch.objmatch.find_nodules算法中的权重，默认与结节分类信息一起从classname_labelname_mapping.xls中读取,类型为dict
     :param cls_weight: 在求加权平均结果时，每个类别的权重，类型为list
     :param cls_value: 在求加权平均结果时，每个类别的得分，类型为list
     :param thickness_thresh: nodule_thickness_filter根据此阈值对结节的层厚进行筛选
@@ -1013,7 +1012,6 @@ class FindNodulesEvaluator(object):
                                             if_dicom=False,
                                             focus_priority_array=None,
                                             skip_init=True)
-
             #之所以可以直接用index调用gt_boxes_list是因为ground_truth_boxes_dict初始化为collections.OrderedDict(),所以不会出现病人错位的问题
             for gt_box_list in gt_boxes_list[index]:
                 #对于每个gt_box_list(格式为[x1, y1, x2, y2, 1, mapped_name, nodule_num, slice_id]),找到跟它在同一个层面的所有框
@@ -1025,8 +1023,8 @@ class FindNodulesEvaluator(object):
                         gt_label.append(gt_box_list[6])
                         post_find_nodules_label.append(box_lst.iloc[i]['nodule'])
             gt_labels.append(gt_label)
+            # # delete nodules that are labeled as -1 (not matched)
             post_find_nodules_labels.append(post_find_nodules_label)
-
         print 'ground truth labels:'
         print gt_labels
         print 'labels after find_nodules:'
@@ -1255,6 +1253,21 @@ def json_df_2_df(df):
                       'prob': row['prob']}
         ret_df = ret_df.append(df_add_row, ignore_index=True)
     return ret_df
+
+def slice_num_to_three_digit_str(slice_num):
+    assert isinstance(slice_num, int), 'slice_num must be an integer'
+    if slice_num >= 1000:
+        print 'we only consider slice num < 1000'
+        return NotImplementedError
+    elif slice_num <= 0:
+        print 'slice num should be a positive integer'
+        return ValueError
+    elif slice_num >= 100:
+        return str(slice_num)
+    elif slice_num >= 10:
+        return '{}{}'.format('0', slice_num)
+    else:
+        return '{}{}'.format('00', slice_num)
 
 def df_2_box_list(df):
     raise NotImplemented
