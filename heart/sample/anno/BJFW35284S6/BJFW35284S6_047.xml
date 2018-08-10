@@ -1,0 +1,26 @@
+<annotation>
+  <folder>BJFW35284S6</folder>
+  <filename>BJFW35284S6_047</filename>
+  <path>/media/tx-eva-12/data/FUWAI/FUWAI_DATA/FUWAI_TMP/dataset/vaild_data_clean/third_anno_new_79/BJFW35284S6/BJFW35284S6_047.xml</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>0</width>
+    <height>0</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <name>LM_ncP</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <bndbox>
+      <xmin>273</xmin>
+      <ymin>287</ymin>
+      <xmax>301</xmax>
+      <ymax>314</ymax>
+    </bndbox>
+  </object>
+</annotation>
