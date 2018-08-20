@@ -38,7 +38,7 @@
 evaluator.py:　模型评估的主要功能实现 
 
 －目的：统计多阈值下模型分类检出的效果，并进行综合评分及筛选最优阈值，画出ROC；对结节匹配算法find_nodules(已封装在公司内部的pypi源的python package
-ObjMatch.ObjMatch.find_nodules中)
+objmatch.find_nodules中)进行测试、调参
 
 －具体操作：读取检出模型（Faster-RCNN/SSD）输出的anchor boxes（默认读取格式为.json,可支持的数据文件格式为_predict.json/_predict.npy),以及
 人工标记的ground truth label的.xml文件，经过conf_thresh的阈值筛选后，调用get_df_nodules.py(./post_process/get_df_nodules.py)进行

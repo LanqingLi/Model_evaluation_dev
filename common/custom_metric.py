@@ -9,7 +9,7 @@ from sklearn import metrics
 
 class ClassificationMetric(EvalMetric):
 
-    def __init__(self, name='ClsMetric', cls_num=1, allow_extra_outputs=False, if_binary=False):
+    def __init__(self, name='ClsMetric', cls_num=1, allow_extra_outputs=False, if_binary=True):
         super(ClassificationMetric, self).__init__(name)
         self._allow_extra_outputs = allow_extra_outputs
         self.cls_num = cls_num
@@ -20,6 +20,10 @@ class ClassificationMetric(EvalMetric):
         self.sum = 0.0
         self.label_pos = 0.0
         self.pred_pos = 0.0
+        # keep track of the number of positive samples in gt and pred labels, for cerebrum segmentation, this is approximately
+        # the intracerebral hemorrhage volume
+        self.gt_vol = 0.0
+        self.pred_vol = 0.0
         # whether it is binary classification
         self.if_binary = if_binary
 
@@ -47,15 +51,16 @@ class ClassificationMetric(EvalMetric):
             # print label
             ind = self.cls_num
             if self.if_binary:
-                label[label > 0] = 1
-                pred_label[pred_label > 0] = 1
-                ind = 1
+                # for binary classification, we regard all labels that are not ind as negative (0)
+                label[label != ind] = 0
+                pred_label[pred_label != ind] = 0
 
 
             pred_pos = (pred_label == ind)
             label_pos = (label == ind)
-            pred_neg = (pred_label == 0.)
-            label_neg = (label == 0.)
+            pred_neg = (pred_label == 0)
+            label_neg = (label == 0)
+
             # print "pred_pos"
             # print pred_pos
             # print "label_pos"
@@ -81,9 +86,12 @@ class ClassificationMetric(EvalMetric):
         self.sum = 0.0
         self.fp=0.0
         self.fn = 0.0
+        self.tn = 0.0
         self.label_pos = 0.0
         self.pred_pos = 0.0
-        self.if_binary = False
+        self.gt_vol = 0.0
+        self.pred_vol = 0.0
+        self.if_binary = True
 
     def get_acc(self):
         """Get the evaluated accuracy
@@ -148,6 +156,12 @@ class ClassificationMetric(EvalMetric):
         else:
             print ("fscore requires a float beta as input, not {}".format(beta))
             return ValueError
+
+    def get_gt_vol(self):
+        return self.label_pos
+
+    def get_pred_vol(self):
+        return self.pred_pos
 
 def cls_avg(cls_weight, cls_value):
     assert len(cls_weight) == len(cls_value), 'weight and value list should contain the same number of classes'

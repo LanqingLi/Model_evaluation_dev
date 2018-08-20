@@ -1,0 +1,96 @@
+# 模型评分系统脑部CT模块说明
+
+版本号：0.1.1
+
+该模块主要功能是对脑部CT项目的模型输出进行评估，用以筛选最优模型。目前版本的主要功能是针对脑卒中出血的语义分割模型，统计其分类的tp、fp、fscore、出血体积等指标，画出分割的contour、RP、ROC曲线。
+	
+## 环境安装
+
+请首先配置公司pypi源: 详见https://git.infervision.com/w/%E7%A0%94%E5%8F%91/%E5%86%85%E9%83%A8python%E4%BB%93%E5%BA%93%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E/
+	
+### 安装model_eval
+
+先删除本地的`model_eval`
+
+ -sudo pip uninstall model_eval
+
+安装'model_eval'
+
+ -sudo pip install model_eval
+ 
+## 输入输出测试集等相关格式
+详见https://git.infervision.com/T1745中出血性卒中相关文档
+
+##　文件说明
+evaluator.py:　模型评估的主要功能实现 
+
+- 目的：统计多阈值下模型分割的效果，并进行综合评分及筛选最优阈值，画出分割的contour、RP、ROC曲线
+
+- 具体操作：读取分割模型输出的各像素点的mask(默认读取格式为.npy,可支持的数据文件格式为_predict.npy),以及
+人工标记的ground truth label的.nrrd文件，经过conf_thresh的阈值筛选后, 经过ClassificationMetric
+统计出对应threshold和class的recall, fp/tp, precision等信息,并进行可视化
+
+- 数据生成：
+  调用预测函数predict得到预测结果（prob_map）, 直接np.save(save_path, prob_map)得到相应的patient_id_x_predict.npy
+
+config.py: 统一存放评估系统后处理相关参数默认值的配置文件,用户可以根据需求重新定义
+
+- 分类相关参数：默认值全部定义在brain.classname_labelname_mapping.xls中，依次包括分割细分类别（人工标记类别）、分割粗分类别（模型识别类别）、
+分割类别置信度概率阈值、分割类别权重
+
+## 代码运行指令(默认在model_evaluation目录下)
+
+### 语义分割功能
+
+1. 多分类(目前仅在二分类数据上有测试)：
+
+-调用multi_class_evaluation:
+ python -m brain.semantic_seg_test --gt_dir [ground truth label directory] --data_type npy --data_dir [predict label directory] \
+ --img_dir [image directory] --multi_class
+ 
+2. 二分类：
+
+-调用binary_class_evaluation:
+ python -m brain.semantic_seg_test --gt_dir [ground truth label directory] --data_type npy --data_dir [predict label directory] \
+ --img_dir [image directory]
+ 
+3. 画分割区域轮廓图：
+
+- 二分类：
+ - 多阈值对比图　(调用binary_class_contour_plot_multi_thresh, 阈值在config.TEST.CONF_THRESHOLD定义)
+ 　python -m brain.semantic_seg_test --gt_dir [ground truth label directory] --data_type npy --data_dir [predict label directory] \
+ 　--img_dir [image directory] --draw --multi_thresh
+ - 单阈值对比图 (调用binary_class_contour_plot_single_thresh，阈值在config.THRESH定义)
+ 　python -m brain.semantic_seg_test --gt_dir [ground truth label directory] --data_type npy --data_dir [predict label directory] \
+ 　--img_dir [image directory] --draw
+
+###　实例分割功能
+
+目前模型组业务中尚未涉及实例分割，今后会根据需求添加
+
+## 函数说明
+
+BrainSemanticSegEvaluatorOffline类（语义分割模型评估）：
+
+ - binary_class_contour_plot_single_thresh: 画二分类分割模型单阈值的轮廓线(contour),与ground truth画成一张对照图，轮廓线统一用cv2中
+ (0, 255, 0)的亮绿色
+ 
+ - binary_class_contour_plot_multi_thresh: 画二分类分割模型多阈值的轮廓线(contour),与ground truth画成一张对照图，轮廓线使用cv2中从(255, 0, 0)
+ 到(0, 0, 255)的渐变彩虹色（类似热力图）
+ 
+ - multi_class_evaluation: 多分类分割模型通用评分,用阈值筛选正类别，并在其中选取最大值作为one-hot label
+ 
+ - binary_class_evaluation: 二分类分割模型评分，用阈值筛选正类别
+ 
+BrainInstanceSegEvaluatorOffline（实例分割模型评估）：
+
+ - 待补充
+ 
+## 注意事项
+
+ - 在模型输出的一致性测试过程中，发现与伟导代码给出的结果tp一致，但fp、tn都要偏大。后来证实是因为脑部项目的源代码中，对于ground truth label
+ 以及predict label无重合的图(tp = 0)直接忽略，而目前的评分系统将所有图都统计在内，所以导致了fp偏大（gt没有出血而模型预测有出血，或者两者都有但没有重合部分）、
+ fn偏大（模型预测没有出血但gt有出血，或者两者都有但没有重合）。经和伟导讨论，决定保持现在这种统计方式。
+ 
+ 
+

@@ -1,4 +1,4 @@
-import model_eval.lung.evaluator as evaluator
+import lung.evaluator as evaluator
 import argparse
 from lung.config import config
 

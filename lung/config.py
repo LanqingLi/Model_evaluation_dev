@@ -125,7 +125,7 @@ config.FIND_NODULES.SAME_BOX_THRESHOLD_GT = np.array([0., 0.])
 
 #同上，适用于find_nodules:
 config.FIND_NODULES.SAME_BOX_THRESHOLD_PRED_OLD = 0.514
-config.FIND_NODULES.SAME_BOX_THRESHOLD_GT_OLD = 1.0
+config.FIND_NODULES.SAME_BOX_THRESHOLD_GT_OLD = 1.
 
 
 # 对于不同层面两个框的匹配，将其视为二分图中一条边的中心点偏移阈值，对于ground truth一般应设置得更小
@@ -140,3 +140,4 @@ config.FIND_NODULES.SCORE_THRESHOLD_GT = 0.4
 #######################
 
 config.THICKNESS_THRESHOLD = 0
+config.FSCORE_BETA = 1.0

@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from tools.data_preprocess import get_instance_number
 
-from ObjMatch.ObjMatch.find_nodules import find_nodules
+from lung.find_nodules_new import find_nodules
 
 # nodule_class = config.CLASSES
 PI = 3.141592654

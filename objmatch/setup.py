@@ -108,7 +108,7 @@ setup(
     #
     # py_modules=["my_module"],
     #
-    packages=find_packages(include=['numpy', 'networkx']), # Required
+    packages=['objmatch'], # Required
 
     # This field lists other packages that your project depends on to run.
     # Any package you put here will be installed by pip when your project is
@@ -116,7 +116,7 @@ setup(
     #
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=[], # Optional
+    install_requires=['networkx<=2.0'], # Optional
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). Users will be able to install these using the "extras"

@@ -3,3 +3,4 @@ excel_result/
 data/
 **/*_result
 find_nodules_new_1000nodules/
+**/*.pyc

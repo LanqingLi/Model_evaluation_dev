@@ -1,0 +1,2 @@
+include model_eval/lung/classname_labelname_mapping.xls
+include model_eval/brain/classname_labelname_mapping.xls

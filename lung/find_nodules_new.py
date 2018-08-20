@@ -140,7 +140,7 @@ def find_nodules(bboxInfo, Z_THRESHOLD, SAME_BOX_THRESHOLD=np.array([1., 1.]), S
                     # 如果两个box中心点相对位移小于SAME_BOX_THRESHOLD，那么认为这两个box表示同一个结节
                     iou = calcDICE(get_bounding_box_nparray(lst.iloc[j1]), get_bounding_box_nparray(lst.iloc[j2]))
                     if iou > 0 and np.all(sim_metric_2d(get_bounding_box_nparray(lst.iloc[j1]),
-                                            get_bounding_box_nparray(lst.iloc[j2])) / iou < SAME_BOX_THRESHOLD):
+                                            get_bounding_box_nparray(lst.iloc[j2]))/iou < SAME_BOX_THRESHOLD):
                         # if lst['prob'][lst.index[j1]] < lst['prob'][lst.index[j2]]:
                         #     union(lst.index[j1], lst.index[j2], unionFindSet)
                         # else:
