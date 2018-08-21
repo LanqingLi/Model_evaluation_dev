@@ -177,17 +177,17 @@ python -m lung.main
 
 ## 注意事项
 
-－find_nodules接收的df_boxes,作为一个pandas.DataFrame,!!!index必须从0开始依次加一递增排列!!!（可以通过reset_index(drop=True)来实现），
+- find_nodules接收的df_boxes,作为一个pandas.DataFrame,!!!index必须从0开始依次加一递增排列!!!（可以通过reset_index(drop=True)来实现），
 否则可能会出现union_find_set调用find_parent无限循环的bug。
 
-－FindNodulesEvaluator类中以load_data_xml为前缀的函数中，ground_truth_boxes_dict必须初始化为collections.OrderedDict(),否则在遍历时
+- FindNodulesEvaluator类中以load_data_xml为前缀的函数中，ground_truth_boxes_dict必须初始化为collections.OrderedDict(),否则在遍历时
 可能会出现病人错位的问题
 
--FindNodulesEvaluator.evaluation_with_nodule_num.load_data_xml_with_nodule_num不能直接读入predict_json_to_xml生成的xml，因为里面
+- FindNodulesEvaluator.evaluation_with_nodule_num.load_data_xml_with_nodule_num不能直接读入predict_json_to_xml生成的xml，因为里面
 检出框的类别是预测出来的结节类别(config.CLASSES)，而不是原始的标记类别(config.NODULE_CLASSES),不能当做正常的人工ground truth label读入，否则会漏
 GGN等类别。如果要强行读入，则必须强制config.NODULE_CLASSSES和config.CLASSES完全一致。
 
--对于ground truth labels以及predict labels,objmatch.objmatch.find_nodules算法的默认最优阈值不一样。尤其对于调用FindNodulesEvaluator,
+- 对于ground truth labels以及predict labels,objmatch.objmatch.find_nodules算法的默认最优阈值不一样。尤其对于调用FindNodulesEvaluator,
 默认参数均为ground truth的最优参数，如果对于predict labels测试，需要自行定义 same_box_threshold_gt=config.FIND_NODULES.SAME_BOX_THRESHOLD_PRED,
 score_threshold_gt=config.FIND_NODULES.SCORE_THRESHOLD_PRED, z_threshold_gt=config.CLASS_Z_THRESHOLD_PRED。并且要注意的是，
 predict_labels测试，最终经过find_nodules输出的label中，没有匹配上的框均为-1,ClusteringMetric会出现问题，所以不建议这样做。

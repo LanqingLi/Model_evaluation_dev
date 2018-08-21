@@ -14,7 +14,7 @@ def RP_plot_xlsx(xlsx_save_dir, xlsx_name, sheet_name, if_AUC=True, xmin = 0., x
             class_name.append(cls)
     # we use the Tableau Colors from the 'T10' categorical palette, for up to ten classes
     for index, cls in enumerate(class_name):
-        evaluation_df = evaluation_df.sort_values([cls_key, 'recall'])
+        evaluation_df = evaluation_df.sort_values([cls_key, 'threshold'], ascending=False)
         plt.plot(evaluation_df['recall'][evaluation_df[cls_key] == cls],
                      evaluation_df['precision'][evaluation_df[cls_key] == cls], linestyle = '-',
                      label = '%s' %(cls), color = 'C%s' %index )
@@ -62,7 +62,7 @@ def RP_plot_json(json_save_dir, json_name, sheet_name, if_AUC=True, xmin = 0., x
             class_name.append(cls)
     # we use the Tableau Colors from the 'T10' categorical palette, for up to ten classes
     for index, cls in enumerate(class_name):
-        evaluation_df = evaluation_df.sort_values([cls_key, 'recall'])
+        evaluation_df = evaluation_df.sort_values([cls_key, 'threshold'], ascending=False)
         print evaluation_df
         plt.plot(evaluation_df['recall'][evaluation_df[cls_key] == cls],
                      evaluation_df['precision'][evaluation_df[cls_key] == cls], linestyle = '-',
@@ -113,7 +113,7 @@ def ROC_plot_xlsx(xlsx_save_dir, xlsx_name, sheet_name, if_AUC=True, xmin=0., xm
             class_name.append(cls)
     # we use the Tableau Colors from the 'T10' categorical palette, for up to ten classes
     for index, cls in enumerate(class_name):
-        evaluation_df = evaluation_df.sort_values([cls_key, 'recall'])
+        evaluation_df = evaluation_df.sort_values([cls_key, 'threshold'], ascending=False)
         label = (evaluation_df[cls_key] == cls) * (evaluation_df['PatientID'] == 'total')
         x_data = evaluation_df['fp_count'][label] / (evaluation_df['fp_count'][label] + evaluation_df['tn_count'][label])
         y_data = evaluation_df['recall'][label]
@@ -170,7 +170,7 @@ def ROC_plot_json(json_save_dir, json_name, sheet_name, if_AUC=True, xmin = 0., 
             class_name.append(cls)
     # we use the Tableau Colors from the 'T10' categorical palette, for up to ten classes
     for index, cls in enumerate(class_name):
-        evaluation_df = evaluation_df.sort_values([cls_key, 'recall'])
+        evaluation_df = evaluation_df.sort_values([cls_key, 'threshold'], ascending=False)
         label = (evaluation_df[cls_key] == cls) * (evaluation_df['PatientID'] == 'total')
         x_data = evaluation_df['fp_count'][label] / (
         evaluation_df['fp_count'][label] + evaluation_df['tn_count'][label])

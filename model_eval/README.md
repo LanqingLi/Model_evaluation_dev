@@ -1,12 +1,22 @@
 # 模型组评分系统说明
 
-版本号：0.0.2
+运行肺、心脏、脑部、胸腔等各项目的具体流程请见各项目子文件夹的README.md
 
-该模块主要功能是对AI模型输出进行评估，用以筛选最优模型。目前版本的主要功能是针对肺结节检出、分类的模型（Faster RCNN/SSD）,将模型输出的2D
-层面的框匹配成3D的结节，并统计其分类检出的tp、fp、fscore等指标，画出ROC曲线。详见lung.README.md
+## python库的版本依赖
 
-## 输入输出测试集等相关格式
-详见https://git.infervision.com/T1745中CT厚层/薄层检测相关文档
+objmatch: networkx <= 2.0
+
+model_eval: pandas >= 0.22.0, pandas != 0.23.0, opencv-python >= 3.3.0.10, matplotlib<=2.1.1
+
+## 超参数调整
+
+### F-Score
+对于通过f-score选择最优模型的功能模块(lung, brain等)，在该模块目录下的配置文件config.py中可以设置config.FSCORE_BETA。该参数
+为f-score中recall和precision的相对权重，越大则precision相对recall的权重越大，默认值为1,具体定义见https://en.wikipedia.org/wiki/F1_score
+
+### confidence threshold
+对于具有多置信度概率筛选功能的模块(lung, brain等)，在该模块目录下的配置文件config.py中可以设置config.TEST.CONF_THRESHOLD。评估程序
+会根据其中的一系列阈值统计模型输出结果。
 
 ## 评估指标可视化
 
@@ -21,6 +31,7 @@ python RP_plot.py --json
 python RP_plot.py
 
 ```
+tip: 对于脑部分割任务，在RP_plot.py中设置cls_key='PatientID'可以生成像https://git.infervision.com/w/%E5%87%BA%E8%A1%80%E6%80%A7%E5%8D%92%E4%B8%AD/ 上以病人为单位统计的RP曲线
 
 ### ROC 曲线
 在ROC_plot中定义读入文件的路径、文件名，支持.xlsx与.json
@@ -31,3 +42,9 @@ python ROC_plot.py --json
 由模型评估生成的.xlsx文件画图：
 python ROC_plot.py
 ```
+
+##　注意事项
+
+- 在测试过程中，发现较新的matplotlib(2.2.0)在画图时不允许出现x坐标相同的两个不同点，而目前开发的版本的tools.plot中为了画阶跃的ROC、RP曲线
+是会出现这种情况的，故要求matplotlib版本<=2.1.1
+

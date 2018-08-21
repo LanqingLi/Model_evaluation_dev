@@ -92,5 +92,7 @@ BrainInstanceSegEvaluatorOffline（实例分割模型评估）：
  以及predict label无重合的图(tp = 0)直接忽略，而目前的评分系统将所有图都统计在内，所以导致了fp偏大（gt没有出血而模型预测有出血，或者两者都有但没有重合部分）、
  fn偏大（模型预测没有出血但gt有出血，或者两者都有但没有重合）。经和伟导讨论，决定保持现在这种统计方式。
  
+ - 在测试过程中，发现较老opencv-python的cv2.findContours函数的输出参数为两个，而基于较新版本(3.3.0.10)开发的cv2.findContours函数
+ 返回参数为三个，故要求opencv-python版本>=3.3.0.10
  
 
