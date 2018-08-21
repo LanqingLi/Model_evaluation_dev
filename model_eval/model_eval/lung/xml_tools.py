@@ -1,7 +1,7 @@
 # ------ coding: utf-8 --------
 import os
 import xml.etree.cElementTree as ET
-from config import config
+from model_eval.lung.config import config
 
 
 # 输入一个xml文件(某个slice), 输出[[bbx1],[bbx2],[bbx3]]

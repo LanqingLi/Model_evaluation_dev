@@ -3,9 +3,9 @@ import numpy as np
 import os, json
 import argparse
 import pandas as pd
-from config import config
+from model_eval.brain.config import config
 import nrrd, cv2
-from contour_draw import contour_and_draw, contour_and_draw_rainbow
+from model_eval.brain.contour_draw import contour_and_draw, contour_and_draw_rainbow
 from model_eval.tools.data_postprocess import save_xlsx_json
 from model_eval.tools.data_preprocess import window_convert
 from model_eval.common.custom_metric import ClassificationMetric
@@ -127,9 +127,8 @@ class BrainSemanticSegEvaluatorOffline(object):
 
         for predict_data, gt_nrrd, img_nrrd, PatientID in zip(predict_data_list, gt_nrrd_list, img_nrrd_list, self.patient_list):
             print ('processing PatientID: %s' % PatientID)
-            assert predict_data.shape[
-                       1] == 2, 'the number of classes %s in predict labels should be 2 for binary classification' % (
-            predict_data.shape[1])
+            assert predict_data.shape[1] == 2, \
+                'the number of classes %s in predict labels should be 2 for binary classification' % (predict_data.shape[1])
             # transpose the predict_data to be shape = [512, 512, figure number]
             # one has to make a copy of part of predict_data, otherwise it will implicitly convert float to int
             predict_data_cpy = predict_data[:, 1, :, :].copy()

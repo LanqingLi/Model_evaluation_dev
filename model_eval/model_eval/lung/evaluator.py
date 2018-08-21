@@ -8,11 +8,11 @@ import shutil
 from collections import OrderedDict
 from model_eval.common.custom_metric import ClassificationMetric, ClusteringMetric, cls_avg
 
-from xml_tools import xml_to_boxeslist, xml_to_boxeslist_with_nodule_num, xml_to_boxeslist_without_nodule_cls, \
+from model_eval.lung.xml_tools import xml_to_boxeslist, xml_to_boxeslist_with_nodule_num, xml_to_boxeslist_without_nodule_cls, \
     xml_to_boxeslist_with_nodule_num_without_nodule_cls, generate_xml
-from config import config
-from post_process import df_to_cls_label
-from get_df_nodules import get_nodule_stat, init_df_boxes
+from model_eval.lung.config import config
+from model_eval.lung.post_process import df_to_cls_label
+from model_eval.lung.get_df_nodules import get_nodule_stat, init_df_boxes
 
 class LungNoduleEvaluatorOffline(object):
     '''

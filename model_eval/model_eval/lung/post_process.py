@@ -1,7 +1,7 @@
 # -- coding: utf-8 --
 import pandas as pd
 import numpy as np
-from config import config
+from model_eval.lung.config import config
 
 def df_to_cls_label(cls_predict_df_list, cls_gt_df_list, cls_list, thresh=config.TEST.IOU_THRESHOLD):
     """Convert list of pandas dataframe to list of list of cls labels, as input for custom_metric.ClassificationMetric
