@@ -10,7 +10,7 @@ from model_eval.common.custom_metric import ClassificationMetric, ClusteringMetr
 
 from model_eval.lung.xml_tools import xml_to_boxeslist, xml_to_boxeslist_with_nodule_num, xml_to_boxeslist_without_nodule_cls, \
     xml_to_boxeslist_with_nodule_num_without_nodule_cls, generate_xml
-from model_eval.lung.config import config
+from config import config
 from model_eval.lung.post_process import df_to_cls_label
 from model_eval.lung.get_df_nodules import get_nodule_stat, init_df_boxes
 
@@ -585,7 +585,7 @@ class LungNoduleEvaluatorOffline(object):
             cls_pred_labels, cls_gt_labels = df_to_cls_label(predict_df_list, gt_df_list, self.cls_name)
 
             # initialize ClassificationMetric class and update with ground truth/predict labels
-            cls_metric = ClassificationMetric(cls_num=1, if_binary=True)
+            cls_metric = ClassificationMetric(cls_num=1, pos_cls_fusion=True)
 
 
             cls_metric.update(cls_gt_labels, cls_pred_labels)
@@ -737,7 +737,7 @@ class LungNoduleEvaluatorOffline(object):
             cls_pred_labels, cls_gt_labels = df_to_cls_label(predict_df_list, gt_df_list, self.cls_name)
 
             # initialize ClassificationMetric class and update with ground truth/predict labels
-            cls_metric = ClassificationMetric(cls_num=1, if_binary=True)
+            cls_metric = ClassificationMetric(cls_num=1, pos_cls_fusion=True)
 
             cls_metric.update(cls_gt_labels, cls_pred_labels)
             if cls_metric.tp == 0:

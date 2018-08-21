@@ -3,7 +3,7 @@ import numpy as np
 import os, json
 import argparse
 import pandas as pd
-from model_eval.brain.config import config
+from config import config
 import nrrd, cv2
 from model_eval.brain.contour_draw import contour_and_draw, contour_and_draw_rainbow
 from model_eval.tools.data_postprocess import save_xlsx_json
@@ -277,7 +277,7 @@ class BrainSemanticSegEvaluatorOffline(object):
                 for cls_num in range(len(self.cls_name)):
                     if self.cls_name[cls_num] == '__background__':
                         continue
-                    cls_metric = ClassificationMetric(cls_num=cls_num, if_binary=True)
+                    cls_metric = ClassificationMetric(cls_num=cls_num, pos_cls_fusion=False)
                     cls_metric.update(gt_label_list, predict_label_list)
 
                     if cls_metric.tp == 0:
@@ -308,7 +308,7 @@ class BrainSemanticSegEvaluatorOffline(object):
             for cls_num in range(len(self.cls_name)):
                 if self.cls_name[cls_num] == '__background__':
                     continue
-                cls_metric = ClassificationMetric(cls_num=cls_num, if_binary=True)
+                cls_metric = ClassificationMetric(cls_num=cls_num, pos_cls_fusion=False)
                 cls_metric.update(gt_array_list, predict_array_list)
 
                 if cls_metric.tp == 0:
@@ -391,7 +391,7 @@ class BrainSemanticSegEvaluatorOffline(object):
     def binary_class_evaluation(self):
         predict_data_list, gt_nrrd_list, _ = self.load_data()
         # initialize ClassificationMetric class and update with ground truth/predict labels
-        cls_metric = ClassificationMetric(cls_num=1, if_binary=True)
+        cls_metric = ClassificationMetric(cls_num=1, pos_cls_fusion=True)
 
         for thresh in self.conf_thresh:
             print ('threshold = %s' %thresh)

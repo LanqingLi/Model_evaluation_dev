@@ -14,7 +14,7 @@ Description: # 模型组评分系统说明
         
         objmatch: networkx <= 2.0
         
-        model_eval: pandas >= 0.22.0, pandas != 0.23.0, opencv-python >= 3.3.0.10
+        model_eval: pandas >= 0.22.0, pandas != 0.23.0, opencv-python >= 3.3.0.10, matplotlib<=2.1.1
         
         ## 超参数调整
         
@@ -51,7 +51,10 @@ Description: # 模型组评分系统说明
         python ROC_plot.py
         ```
         
+        ##　注意事项
         
+        - 在测试过程中，发现较新的matplotlib(2.2.0)在画图时不允许出现x坐标相同的两个不同点，而目前开发的版本的tools.plot中为了画阶跃的ROC、RP曲线
+        是会出现这种情况的，故要求matplotlib版本<=2.1.1
         
         
 Keywords: sample setuptools development

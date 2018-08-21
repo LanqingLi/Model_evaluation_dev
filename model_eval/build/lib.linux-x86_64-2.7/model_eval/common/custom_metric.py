@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from metric import EvalMetric, check_label_shapes
+from model_eval.common.metric import EvalMetric, check_label_shapes
 from sklearn import metrics
 
 ########################
