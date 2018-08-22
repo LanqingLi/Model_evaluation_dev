@@ -585,7 +585,7 @@ class LungNoduleEvaluatorOffline(object):
             cls_pred_labels, cls_gt_labels = df_to_cls_label(predict_df_list, gt_df_list, self.cls_name)
 
             # initialize ClassificationMetric class and update with ground truth/predict labels
-            cls_metric = ClassificationMetric(cls_num=1, if_binary=False)
+            cls_metric = ClassificationMetric(cls_num=1, pos_cls_fusion=True)
 
 
             cls_metric.update(cls_gt_labels, cls_pred_labels)
@@ -737,7 +737,7 @@ class LungNoduleEvaluatorOffline(object):
             cls_pred_labels, cls_gt_labels = df_to_cls_label(predict_df_list, gt_df_list, self.cls_name)
 
             # initialize ClassificationMetric class and update with ground truth/predict labels
-            cls_metric = ClassificationMetric(cls_num=1, if_binary=False)
+            cls_metric = ClassificationMetric(cls_num=1, pos_cls_fusion=True)
 
             cls_metric.update(cls_gt_labels, cls_pred_labels)
             if cls_metric.tp == 0:

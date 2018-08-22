@@ -1,11 +1,11 @@
-# 版本0.0.1 说明
-该ObjMatch package封装了针对检测模型输出进行后处理的匹配算法。该版本目前只包含2D到3D的匹配功能(2D-3DMatch)。
+# 版本0.1.1 说明
+该objmatch package封装了针对检测模型输出进行后处理的匹配算法。该版本目前只包含2D到3D的匹配功能(2D-3DMatch)。
 
 ## 2D-3DMatch 说明
-该package当前版本只包含CT肺结节检测的find_nodules算法,其被get_df_nodules中的get_nodule_stat调用，将detection模型输出的按二维层面排列的检出框
+该package当前版本包含以CT肺结节检测的find_nodules算法为模板的find_objects,其被get_df_nodules中的get_nodule_stat调用，将detection模型输出的按二维层面排列的检出框
 匹配成三维的结节，最终用于模型的评估与测试。该功能可以推广到将任何基于二维层面的检测结果重新匹配/聚类成三维结构的问题，例如心脏CT的斑块检测等。
 
-### find_nodules说明
+### find_nodules/find_objects说明
 
 #### 需要安装的库
 numpy
@@ -48,3 +48,14 @@ misalign_suppress: exp(-sim_metric)，基于先验假设：结节具有在三维
 
 －find_nodules接收的df_boxes,作为一个pandas.DataFrame,!!!index必须从0开始依次加一递增排列!!!（可以通过reset_index(drop=True)来实现），
 否则可能会出现union_find_set调用find_parent无限循环的bug。
+
+### common_metrics说明
+
+#### AnchorMetric
+
+包含了对比两个锚框(anchor)相似度的相关函数，例如iou(intersection over union), center_deviation(中心点偏移)等，兼容各种维度，维度信息初始化时
+需要定义好。
+
+### post_process说明
+
+包含了对比将锚框匹配后的两个物体(例如三维结节)是否一致的相关函数，目前主要用于对比模型预测出物体与ground truth是否一致(fp or tp)的问题。

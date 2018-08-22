@@ -1,3 +1,4 @@
+# -- coding: utf-8 --
 import numpy as np
 import math
 from model_eval.common.metric import EvalMetric, check_label_shapes
@@ -9,7 +10,7 @@ from sklearn import metrics
 
 class ClassificationMetric(EvalMetric):
 
-    def __init__(self, name='ClsMetric', cls_num=1, allow_extra_outputs=False, if_binary=True):
+    def __init__(self, name='ClsMetric', cls_num=1, allow_extra_outputs=False, if_binary=True, pos_cls_fusion=True):
         super(ClassificationMetric, self).__init__(name)
         self._allow_extra_outputs = allow_extra_outputs
         self.cls_num = cls_num
@@ -26,7 +27,10 @@ class ClassificationMetric(EvalMetric):
         self.pred_vol = 0.0
         # whether it is binary classification
         self.if_binary = if_binary
-
+        # In the context of binary classification, whether to regard all positive samples as the same class, or regard all classes (positive
+        # and negative samples) but a single positive class as background (negative class). The former is usually adapted
+        # for detection of positive samples (检出), the latter is usually used for detection of a specific class
+        self.pos_cls_fusion = pos_cls_fusion
 
     def update(self, labels, preds):
         """
@@ -43,17 +47,18 @@ class ClassificationMetric(EvalMetric):
             pred_label = np.asarray(pred)
             label = np.asarray(label)
             check_label_shapes(label, pred_label)
-            # print "ind"
-            # print ind
-            # print "pred_label"
-            # print pred_label
-            # print "label"
-            # print label
+
             ind = self.cls_num
             if self.if_binary:
-                # for binary classification, we regard all labels that are not ind as negative (0)
-                label[label != ind] = 0
-                pred_label[pred_label != ind] = 0
+                # for binary classification, we either regard all labels that are not ind as negative (0) or regard all labels
+                # that are not negative as positive (the same class)
+                if self.pos_cls_fusion:
+                    label[label > 0] = 1
+                    pred_label[pred_label > 0] = 1
+                    ind = 1
+                else:
+                    label[label != ind] = 0
+                    pred_label[pred_label != ind] = 0
 
 
             pred_pos = (pred_label == ind)
@@ -61,14 +66,6 @@ class ClassificationMetric(EvalMetric):
             pred_neg = (pred_label == 0)
             label_neg = (label == 0)
 
-            # print "pred_pos"
-            # print pred_pos
-            # print "label_pos"
-            # print label_pos
-            # print "pred_neg"
-            # print pred_neg
-            # print "label_neg"
-            # print label_neg
             self.label_pos += np.asscalar(np.sum(label_pos))
             self.pred_pos += np.asscalar(np.sum(pred_pos))
             tp = np.asscalar(np.sum(pred_pos * label_pos))
@@ -204,13 +201,7 @@ class ClusteringMetric(EvalMetric):
     def __init__(self, name='ClusMetric', allow_extra_outputs=False):
         super(ClusteringMetric, self).__init__(name)
         self._allow_extra_outputs = allow_extra_outputs
-        # self.tp = 0.0
-        # self.fp = 0.0
-        # self.fn = 0.0
-        # self.tn = 0.0
-        # self.sum = 0.0
-        # self.label_pos = 0.0
-        # self.pred_pos = 0.0
+
         self.labels_gt = []
         self.labels_pred = []
 

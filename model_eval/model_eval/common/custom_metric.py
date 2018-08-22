@@ -129,8 +129,8 @@ class ClassificationMetric(EvalMetric):
     def get_fscore(self, beta=1.):
         """Get the evaluated f score
 
-        The F score is equivalent to weighted average of the precision and recall.
-        where the best value is 1.0 and the worst value is 0.0. The formula for F score is:
+        The F score is equivalent to weighted average of the precision and recall. The greater the beta, the more significant
+        the recall. The best value is 1.0 and the worst value is 0.0. The formula for F score is:
 
         F_{beta} = (1 + \beta^2) * (precision * recall) / (\beta^2 * precision + recall)
 
