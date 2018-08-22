@@ -2,9 +2,37 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="acfa41cf-b818-403a-b6d1-bacf2c92adbd" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/brain/README.md" afterPath="$PROJECT_DIR$/model_eval/model_eval/brain/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/setup.py" afterPath="$PROJECT_DIR$/model_eval/setup.py" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/__init__.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/__init__.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/classname_labelname_mapping.xls" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/config.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/contour_draw.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/evaluator.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/common/__init__.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/common/custom_metric.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/common/metric.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/common/registry.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/__init__.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/classname_labelname_mapping.xls" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/config.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/evaluator.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/get_df_nodules.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/post_process.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/xml_tools.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/tools/__init__.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/tools/data_postprocess.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/tools/data_preprocess.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/tools/plot.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/dist/model_eval-0.1.2-py2-none-any.whl" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/dist/model_eval-0.1.2.tar.gz" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/model_eval.egg-info/PKG-INFO" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/model_eval.egg-info/SOURCES.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/model_eval.egg-info/dependency_links.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/model_eval.egg-info/entry_points.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/model_eval.egg-info/requires.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/model_eval.egg-info/top_level.txt" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/README.md" afterPath="$PROJECT_DIR$/model_eval/README.md" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -22,10 +50,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="setup.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="setup.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/model_eval/setup.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="360">
+            <state relative-caret-position="684">
               <caret line="41" column="18" lean-forward="false" selection-start-line="41" selection-start-column="18" selection-end-line="41" selection-end-column="18" />
               <folding />
             </state>
@@ -37,7 +65,7 @@
           <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
             <state split_layout="SPLIT">
               <first_editor relative-caret-position="180">
-                <caret line="10" column="8" lean-forward="true" selection-start-line="10" selection-start-column="8" selection-end-line="10" selection-end-column="8" />
+                <caret line="10" column="8" lean-forward="false" selection-start-line="10" selection-start-column="8" selection-end-line="10" selection-end-column="8" />
                 <folding />
               </first_editor>
               <second_editor />
@@ -45,26 +73,27 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="config.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/brain/config.py">
+      <file leaf-file-name="evaluator.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="72">
-              <caret line="4" column="0" lean-forward="true" selection-start-line="4" selection-start-column="0" selection-end-line="5" selection-end-column="16" />
+            <state relative-caret-position="360">
+              <caret line="20" column="117" lean-forward="false" selection-start-line="20" selection-start-column="117" selection-end-line="20" selection-end-column="117" />
               <folding>
-                <element signature="e#0#38#0" expanded="true" />
+                <element signature="e#22#40#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="evaluator.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="7776">
-              <caret line="447" column="91" lean-forward="false" selection-start-line="447" selection-start-column="91" selection-end-line="447" selection-end-column="91" />
-              <folding>
-                <element signature="e#22#40#0" expanded="true" />
-              </folding>
+      <file leaf-file-name="README.md" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/brain/README.md">
+          <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+            <state split_layout="SPLIT">
+              <first_editor relative-caret-position="0">
+                <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+                <folding />
+              </first_editor>
+              <second_editor />
             </state>
           </provider>
         </entry>
@@ -74,7 +103,7 @@
           <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
             <state split_layout="SPLIT">
               <first_editor relative-caret-position="2304">
-                <caret line="128" column="26" lean-forward="true" selection-start-line="128" selection-start-column="26" selection-end-line="128" selection-end-column="26" />
+                <caret line="128" column="26" lean-forward="false" selection-start-line="128" selection-start-column="26" selection-end-line="128" selection-end-column="26" />
                 <folding />
               </first_editor>
               <second_editor />
@@ -86,7 +115,7 @@
         <entry file="file://$PROJECT_DIR$/brain/evaluator.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="9486">
-              <caret line="527" column="0" lean-forward="true" selection-start-line="12" selection-start-column="0" selection-end-line="527" selection-end-column="0" />
+              <caret line="527" column="0" lean-forward="false" selection-start-line="12" selection-start-column="0" selection-end-line="527" selection-end-column="0" />
               <folding>
                 <element signature="e#22#40#0" expanded="true" />
               </folding>
@@ -98,7 +127,7 @@
         <entry file="file://$PROJECT_DIR$/brain/semantic_seg_test.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="918">
-              <caret line="54" column="90" lean-forward="true" selection-start-line="54" selection-start-column="90" selection-end-line="54" selection-end-column="90" />
+              <caret line="54" column="90" lean-forward="false" selection-start-line="54" selection-start-column="90" selection-end-line="54" selection-end-column="90" />
               <folding>
                 <element signature="e#0#35#0" expanded="true" />
               </folding>
@@ -110,7 +139,7 @@
         <entry file="file://$PROJECT_DIR$/model_eval/model_eval/__init__.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="18">
-              <caret line="1" column="0" lean-forward="true" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+              <caret line="1" column="0" lean-forward="false" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
               <folding>
                 <element signature="e#20#33#0" expanded="true" />
               </folding>
@@ -526,16 +555,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/tools/plot.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-486">
-          <caret line="138" column="36" lean-forward="false" selection-start-line="138" selection-start-column="36" selection-end-line="138" selection-end-column="36" />
-          <folding>
-            <element signature="e#22#40#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/ROC_plot.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="360">
@@ -912,7 +931,7 @@
     <entry file="file://$PROJECT_DIR$/brain/config.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="72">
-          <caret line="4" column="0" lean-forward="true" selection-start-line="4" selection-start-column="0" selection-end-line="5" selection-end-column="16" />
+          <caret line="4" column="0" lean-forward="false" selection-start-line="4" selection-start-column="0" selection-end-line="5" selection-end-column="16" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
           </folding>
@@ -922,7 +941,7 @@
     <entry file="file://$PROJECT_DIR$/model_eval/model_eval/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="18">
-          <caret line="1" column="0" lean-forward="true" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+          <caret line="1" column="0" lean-forward="false" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
           <folding>
             <element signature="e#20#33#0" expanded="true" />
           </folding>
@@ -948,7 +967,7 @@
     <entry file="file://$PROJECT_DIR$/brain/evaluator.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="9486">
-          <caret line="527" column="0" lean-forward="true" selection-start-line="12" selection-start-column="0" selection-end-line="527" selection-end-column="0" />
+          <caret line="527" column="0" lean-forward="false" selection-start-line="12" selection-start-column="0" selection-end-line="527" selection-end-column="0" />
           <folding>
             <element signature="e#22#40#0" expanded="true" />
           </folding>
@@ -958,7 +977,7 @@
     <entry file="file://$PROJECT_DIR$/brain/semantic_seg_test.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="918">
-          <caret line="54" column="90" lean-forward="true" selection-start-line="54" selection-start-column="90" selection-end-line="54" selection-end-column="90" />
+          <caret line="54" column="90" lean-forward="false" selection-start-line="54" selection-start-column="90" selection-end-line="54" selection-end-column="90" />
           <folding>
             <element signature="e#0#35#0" expanded="true" />
           </folding>
@@ -969,20 +988,10 @@
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="SPLIT">
           <first_editor relative-caret-position="180">
-            <caret line="10" column="8" lean-forward="true" selection-start-line="10" selection-start-column="8" selection-end-line="10" selection-end-column="8" />
+            <caret line="10" column="8" lean-forward="false" selection-start-line="10" selection-start-column="8" selection-end-line="10" selection-end-column="8" />
             <folding />
           </first_editor>
           <second_editor />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="7776">
-          <caret line="447" column="91" lean-forward="false" selection-start-line="447" selection-start-column="91" selection-end-line="447" selection-end-column="91" />
-          <folding>
-            <element signature="e#22#40#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -990,7 +999,7 @@
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="SPLIT">
           <first_editor relative-caret-position="2304">
-            <caret line="128" column="26" lean-forward="true" selection-start-line="128" selection-start-column="26" selection-end-line="128" selection-end-column="26" />
+            <caret line="128" column="26" lean-forward="false" selection-start-line="128" selection-start-column="26" selection-end-line="128" selection-end-column="26" />
             <folding />
           </first_editor>
           <second_editor />
@@ -999,9 +1008,30 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/model_eval/setup.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="360">
+        <state relative-caret-position="684">
           <caret line="41" column="18" lean-forward="false" selection-start-line="41" selection-start-column="18" selection-end-line="41" selection-end-column="18" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="20" column="117" lean-forward="false" selection-start-line="20" selection-start-column="117" selection-end-line="20" selection-end-column="117" />
+          <folding>
+            <element signature="e#22#40#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/brain/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="0">
+            <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+            <folding />
+          </first_editor>
+          <second_editor />
         </state>
       </provider>
     </entry>
