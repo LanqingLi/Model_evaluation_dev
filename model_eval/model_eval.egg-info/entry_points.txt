@@ -1,0 +1,3 @@
+[console_scripts]
+model_eval = model_eval:main
+
