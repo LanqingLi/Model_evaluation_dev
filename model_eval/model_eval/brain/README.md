@@ -1,13 +1,24 @@
 # 模型评分系统脑部CT模块说明
 
-版本号：0.1.1
+版本号：0.1.3
 
 该模块主要功能是对脑部CT项目的模型输出进行评估，用以筛选最优模型。目前版本的主要功能是针对脑卒中出血的语义分割模型，统计其分类的tp、fp、fscore、出血体积等指标，画出分割的contour、RP、ROC曲线。
+最新版0.1.3实现了evaluator的offline(以文件形式读入模型预测结果，用于inference和evaluation的解耦运行)和online(直接将模型预测输出作为输入，实现inference和evaluation的一体化运行)功能
 	
 ## 环境安装
 
 请首先配置公司pypi源: 详见https://git.infervision.com/w/%E7%A0%94%E5%8F%91/%E5%86%85%E9%83%A8python%E4%BB%93%E5%BA%93%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E/
-	
+
+### 安装objmatch
+
+先删除本地的`objmatch`
+
+ -sudo pip uninstall objmatch
+
+安装'objmatch'
+
+ -sudo pip install objmatch
+ 
 ### 安装model_eval
 
 先删除本地的`model_eval`
@@ -19,7 +30,7 @@
  -sudo pip install model_eval
  
 ## 输入输出测试集等相关格式
-详见https://git.infervision.com/T1745中出血性卒中相关文档
+详见https://git.infervision.com/T1745 中出血性卒中相关文档
 
 ##　文件说明
 evaluator.py:　模型评估的主要功能实现 
@@ -41,6 +52,8 @@ config.py: 统一存放评估系统后处理相关参数默认值的配置文件
 ## 代码运行指令(默认在model_evaluation目录下)
 
 ### 语义分割功能
+
+offline模式：
 
 1. 多分类(目前仅在二分类数据上有测试)：
 
@@ -64,6 +77,43 @@ config.py: 统一存放评估系统后处理相关参数默认值的配置文件
  　python -m brain.semantic_seg_test --gt_dir [ground truth label directory] --data_type npy --data_dir [predict label directory] \
  　--img_dir [image directory] --draw
 
+online模式：
+
+- 在inference时让模型输出predict_data_list, gt_nrrd_list, img_nrrd_list, patient_list, data_type,　各变量定义如下：
+
+ - predict_data_list: list of predict class score, default type: float32, default shape: [figure number, class number, 512, 512] 
+ (background class number = 0), softmax value in range [0, 1]
+ - gt_nrrd_list: list of ground truth nrrd mask, default type: int16, default shape: [512, 512, figure number]
+ - img_nrrd_list: list of nrrd image, default type: int16, default shape: [512, 512, figure number]
+ - patient_list: list of patient id, e.g.: [patient_id_1, patient_id_2, ...]
+
+!!!注意：此处patient_list的顺序必须与其余几个list顺序一致!!!
+
+之后初始化BrainSemanticSegEvaluatorOnline类：
+
+brain_evaluator = evaluator.BrainSemanticSegEvaluatorOnline(predict_data_list=predict_data_list,
+                                          gt_nrrd_list=gt_nrrd_list,
+                                          img_nrrd_list=img_nrrd_list,
+                                          patient_list=patient_list)
+                                          
+之后调用brain_evaluator如下函数即可：
+
+1. 多分类(目前仅在二分类数据上有测试)：
+
+-调用multi_class_evaluation: brain_evaluator.multi_class_evaluation()
+
+2. 二分类：
+
+-调用binary_class_evaluation: brain_evaluator.binary_class_evaluation()
+ 
+3. 画分割区域轮廓图：
+
+- 二分类：
+ - 多阈值对比图　(调用binary_class_contour_plot_multi_thresh, 阈值在config.TEST.CONF_THRESHOLD定义):
+   brain_evaluator.binary_class_contour_plot_multi_thresh()
+ - 单阈值对比图 (调用binary_class_contour_plot_single_thresh，阈值在config.THRESH定义)
+ 　brain_evaluator.binary_class_contour_plot_single_thresh()
+                                          
 ###　实例分割功能
 
 目前模型组业务中尚未涉及实例分割，今后会根据需求添加
