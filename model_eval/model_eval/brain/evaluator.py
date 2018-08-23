@@ -10,6 +10,421 @@ from model_eval.tools.data_postprocess import save_xlsx_json
 from model_eval.tools.data_preprocess import window_convert
 from model_eval.common.custom_metric import ClassificationMetric
 
+class BrainSemanticSegEvaluatorOnlineIter(object):
+    '''
+
+    '''
+    def __init__(self, data_iter, predict_key, gt_key, img_key, patient_key, img_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_contour'),
+                 score_type='fscore', result_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_result'),
+                 xlsx_name='BrainSemanticSegEvaluation.xlsx', json_name='BrainSemanticSegEvaluation',
+                 conf_thresh=config.TEST.CONF_THRESHOLD, cls_weights=config.CLASS_WEIGHTS,
+                 fscore_beta=config.FSCORE_BETA):
+        self.data_iter = data_iter
+        self.predict_key = predict_key
+        self.gt_key = gt_key
+        self.img_key = img_key
+        self.patient_key = patient_key
+        self.img_save_dir = img_save_dir
+        # config.CLASSES 包含background class,是模型预测的所有类别
+        self.cls_name = config.CLASSES
+        self.cls_dict = config.CLASS_DICT
+        self.score_type = score_type
+        self.opt_thresh = {}
+
+        self.result_df = pd.DataFrame(
+            columns=['PatientID', 'class', 'threshold', 'tp_count', 'tn_count', 'fp_count', 'fn_count',
+                     'accuracy', 'recall', 'precision',
+                     'fp/tp', 'gt_vol', 'pred_vol', 'gt_phys_vol/mm^3', 'pred_phys_vol/mm^3', self.score_type])
+        self.result_save_dir = result_save_dir
+        self.xlsx_name = xlsx_name
+        self.json_name = json_name
+        self.conf_thresh = conf_thresh
+        self.cls_weights = cls_weights
+        self.fscore_beta = fscore_beta
+
+    def binary_class_contour_plot_single_thresh(self, thresh):
+
+        if not os.path.exists(self.img_save_dir):
+            os.mkdir(self.img_save_dir)
+
+        for data in self.data_iter:
+            predict_data = data[self.predict_key]
+            gt_nrrd = data[self.gt_key]
+            img_nrrd = data[self.img_key]
+            PatientID = data[self.patient_key]
+
+            print ('processing PatientID: %s' % PatientID)
+            assert predict_data.shape[
+                       1] == 2, 'the number of classes %s in predict labels should be 2 for binary classification' % (
+                predict_data.shape[1])
+            # transpose the predict_data to be shape = [512, 512, figure number]
+            # one has to make a copy of part of predict_data, otherwise it will implicitly convert float to int
+            predict_data_cpy = predict_data[:, 1, :, :].copy()
+            predict_data_cpy = predict_data_cpy.transpose((1, 2, 0))
+            # check if the predict and ground truth labels have the same shape
+            if not predict_data_cpy.shape == gt_nrrd[0].shape:
+                raise Exception("predict and ground truth labels must have the same shape")
+
+            for fig_num in range(predict_data_cpy.shape[-1]):
+                gt_img = img_nrrd[:, :, fig_num]
+                # copy original img three times for RGB channels
+                gt_img = np.repeat(gt_img[:, :, np.newaxis], axis=2, repeats=3)
+                gt_img = window_convert(gt_img, 40, 80)
+                gt_map = gt_nrrd[0][:, :, fig_num]
+                predict_map = predict_data_cpy[:, :, fig_num]
+                img = cv2.cvtColor(gt_img, cv2.COLOR_BGR2RGB)
+                lab = cv2.cvtColor(gt_img, cv2.COLOR_BGR2RGB)
+
+                binary_pmap = np.array(predict_map > thresh, dtype=np.int)
+
+                lab, _ = contour_and_draw(lab, gt_map)
+                img, _ = contour_and_draw(img, binary_pmap)
+
+                prob = predict_map[:, :, np.newaxis] * 255
+                prob = np.array(np.repeat(prob, axis=2, repeats=3), dtype=np.uint8)
+
+                to_show = np.zeros(shape=(512, 1024, 3), dtype=np.uint8)
+                to_show[:, :512, :] = img
+                to_show[:, 512:, :] = lab
+
+                cv2.imwrite(os.path.join(self.img_save_dir, PatientID + '-' + str(fig_num).zfill(2) + '.jpg'), to_show)
+
+    def binary_class_contour_plot_multi_thresh(self):
+
+        if not os.path.exists(self.img_save_dir):
+            os.mkdir(self.img_save_dir)
+
+        for data in self.data_iter:
+            predict_data = data[self.predict_key]
+            gt_nrrd = data[self.gt_key]
+            img_nrrd = data[self.img_key]
+            PatientID = data[self.patient_key]
+
+            print ('processing PatientID: %s' % PatientID)
+            assert predict_data.shape[
+                       1] == 2, 'the number of classes %s in predict labels should be 2 for binary classification' % (
+                predict_data.shape[1])
+            # transpose the predict_data to be shape = [512, 512, figure number]
+            # one has to make a copy of part of predict_data, otherwise it will implicitly convert float to int
+            predict_data_cpy = predict_data[:, 1, :, :].copy()
+            predict_data_cpy = predict_data_cpy.transpose((1, 2, 0))
+            # check if the predict and ground truth labels have the same shape
+            if not predict_data_cpy.shape == gt_nrrd[0].shape:
+                raise Exception("predict and ground truth labels must have the same shape")
+
+            for fig_num in range(predict_data_cpy.shape[-1]):
+                gt_img = img_nrrd[:, :, fig_num]
+                # copy original img three times for RGB channels
+                gt_img = np.repeat(gt_img[:, :, np.newaxis], axis=2, repeats=3)
+                gt_img = window_convert(gt_img, 40, 80)
+                gt_map = gt_nrrd[0][:, :, fig_num]
+                predict_map = predict_data_cpy[:, :, fig_num]
+                img = cv2.cvtColor(gt_img, cv2.COLOR_BGR2RGB)
+                lab = cv2.cvtColor(gt_img, cv2.COLOR_BGR2RGB)
+                lab, _ = contour_and_draw_rainbow(lab, gt_map, color_range=len(self.conf_thresh),
+                                                  color_num=len(self.conf_thresh) / 2)
+                # superimpose contour images for multiple thresholds
+                for index, thresh in enumerate(self.conf_thresh):
+                    binary_pmap = np.array(predict_map > thresh, dtype=np.int)
+
+                    img, _ = contour_and_draw_rainbow(img, binary_pmap, color_range=len(self.conf_thresh),
+                                                      color_num=index)
+
+                    prob = predict_map[:, :, np.newaxis] * 255
+                    prob = np.array(np.repeat(prob, axis=2, repeats=3), dtype=np.uint8)
+
+                    to_show = np.zeros(shape=(512, 1024, 3), dtype=np.uint8)
+                    to_show[:, :512, :] = img
+                    to_show[:, 512:, :] = lab
+
+                cv2.imwrite(os.path.join(self.img_save_dir, PatientID + '-' + str(fig_num).zfill(2) + '.jpg'),
+                            to_show)
+
+    # 多分类分割模型通用评分,用阈值筛选正类别，并在其中选取最大值作为one-hot label
+    def multi_class_evaluation(self):
+
+        for thresh in self.conf_thresh:
+            print ('threshold = %s' % thresh)
+            # predict_data.shape() = [figure number, class number, 512, 512], gt_nrrd.shape() = [512, 512, figure number],
+            # the pictures are arranged in the same order
+
+            # initialize ClassificationMetric class for total stat (all patients) and update with ground truth/predict labels
+            cls_metric = ClassificationMetric(cls_num=len(self.cls_name)-1, if_binary=True, pos_cls_fusion=False)
+            gt_tot_phys_vol = [0. for _ in range(len(self.cls_name) - 1)]
+            pred_tot_phys_vol = [0. for _ in range(len(self.cls_name) - 1)]
+
+            for data in self.data_iter:
+                predict_data = data[self.predict_key]
+                gt_nrrd = data[self.gt_key]
+                PatientID = data[self.patient_key]
+                print ('processing PatientID: %s' % PatientID)
+                # one has to make a copy of part of predict_data, otherwise it will implicitly convert float to int
+                predict_data_cpy = predict_data.copy()
+                # transpose predict_data_cpy to shape [512, 512, figure number, class number]
+                predict_data_cpy = predict_data_cpy.transpose((2, 3, 0, 1))
+                assert predict_data_cpy.shape[-1] == len(self.cls_name), 'the num of classes: %s in predict labels ' \
+                                                                         'should equal that defined in brain/classname_labelname_mapping.xls: %s' % (
+                                                                             predict_data_cpy.shape[-1],
+                                                                             len(self.cls_name))
+                predict_data_slice_cpy = predict_data[:, 0, :, :].copy()
+                predict_data_slice_cpy = predict_data_slice_cpy.transpose((1, 2, 0))
+                # check if the predict and ground truth labels have the same shape
+                if not predict_data_slice_cpy.shape == gt_nrrd[0].shape:
+                    raise Exception("predict and ground truth labels must have the same shape")
+
+                predict_label_list = []
+                gt_label_list = []
+                for fig_num in range(predict_data_cpy.shape[-2]):
+                    gt_label = gt_nrrd[0][:, :, fig_num]
+                    gt_label_list.append(gt_label)
+                    predict_score = predict_data_cpy[:, :, fig_num, :].copy()
+                    for cls in range(predict_data_cpy.shape[-1]):
+                        if self.cls_name[cls] == '__background__':
+                            predict_score[:, :, cls] = 0.
+                            continue
+                        predict_score[predict_data_cpy[:, :, fig_num, cls] <= thresh] = 0.
+                    # return the predict label as the index of the maximum value across all classes, the __background__
+                    # class should be the first one, so if none of the positive class score is greater than zero, the
+                    # pixel is classified as the background
+                    predict_label = np.argmax(predict_score, axis=2)
+                    predict_label_list.append(predict_label)
+
+                # list-to-array-to-list conversion for calculating the overall stat (each patient)
+                predict_list = [np.asarray(predict_label_list)]
+                gt_list = [np.asarray(gt_label_list)]
+
+                # calculate physical volume using space directions info stored in .nrrd
+                space_matrix = np.zeros((3, 3))
+                space_matrix[0] = np.asarray(gt_nrrd[1]['space directions'][0]).astype('float32')
+                space_matrix[1] = np.asarray(gt_nrrd[1]['space directions'][1]).astype('float32')
+                space_matrix[2] = np.asarray(gt_nrrd[1]['space directions'][2]).astype('float32')
+                # calculate voxel volume as the determinant of spacing matrix
+                voxel_vol = np.linalg.det(space_matrix)
+
+                # initialize ClassificationMetric class for each patient and update with ground truth/predict labels
+                patient_metric = ClassificationMetric(cls_num=len(self.cls_name)-1, if_binary=True, pos_cls_fusion=False)
+                for cls_label in range(len(self.cls_name)):
+                    if self.cls_name[cls_label] == '__background__':
+                        continue
+
+                    cls_metric.update(gt_list, predict_list, cls_label=cls_label)
+
+                    patient_metric.update(gt_list, predict_list, cls_label=cls_label)
+
+                    if patient_metric.tp[cls_label-1] == 0:
+                        fp_tp = np.nan
+                    else:
+                        fp_tp = patient_metric.fp[cls_label-1] / patient_metric.tp[cls_label-1]
+
+                    self.result_df = self.result_df.append({'PatientID': PatientID,
+                                                            'class': self.cls_name[cls_label],
+                                                            'threshold': thresh,
+                                                            'tp_count': patient_metric.tp[cls_label-1],
+                                                            'tn_count': patient_metric.tn[cls_label-1],
+                                                            'fp_count': patient_metric.fp[cls_label-1],
+                                                            'fn_count': patient_metric.fn[cls_label-1],
+                                                            'accuracy': patient_metric.get_acc(cls_label),
+                                                            'recall': patient_metric.get_rec(cls_label),
+                                                            'precision': patient_metric.get_prec(cls_label),
+                                                            'fp/tp': fp_tp,
+                                                            'gt_vol': patient_metric.get_gt_vol(cls_label),
+                                                            'pred_vol': patient_metric.get_pred_vol(cls_label),
+                                                            'gt_phys_vol/mm^3': patient_metric.get_gt_vol(cls_label) * voxel_vol,
+                                                            'pred_phys_vol/mm^3': patient_metric.get_pred_vol(cls_label) * voxel_vol,
+                                                            self.score_type: patient_metric.get_fscore(
+                                                                cls_label=cls_label, beta=self.fscore_beta)},
+                                                           ignore_index=True)
+                    gt_tot_phys_vol[cls_label-1] += cls_metric.get_gt_vol() * voxel_vol
+                    pred_tot_phys_vol[cls_label-1] += cls_metric.get_pred_vol() * voxel_vol
+
+            for cls_label in range(len(self.cls_name)):
+                if self.cls_name[cls_label] == '__background__':
+                    continue
+
+                if cls_metric.tp[cls_label-1] == 0:
+                    fp_tp = np.nan
+                else:
+                    fp_tp = cls_metric.fp[cls_label-1] / cls_metric.tp[cls_label-1]
+
+                self.result_df = self.result_df.append({'PatientID': 'total',
+                                                        'class': self.cls_name[cls_label],
+                                                        'threshold': thresh,
+                                                        'tp_count': cls_metric.tp[cls_label-1],
+                                                        'tn_count': cls_metric.tn[cls_label-1],
+                                                        'fp_count': cls_metric.fp[cls_label-1],
+                                                        'fn_count': cls_metric.fn[cls_label-1],
+                                                        'accuracy': cls_metric.get_acc(cls_label),
+                                                        'recall': cls_metric.get_rec(cls_label),
+                                                        'precision': cls_metric.get_prec(cls_label),
+                                                        'fp/tp': fp_tp,
+                                                        'gt_vol': cls_metric.get_gt_vol(cls_label),
+                                                        'pred_vol': cls_metric.get_pred_vol(cls_label),
+                                                        'gt_phys_vol/mm^3': gt_tot_phys_vol[cls_label-1],
+                                                        'pred_phys_vol/mm^3': pred_tot_phys_vol[cls_label-1],
+                                                        self.score_type: cls_metric.get_fscore(
+                                                            cls_label=cls_label, beta=self.fscore_beta)},
+                                                       ignore_index=True)
+
+                # find the optimal threshold
+                if self.cls_name[cls_label] not in self.opt_thresh:
+
+                    self.opt_thresh[self.cls_name[cls_label]] = self.result_df.iloc[-1]
+
+                    self.opt_thresh[self.cls_name[cls_label]].loc['threshold'] = thresh
+
+                else:
+                    # we choose the optimal threshold corresponding to the one that gives the highest model score
+                    if self.result_df.iloc[-1][self.score_type] > self.opt_thresh[self.cls_name[cls_label]][
+                        self.score_type]:
+                        self.opt_thresh[self.cls_name[cls_label]] = self.result_df.iloc[-1]
+                        self.opt_thresh[self.cls_name[cls_label]].loc['threshold'] = thresh
+
+        self.result_df = self.result_df.sort_values(['threshold', 'PatientID', 'class'])
+
+        save_xlsx_json(self.result_df, self.opt_thresh, self.result_save_dir, self.xlsx_name, self.json_name,
+                       'multi-class_evaluation', 'optimal_threshold')
+
+    # 二分类分割模型评分，用阈值筛选正类别,不管gt有多少类别，我们只关心检出(正样本全部归为一类,pos_cls_fusion=True)
+    def binary_class_evaluation(self):
+
+        for thresh in self.conf_thresh:
+            print ('threshold = %s' % thresh)
+            # predict_data.shape() = [figure number, class number, 512, 512], gt_nrrd.shape() = [512, 512, figure number],
+            # the pictures are arranged in the same order
+
+            # initialize ClassificationMetric class for total stat (all patients) and update with ground truth/predict labels
+            cls_metric = ClassificationMetric(cls_num=1, if_binary=True, pos_cls_fusion=True)
+            gt_tot_phys_vol = [0.]
+            pred_tot_phys_vol = [0.]
+
+            for data in self.data_iter:
+                predict_data = data[self.predict_key]
+                gt_nrrd = data[self.gt_key]
+                PatientID = data[self.patient_key]
+                print ('processing PatientID: %s' % PatientID)
+                # one has to make a copy of part of predict_data, otherwise it will implicitly convert float to int
+                predict_data_cpy = predict_data.copy()
+                # transpose predict_data_cpy to shape [512, 512, figure number, class number]
+                predict_data_cpy = predict_data_cpy.transpose((2, 3, 0, 1))
+                assert predict_data_cpy.shape[-1] == len(self.cls_name), 'the num of classes: %s in predict labels ' \
+                                                                         'should equal that defined in brain/classname_labelname_mapping.xls: %s' % (
+                                                                             predict_data_cpy.shape[-1],
+                                                                             len(self.cls_name))
+                predict_data_slice_cpy = predict_data[:, 0, :, :].copy()
+                predict_data_slice_cpy = predict_data_slice_cpy.transpose((1, 2, 0))
+                # check if the predict and ground truth labels have the same shape
+                if not predict_data_slice_cpy.shape == gt_nrrd[0].shape:
+                    raise Exception("predict and ground truth labels must have the same shape")
+
+                predict_label_list = []
+                gt_label_list = []
+                for fig_num in range(predict_data_cpy.shape[-2]):
+                    gt_label = gt_nrrd[0][:, :, fig_num]
+                    gt_label_list.append(gt_label)
+                    predict_score = predict_data_cpy[:, :, fig_num, :].copy()
+                    for cls in range(predict_data_cpy.shape[-1]):
+                        if self.cls_name[cls] == '__background__':
+                            predict_score[:, :, cls] = 0.
+                            continue
+                        predict_score[predict_data_cpy[:, :, fig_num, cls] <= thresh] = 0.
+                    # return the predict label as the index of the maximum value across all classes, the __background__
+                    # class should be the first one, so if none of the positive class score is greater than zero, the
+                    # pixel is classified as the background
+                    predict_label = np.argmax(predict_score, axis=2)
+                    predict_label_list.append(predict_label)
+
+                # list-to-array-to-list conversion for calculating the overall stat (each patient)
+                predict_list = [np.asarray(predict_label_list)]
+                gt_list = [np.asarray(gt_label_list)]
+
+                # calculate physical volume using space directions info stored in .nrrd
+                space_matrix = np.zeros((3, 3))
+                space_matrix[0] = np.asarray(gt_nrrd[1]['space directions'][0]).astype('float32')
+                space_matrix[1] = np.asarray(gt_nrrd[1]['space directions'][1]).astype('float32')
+                space_matrix[2] = np.asarray(gt_nrrd[1]['space directions'][2]).astype('float32')
+                # calculate voxel volume as the determinant of spacing matrix
+                voxel_vol = np.linalg.det(space_matrix)
+
+                # initialize ClassificationMetric class for each patient and update with ground truth/predict labels
+                patient_metric = ClassificationMetric(cls_num=1, if_binary=True,
+                                                      pos_cls_fusion=True)
+
+                cls_metric.update(gt_list, predict_list, cls_label=1)
+
+                patient_metric.update(gt_list, predict_list, cls_label=1)
+
+                if patient_metric.tp[0] == 0:
+                    fp_tp = np.nan
+                else:
+                    fp_tp = patient_metric.fp[0] / patient_metric.tp[0]
+
+                self.result_df = self.result_df.append({'PatientID': PatientID,
+                                                        'class': 'postive sample',
+                                                        'threshold': thresh,
+                                                        'tp_count': patient_metric.tp[0],
+                                                        'tn_count': patient_metric.tn[0],
+                                                        'fp_count': patient_metric.fp[0],
+                                                        'fn_count': patient_metric.fn[0],
+                                                        'accuracy': patient_metric.get_acc(cls_label=1),
+                                                        'recall': patient_metric.get_rec(cls_label=1),
+                                                        'precision': patient_metric.get_prec(cls_label=1),
+                                                        'fp/tp': fp_tp,
+                                                        'gt_vol': patient_metric.get_gt_vol(cls_label=1),
+                                                        'pred_vol': patient_metric.get_pred_vol(cls_label=1),
+                                                        'gt_phys_vol/mm^3': patient_metric.get_gt_vol(
+                                                            cls_label=1) * voxel_vol,
+                                                        'pred_phys_vol/mm^3': patient_metric.get_pred_vol(
+                                                            cls_label=1) * voxel_vol,
+                                                        self.score_type: patient_metric.get_fscore(
+                                                            cls_label=1, beta=self.fscore_beta)},
+                                                       ignore_index=True)
+                gt_tot_phys_vol[0] += cls_metric.get_gt_vol(cls_label=1) * voxel_vol
+                pred_tot_phys_vol[0] += cls_metric.get_pred_vol(cls_label=1) * voxel_vol
+
+
+            if cls_metric.tp[0] == 0:
+                fp_tp = np.nan
+            else:
+                fp_tp = cls_metric.fp[0] / cls_metric.tp[0]
+
+            self.result_df = self.result_df.append({'PatientID': 'total',
+                                                    'class': 'positve sample',
+                                                    'threshold': thresh,
+                                                    'tp_count': cls_metric.tp[0],
+                                                    'tn_count': cls_metric.tn[0],
+                                                    'fp_count': cls_metric.fp[0],
+                                                    'fn_count': cls_metric.fn[0],
+                                                    'accuracy': cls_metric.get_acc(cls_label=1),
+                                                    'recall': cls_metric.get_rec(cls_label=1),
+                                                    'precision': cls_metric.get_prec(cls_label=1),
+                                                    'fp/tp': fp_tp,
+                                                    'gt_vol': cls_metric.get_gt_vol(cls_label=1),
+                                                    'pred_vol': cls_metric.get_pred_vol(cls_label=1),
+                                                    'gt_phys_vol/mm^3': gt_tot_phys_vol[0],
+                                                    'pred_phys_vol/mm^3': pred_tot_phys_vol[0],
+                                                    self.score_type: cls_metric.get_fscore(
+                                                        cls_label=1, beta=self.fscore_beta)},
+                                                   ignore_index=True)
+
+            # find the optimal threshold
+            if 'postive sample' not in self.opt_thresh:
+
+                self.opt_thresh['positive sample'] = self.result_df.iloc[-1]
+
+                self.opt_thresh['positive sample'].loc['threshold'] = thresh
+
+            else:
+                # we choose the optimal threshold corresponding to the one that gives the highest model score
+                if self.result_df.iloc[-1][self.score_type] > self.opt_thresh['positive sample'][
+                    self.score_type]:
+                    self.opt_thresh['positive sample'] = self.result_df.iloc[-1]
+                    self.opt_thresh['positive sample'].loc['threshold'] = thresh
+
+        self.result_df = self.result_df.sort_values(['threshold', 'PatientID', 'class'])
+
+        save_xlsx_json(self.result_df, self.opt_thresh, self.result_save_dir, self.xlsx_name, self.json_name,
+                       'binary-class_evaluation', 'optimal_threshold')
+
 class BrainSemanticSegEvaluatorOnline(object):
     '''
 
@@ -28,6 +443,7 @@ class BrainSemanticSegEvaluatorOnline(object):
         self.img_nrrd_list = img_nrrd_list
         self.patient_list = patient_list
         self.img_save_dir = img_save_dir
+        # config.CLASSES 包含background class,是模型预测的所有类别
         self.cls_name = config.CLASSES
         self.cls_dict = config.CLASS_DICT
         self.score_type = score_type
@@ -140,24 +556,22 @@ class BrainSemanticSegEvaluatorOnline(object):
                 cv2.imwrite(os.path.join(self.img_save_dir, PatientID + '-' + str(fig_num).zfill(2) + '.jpg'),
                             to_show)
 
-                # 多分类分割模型通用评分,用阈值筛选正类别，并在其中选取最大值作为one-hot label
-
+    # 多分类分割模型通用评分,用阈值筛选正类别，并在其中选取最大值作为one-hot label
     def multi_class_evaluation(self):
         predict_data_list = self.predict_data_list
         gt_nrrd_list = self.gt_nrrd_list
-        # initialize ClassificationMetric class and update with ground truth/predict labels
-
 
         for thresh in self.conf_thresh:
             print ('threshold = %s' % thresh)
-            predict_array_list = []
-            gt_array_list = []
             # predict_data.shape() = [figure number, class number, 512, 512], gt_nrrd.shape() = [512, 512, figure number],
             # the pictures are arranged in the same order
 
             # list to keep track of the total physical volume for each segmentation class
-            gt_tot_phys_vol = [0. for _ in range(len(self.cls_name))]
-            pred_tot_phys_vol = [0. for _ in range(len(self.cls_name))]
+            # initialize ClassificationMetric class for total stat (all patients) and update with ground truth/predict labels
+            cls_metric = ClassificationMetric(cls_num=len(self.cls_name) - 1, if_binary=True, pos_cls_fusion=False)
+            gt_tot_phys_vol = [0. for _ in range(len(self.cls_name) - 1)]
+            pred_tot_phys_vol = [0. for _ in range(len(self.cls_name) - 1)]
+
             for predict_data, gt_nrrd, PatientID in zip(predict_data_list, gt_nrrd_list, self.patient_list):
                 print ('processing PatientID: %s' % PatientID)
                 # one has to make a copy of part of predict_data, otherwise it will implicitly convert float to int
@@ -166,7 +580,8 @@ class BrainSemanticSegEvaluatorOnline(object):
                 predict_data_cpy = predict_data_cpy.transpose((2, 3, 0, 1))
                 assert predict_data_cpy.shape[-1] == len(self.cls_name), 'the num of classes: %s in predict labels ' \
                                                                          'should equal that defined in brain/classname_labelname_mapping.xls: %s' % (
-                                                                         predict_data_cpy.shape[-1], len(self.cls_name))
+                                                                             predict_data_cpy.shape[-1],
+                                                                             len(self.cls_name))
                 predict_data_slice_cpy = predict_data[:, 0, :, :].copy()
                 predict_data_slice_cpy = predict_data_slice_cpy.transpose((1, 2, 0))
                 # check if the predict and ground truth labels have the same shape
@@ -190,11 +605,9 @@ class BrainSemanticSegEvaluatorOnline(object):
                     predict_label = np.argmax(predict_score, axis=2)
                     predict_label_list.append(predict_label)
 
-                # list-to-array conversion for calculating the overall stat (all patients)
-                predict_array = np.asarray(predict_label_list)
-                gt_array = np.asarray(gt_label_list)
-                predict_array_list.append(predict_array)
-                gt_array_list.append(gt_array)
+                # list-to-array-to-list conversion for calculating the overall stat (each patient)
+                predict_list = [np.asarray(predict_label_list)]
+                gt_list = [np.asarray(gt_label_list)]
 
                 # calculate physical volume using space directions info stored in .nrrd
                 space_matrix = np.zeros((3, 3))
@@ -204,79 +617,86 @@ class BrainSemanticSegEvaluatorOnline(object):
                 # calculate voxel volume as the determinant of spacing matrix
                 voxel_vol = np.linalg.det(space_matrix)
 
-                for cls_num in range(len(self.cls_name)):
-                    if self.cls_name[cls_num] == '__background__':
+                # initialize ClassificationMetric class for each patient and update with ground truth/predict labels
+                patient_metric = ClassificationMetric(cls_num=len(self.cls_name) - 1, if_binary=True,
+                                                      pos_cls_fusion=False)
+                for cls_label in range(len(self.cls_name)):
+                    if self.cls_name[cls_label] == '__background__':
                         continue
-                    cls_metric = ClassificationMetric(cls_num=cls_num, if_binary=True)
-                    cls_metric.update(gt_label_list, predict_label_list)
 
-                    if cls_metric.tp == 0:
+                    cls_metric.update(gt_list, predict_list, cls_label=cls_label)
+
+                    patient_metric.update(gt_list, predict_list, cls_label=cls_label)
+
+                    if patient_metric.tp[cls_label - 1] == 0:
                         fp_tp = np.nan
                     else:
-                        fp_tp = cls_metric.fp / cls_metric.tp
+                        fp_tp = patient_metric.fp[cls_label - 1] / patient_metric.tp[cls_label - 1]
 
                     self.result_df = self.result_df.append({'PatientID': PatientID,
-                                                            'class': self.cls_name[cls_num],
+                                                            'class': self.cls_name[cls_label],
                                                             'threshold': thresh,
-                                                            'tp_count': cls_metric.tp,
-                                                            'tn_count': cls_metric.tn,
-                                                            'fp_count': cls_metric.fp,
-                                                            'fn_count': cls_metric.fn,
-                                                            'accuracy': cls_metric.get_acc(),
-                                                            'recall': cls_metric.get_rec(),
-                                                            'precision': cls_metric.get_prec(),
+                                                            'tp_count': patient_metric.tp[cls_label - 1],
+                                                            'tn_count': patient_metric.tn[cls_label - 1],
+                                                            'fp_count': patient_metric.fp[cls_label - 1],
+                                                            'fn_count': patient_metric.fn[cls_label - 1],
+                                                            'accuracy': patient_metric.get_acc(cls_label),
+                                                            'recall': patient_metric.get_rec(cls_label),
+                                                            'precision': patient_metric.get_prec(cls_label),
                                                             'fp/tp': fp_tp,
-                                                            'gt_vol': cls_metric.get_gt_vol(),
-                                                            'pred_vol': cls_metric.get_pred_vol(),
-                                                            'gt_phys_vol/mm^3': cls_metric.get_gt_vol() * voxel_vol,
-                                                            'pred_phys_vol/mm^3': cls_metric.get_pred_vol() * voxel_vol,
-                                                            self.score_type: cls_metric.get_fscore(
-                                                                beta=self.fscore_beta)},
+                                                            'gt_vol': patient_metric.get_gt_vol(cls_label),
+                                                            'pred_vol': patient_metric.get_pred_vol(cls_label),
+                                                            'gt_phys_vol/mm^3': patient_metric.get_gt_vol(
+                                                                cls_label) * voxel_vol,
+                                                            'pred_phys_vol/mm^3': patient_metric.get_pred_vol(
+                                                                cls_label) * voxel_vol,
+                                                            self.score_type: patient_metric.get_fscore(
+                                                                cls_label=cls_label, beta=self.fscore_beta)},
                                                            ignore_index=True)
-                    gt_tot_phys_vol[cls_num] += cls_metric.get_gt_vol() * voxel_vol
-                    pred_tot_phys_vol[cls_num] += cls_metric.get_pred_vol() * voxel_vol
-            for cls_num in range(len(self.cls_name)):
-                if self.cls_name[cls_num] == '__background__':
-                    continue
-                cls_metric = ClassificationMetric(cls_num=cls_num, if_binary=True)
-                cls_metric.update(gt_array_list, predict_array_list)
+                    gt_tot_phys_vol[cls_label - 1] += cls_metric.get_gt_vol() * voxel_vol
+                    pred_tot_phys_vol[cls_label - 1] += cls_metric.get_pred_vol() * voxel_vol
 
-                if cls_metric.tp == 0:
+            for cls_label in range(len(self.cls_name)):
+                if self.cls_name[cls_label] == '__background__':
+                    continue
+
+                if cls_metric.tp[cls_label - 1] == 0:
                     fp_tp = np.nan
                 else:
-                    fp_tp = cls_metric.fp / cls_metric.tp
+                    fp_tp = cls_metric.fp[cls_label - 1] / cls_metric.tp[cls_label - 1]
 
                 self.result_df = self.result_df.append({'PatientID': 'total',
-                                                        'class': self.cls_name[cls_num],
+                                                        'class': self.cls_name[cls_label],
                                                         'threshold': thresh,
-                                                        'tp_count': cls_metric.tp,
-                                                        'tn_count': cls_metric.tn,
-                                                        'fp_count': cls_metric.fp,
-                                                        'fn_count': cls_metric.fn,
-                                                        'accuracy': cls_metric.get_acc(),
-                                                        'recall': cls_metric.get_rec(),
-                                                        'precision': cls_metric.get_prec(),
+                                                        'tp_count': cls_metric.tp[cls_label - 1],
+                                                        'tn_count': cls_metric.tn[cls_label - 1],
+                                                        'fp_count': cls_metric.fp[cls_label - 1],
+                                                        'fn_count': cls_metric.fn[cls_label - 1],
+                                                        'accuracy': cls_metric.get_acc(cls_label),
+                                                        'recall': cls_metric.get_rec(cls_label),
+                                                        'precision': cls_metric.get_prec(cls_label),
                                                         'fp/tp': fp_tp,
-                                                        'gt_vol': cls_metric.get_gt_vol(),
-                                                        'pred_vol': cls_metric.get_pred_vol(),
-                                                        'gt_phys_vol/mm^3': gt_tot_phys_vol[cls_num],
-                                                        'pred_phys_vol/mm^3': pred_tot_phys_vol[cls_num],
-                                                        self.score_type: cls_metric.get_fscore(beta=self.fscore_beta)},
+                                                        'gt_vol': cls_metric.get_gt_vol(cls_label),
+                                                        'pred_vol': cls_metric.get_pred_vol(cls_label),
+                                                        'gt_phys_vol/mm^3': gt_tot_phys_vol[cls_label - 1],
+                                                        'pred_phys_vol/mm^3': pred_tot_phys_vol[cls_label - 1],
+                                                        self.score_type: cls_metric.get_fscore(
+                                                            cls_label=cls_label, beta=self.fscore_beta)},
                                                        ignore_index=True)
 
                 # find the optimal threshold
-                if self.cls_name[cls_num] not in self.opt_thresh:
+                if self.cls_name[cls_label] not in self.opt_thresh:
 
-                    self.opt_thresh[self.cls_name[cls_num]] = self.result_df.iloc[-1]
+                    self.opt_thresh[self.cls_name[cls_label]] = self.result_df.iloc[-1]
 
-                    self.opt_thresh[self.cls_name[cls_num]].loc['threshold'] = thresh
+                    self.opt_thresh[self.cls_name[cls_label]].loc['threshold'] = thresh
 
                 else:
                     # we choose the optimal threshold corresponding to the one that gives the highest model score
-                    if self.result_df.iloc[-1][self.score_type] > self.opt_thresh[self.cls_name[cls_num]][
+                    if self.result_df.iloc[-1][self.score_type] > self.opt_thresh[self.cls_name[cls_label]][
                         self.score_type]:
-                        self.opt_thresh[self.cls_name[cls_num]] = self.result_df.iloc[-1]
-                        self.opt_thresh[self.cls_name[cls_num]].loc['threshold'] = thresh
+                        self.opt_thresh[self.cls_name[cls_label]] = self.result_df.iloc[-1]
+                        self.opt_thresh[self.cls_name[cls_label]].loc['threshold'] = thresh
 
         self.result_df = self.result_df.sort_values(['threshold', 'PatientID', 'class'])
 
@@ -287,29 +707,52 @@ class BrainSemanticSegEvaluatorOnline(object):
     def binary_class_evaluation(self):
         predict_data_list = self.predict_data_list
         gt_nrrd_list = self.gt_nrrd_list
-        # initialize ClassificationMetric class and update with ground truth/predict labels
-        cls_metric = ClassificationMetric(cls_num=1, if_binary=True)
 
         for thresh in self.conf_thresh:
             print ('threshold = %s' % thresh)
-            predict_array_list = []
-            gt_array_list = []
             # predict_data.shape() = [figure number, class number, 512, 512], gt_nrrd.shape() = [512, 512, figure number],
             # the pictures are arranged in the same order
-            gt_tot_phys_vol = 0.
-            pred_tot_phys_vol = 0.
+            gt_tot_phys_vol = [0.]
+            pred_tot_phys_vol = [0.]
+            # initialize ClassificationMetric class for total stat (all patients) and update with ground truth/predict labels
+            cls_metric = ClassificationMetric(cls_num=1, if_binary=True, pos_cls_fusion=True)
+
             for predict_data, gt_nrrd, PatientID in zip(predict_data_list, gt_nrrd_list, self.patient_list):
                 print ('processing PatientID: %s' % PatientID)
-                assert predict_data.shape[
-                           1] == 2, 'the number of classes %s in predict labels should be 2 for binary classification' % (
-                predict_data.shape[1])
-                # transpose the predict_data to be shape = [512, 512, figure number]
                 # one has to make a copy of part of predict_data, otherwise it will implicitly convert float to int
-                predict_data_cpy = predict_data[:, 1, :, :].copy()
-                predict_data_cpy = predict_data_cpy.transpose((1, 2, 0))
+                predict_data_cpy = predict_data.copy()
+                # transpose predict_data_cpy to shape [512, 512, figure number, class number]
+                predict_data_cpy = predict_data_cpy.transpose((2, 3, 0, 1))
+                assert predict_data_cpy.shape[-1] == len(self.cls_name), 'the num of classes: %s in predict labels ' \
+                                                                         'should equal that defined in brain/classname_labelname_mapping.xls: %s' % (
+                                                                             predict_data_cpy.shape[-1],
+                                                                             len(self.cls_name))
+                predict_data_slice_cpy = predict_data[:, 0, :, :].copy()
+                predict_data_slice_cpy = predict_data_slice_cpy.transpose((1, 2, 0))
                 # check if the predict and ground truth labels have the same shape
-                if not predict_data_cpy.shape == gt_nrrd[0].shape:
+                if not predict_data_slice_cpy.shape == gt_nrrd[0].shape:
                     raise Exception("predict and ground truth labels must have the same shape")
+
+                predict_label_list = []
+                gt_label_list = []
+                for fig_num in range(predict_data_cpy.shape[-2]):
+                    gt_label = gt_nrrd[0][:, :, fig_num]
+                    gt_label_list.append(gt_label)
+                    predict_score = predict_data_cpy[:, :, fig_num, :].copy()
+                    for cls in range(predict_data_cpy.shape[-1]):
+                        if self.cls_name[cls] == '__background__':
+                            predict_score[:, :, cls] = 0.
+                            continue
+                        predict_score[predict_data_cpy[:, :, fig_num, cls] <= thresh] = 0.
+                    # return the predict label as the index of the maximum value across all classes, the __background__
+                    # class should be the first one, so if none of the positive class score is greater than zero, the
+                    # pixel is classified as the background
+                    predict_label = np.argmax(predict_score, axis=2)
+                    predict_label_list.append(predict_label)
+
+                # list-to-array-to-list conversion for calculating the overall stat (each patient)
+                predict_list = [np.asarray(predict_label_list)]
+                gt_list = [np.asarray(gt_label_list)]
 
                 # calculate physical volume using space directions info stored in .nrrd
                 space_matrix = np.zeros((3, 3))
@@ -319,90 +762,81 @@ class BrainSemanticSegEvaluatorOnline(object):
                 # calculate voxel volume as the determinant of spacing matrix
                 voxel_vol = np.linalg.det(space_matrix)
 
-                predict_label_list = []
-                gt_label_list = []
-                for fig_num in range(predict_data_cpy.shape[-1]):
-                    predict_label = predict_data_cpy[:, :, fig_num]
-                    gt_label = gt_nrrd[0][:, :, fig_num]
-                    predict_label[predict_data_cpy[:, :, fig_num] > thresh] = 1
-                    predict_label[predict_data_cpy[:, :, fig_num] <= thresh] = 0
-                    predict_label_list.append(predict_label)
-                    gt_label_list.append(gt_label)
+                # initialize ClassificationMetric class for each patient and update with ground truth/predict labels
+                patient_metric = ClassificationMetric(cls_num=1, if_binary=True,
+                                                      pos_cls_fusion=True)
 
-                # list-to-array conversion for calculating the overall stat (all patients)
-                predict_array = np.asarray(predict_label_list)
-                gt_array = np.asarray(gt_label_list)
-                predict_array_list.append(predict_array)
-                gt_array_list.append(gt_array)
+                cls_metric.update(gt_list, predict_list, cls_label=1)
 
-                cls_metric.reset()
-                cls_metric.update(gt_label_list, predict_label_list)
+                patient_metric.update(gt_list, predict_list, cls_label=1)
 
-                if cls_metric.tp == 0:
+                if patient_metric.tp[0] == 0:
                     fp_tp = np.nan
                 else:
-                    fp_tp = cls_metric.fp / cls_metric.tp
+                    fp_tp = patient_metric.fp[0] / patient_metric.tp[0]
 
                 self.result_df = self.result_df.append({'PatientID': PatientID,
-                                                        'class': 'mask',
+                                                        'class': 'postive sample',
                                                         'threshold': thresh,
-                                                        'tp_count': cls_metric.tp,
-                                                        'tn_count': cls_metric.tn,
-                                                        'fp_count': cls_metric.fp,
-                                                        'fn_count': cls_metric.fn,
-                                                        'accuracy': cls_metric.get_acc(),
-                                                        'recall': cls_metric.get_rec(),
-                                                        'precision': cls_metric.get_prec(),
+                                                        'tp_count': patient_metric.tp[0],
+                                                        'tn_count': patient_metric.tn[0],
+                                                        'fp_count': patient_metric.fp[0],
+                                                        'fn_count': patient_metric.fn[0],
+                                                        'accuracy': patient_metric.get_acc(cls_label=1),
+                                                        'recall': patient_metric.get_rec(cls_label=1),
+                                                        'precision': patient_metric.get_prec(cls_label=1),
                                                         'fp/tp': fp_tp,
-                                                        'gt_vol': cls_metric.get_gt_vol(),
-                                                        'pred_vol': cls_metric.get_pred_vol(),
-                                                        'gt_phys_vol/mm^3': cls_metric.get_gt_vol() * voxel_vol,
-                                                        'pred_phys_vol/mm^3': cls_metric.get_pred_vol() * voxel_vol,
-                                                        self.score_type: cls_metric.get_fscore(beta=self.fscore_beta)},
+                                                        'gt_vol': patient_metric.get_gt_vol(cls_label=1),
+                                                        'pred_vol': patient_metric.get_pred_vol(cls_label=1),
+                                                        'gt_phys_vol/mm^3': patient_metric.get_gt_vol(
+                                                            cls_label=1) * voxel_vol,
+                                                        'pred_phys_vol/mm^3': patient_metric.get_pred_vol(
+                                                            cls_label=1) * voxel_vol,
+                                                        self.score_type: patient_metric.get_fscore(
+                                                            cls_label=1, beta=self.fscore_beta)},
                                                        ignore_index=True)
-                gt_tot_phys_vol += cls_metric.get_gt_vol() * voxel_vol
-                pred_tot_phys_vol += cls_metric.get_pred_vol() * voxel_vol
+                gt_tot_phys_vol[0] += cls_metric.get_gt_vol(cls_label=1) * voxel_vol
+                pred_tot_phys_vol[0] += cls_metric.get_pred_vol(cls_label=1) * voxel_vol
 
-            cls_metric.reset()
-            cls_metric.update(gt_array_list, predict_array_list)
-
-            if cls_metric.tp == 0:
+            if cls_metric.tp[0] == 0:
                 fp_tp = np.nan
             else:
-                fp_tp = cls_metric.fp / cls_metric.tp
+                fp_tp = cls_metric.fp[0] / cls_metric.tp[0]
 
             self.result_df = self.result_df.append({'PatientID': 'total',
-                                                    'class': 'mask',
+                                                    'class': 'positve sample',
                                                     'threshold': thresh,
-                                                    'tp_count': cls_metric.tp,
-                                                    'tn_count': cls_metric.tn,
-                                                    'fp_count': cls_metric.fp,
-                                                    'fn_count': cls_metric.fn,
-                                                    'accuracy': cls_metric.get_acc(),
-                                                    'recall': cls_metric.get_rec(),
-                                                    'precision': cls_metric.get_prec(),
+                                                    'tp_count': cls_metric.tp[0],
+                                                    'tn_count': cls_metric.tn[0],
+                                                    'fp_count': cls_metric.fp[0],
+                                                    'fn_count': cls_metric.fn[0],
+                                                    'accuracy': cls_metric.get_acc(cls_label=1),
+                                                    'recall': cls_metric.get_rec(cls_label=1),
+                                                    'precision': cls_metric.get_prec(cls_label=1),
                                                     'fp/tp': fp_tp,
-                                                    'gt_vol': cls_metric.get_gt_vol(),
-                                                    'pred_vol': cls_metric.get_pred_vol(),
-                                                    'gt_phys_vol/mm^3': gt_tot_phys_vol,
-                                                    'pred_phys_vol/mm^3': pred_tot_phys_vol,
-                                                    self.score_type: cls_metric.get_fscore(beta=self.fscore_beta)},
+                                                    'gt_vol': cls_metric.get_gt_vol(cls_label=1),
+                                                    'pred_vol': cls_metric.get_pred_vol(cls_label=1),
+                                                    'gt_phys_vol/mm^3': gt_tot_phys_vol[0],
+                                                    'pred_phys_vol/mm^3': pred_tot_phys_vol[0],
+                                                    self.score_type: cls_metric.get_fscore(
+                                                        cls_label=1, beta=self.fscore_beta)},
                                                    ignore_index=True)
 
             # find the optimal threshold
-            if 'mask' not in self.opt_thresh:
+            if 'postive sample' not in self.opt_thresh:
 
-                self.opt_thresh['mask'] = self.result_df.iloc[-1]
+                self.opt_thresh['positive sample'] = self.result_df.iloc[-1]
 
-                self.opt_thresh['mask'].loc['threshold'] = thresh
+                self.opt_thresh['positive sample'].loc['threshold'] = thresh
 
             else:
                 # we choose the optimal threshold corresponding to the one that gives the highest model score
-                if self.result_df.iloc[-1][self.score_type] > self.opt_thresh['mask'][self.score_type]:
-                    self.opt_thresh['mask'] = self.result_df.iloc[-1]
-                    self.opt_thresh['mask'].loc['threshold'] = thresh
+                if self.result_df.iloc[-1][self.score_type] > self.opt_thresh['positive sample'][
+                    self.score_type]:
+                    self.opt_thresh['positive sample'] = self.result_df.iloc[-1]
+                    self.opt_thresh['positive sample'].loc['threshold'] = thresh
 
-        self.result_df = self.result_df.sort_values(['threshold', 'PatientID'])
+        self.result_df = self.result_df.sort_values(['threshold', 'PatientID', 'class'])
 
         save_xlsx_json(self.result_df, self.opt_thresh, self.result_save_dir, self.xlsx_name, self.json_name,
                        'binary-class_evaluation', 'optimal_threshold')
@@ -425,6 +859,7 @@ class BrainSemanticSegEvaluatorOffline(BrainSemanticSegEvaluatorOnline):
         self.gt_dir = gt_dir
         self.img_dir = img_dir
         self.img_save_dir = img_save_dir
+        # config.CLASSES 包含background class,是模型预测的所有类别
         self.cls_name = config.CLASSES
         self.cls_dict = config.CLASS_DICT
         self.score_type = score_type

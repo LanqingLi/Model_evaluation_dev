@@ -16,7 +16,7 @@ class BrainSemanticSegEvaluatorOnline(object):
 
     '''
 
-    def __init__(self, predict_data_list, gt_nrrd_list, img_nrrd_list, patient_list, data_type,
+    def __init__(self, predict_data_list, gt_nrrd_list, img_nrrd_list, patient_list,
                  img_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_contour'),
                  score_type='fscore', result_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_result'),
                  xlsx_name='BrainSemanticSegEvaluation.xlsx', json_name='BrainSemanticSegEvaluation',
@@ -24,7 +24,6 @@ class BrainSemanticSegEvaluatorOnline(object):
                  fscore_beta=config.FSCORE_BETA
                  ):
         self.predict_data_list = predict_data_list
-        self.data_type = data_type
         self.gt_nrrd_list = gt_nrrd_list
         self.img_nrrd_list = img_nrrd_list
         self.patient_list = patient_list
@@ -447,8 +446,10 @@ class BrainSemanticSegEvaluatorOffline(BrainSemanticSegEvaluatorOnline):
         super(BrainSemanticSegEvaluatorOffline, self).__init__(predict_data_list=predict_data_list,
                                                                gt_nrrd_list=gt_nrrd_list,
                                                                img_nrrd_list=img_nrrd_list,
-                                                               data_type=self.data_type,
-                                                               patient_list=self.patient_list)
+                                                               patient_list=self.patient_list,
+                                                               conf_thresh=self.conf_thresh,
+                                                               cls_weights=self.cls_weights,
+                                                               fscore_beta=self.fscore_beta)
     def load_data(self):
         '''
         data-storing convention:

@@ -15,15 +15,14 @@ from lung.post_process import df_to_cls_label
 from lung.get_df_nodules import get_nodule_stat, init_df_boxes
 from tools.generate_interpolated_nodule_list.generate_interpolated_nodule_list import slice_num_to_three_digit_str
 
-class LungNoduleEvaluatorOffline(object):
+class LungNoduleEvaluatorOnline(object):
     '''
-    this class is designed for evaluation of our CT lung model offline. It can read anchor boxes from a selection of format (.json/.npy)
+    this class is designed for evaluation of our CT lung model offline. It can read anchor boxes pandas.Dataframe from inference
     and generate spreadsheets of statistics (tp, fp, etc. see common/custom_metric) for each nodule class under customized
     range of classification (softmax) probability threshold, which can be used for plotting ROC curve and calculating AUC.
 
-    :param data_dir: 存储模型预测出的框的信息的数据路径，我们读入数据的路径
-    :param data_type: 存储预测出的框的信息的数据格式，默认为.json，我们读入数据的格式。对于FRCNN,我们将clean_box_new输出的框存成.npy/.json供读取
-    :param anno_dir: 存储对应CT ground truth数据标记(annotation)的路径
+    :param predict_df_boxes_dict: 模型预测出来的锚框的字典，关键词为病人号
+    :param ground_truth_boxes_dict: 人工标记的锚框的字典，关键词为病人号
     :param score_type: 模型得分的函数，对于结节的检出、分类问题，我们默认用'fscore'
     :param result_save_dir: 存放评估结果的路径
     :param cls_name: 包含预测所有类别的列表，默认为config.CLASSES, 包含'__background__'类
@@ -42,17 +41,16 @@ class LungNoduleEvaluatorOffline(object):
     :param thickness_thresh: nodule_thickness_filter根据此阈值对结节的层厚进行筛选
     :param nodule_compare_thresh: 比较两个结节是否算一个的IOU阈值
     '''
-    def __init__(self, data_dir, data_type, anno_dir, score_type = 'fscore',  result_save_dir = os.path.join(os.getcwd(), 'LungNoduleEvaluation_result'),
+    def __init__(self, predict_df_boxes_dict, ground_truth_boxes_dict, score_type = 'fscore',  result_save_dir = os.path.join(os.getcwd(), 'LungNoduleEvaluation_result'),
                  xlsx_name = 'LungNoduleEvaluation.xlsx', json_name = 'LungNoduleEvaluation', if_nodule_json = False,
                  conf_thresh = config.TEST.CONF_THRESHOLD, nodule_cls_weights = config.CLASS_WEIGHTS,
                  same_box_threshold_pred = config.FIND_NODULES.SAME_BOX_THRESHOLD_PRED, same_box_threshold_gt = config.FIND_NODULES.SAME_BOX_THRESHOLD_GT,
                  score_threshold_pred = config.FIND_NODULES.SCORE_THRESHOLD_PRED, score_threshold_gt = config.FIND_NODULES.SCORE_THRESHOLD_GT,
                  z_threshold_pred = config.CLASS_Z_THRESHOLD_PRED, z_threshold_gt = config.CLASS_Z_THRESHOLD_GT,
                  nodule_compare_thresh = config.TEST.IOU_THRESHOLD, thickness_thresh = config.THICKNESS_THRESHOLD, if_nodule_threshold = False):
-        assert os.path.isdir(data_dir), 'must initialize it with a valid directory of bbox data'
-        self.data_dir = data_dir
-        self.data_type = data_type
-        self.anno_dir = anno_dir
+
+        self.predict_df_boxes_dict = predict_df_boxes_dict
+        self.ground_truth_boxes_dict = ground_truth_boxes_dict
         # config.CLASSES 包含background class,是结节的粗分类(RCNN分类)
         self.cls_name = config.CLASSES
         self.cls_dict = config.CLASS_DICT
@@ -74,7 +72,7 @@ class LungNoduleEvaluatorOffline(object):
         self.patient_list = []
         self.cls_weight = []
         self.cls_value = {'accuracy': [], 'recall': [], 'precision': [], self.score_type: []}
-        # ObjMatch.ObjMatch.find_nodules算法的相关超参数，详见config文件
+        # objmatch.find_nodules算法的相关超参数，详见config文件
         self.same_box_threshold_pred = same_box_threshold_pred
         self.same_box_threshold_gt = same_box_threshold_gt
         self.score_threshold_pred = score_threshold_pred
@@ -89,7 +87,8 @@ class LungNoduleEvaluatorOffline(object):
     # 多分类模型评分,每次只选取单类别的检出框，把其余所有类别作为负样本。
     def multi_class_evaluation(self):
 
-        predict_df_boxes_dict, ground_truth_boxes_dict = self.load_data()
+        predict_df_boxes_dict = self.predict_df_boxes_dict
+        ground_truth_boxes_dict = self.ground_truth_boxes_dict
 
         # 为了画ROC曲线做模型评分，我们取0.1到1的多个阈值并对predict_df_boxes做筛选
         for thresh in self.conf_thresh:
@@ -188,6 +187,7 @@ class LungNoduleEvaluatorOffline(object):
 
                 self.count_df = self.count_df.append({'nodule_class': cls,
                                                       'threshold': thresh,
+                                                      'nodule_count': self.nodule_count,
                                                       'tp_count': cls_metric.tp,
                                                       'fp_count': cls_metric.fp,
                                                       'fn_count': cls_metric.fn,
@@ -290,7 +290,8 @@ class LungNoduleEvaluatorOffline(object):
     # 多分类模型评分,每次只选取单类别的检出框，把其余所有类别作为负样本。先把框匹配成结节，再用阈值对结节的最高概率进行筛选
     def multi_class_evaluation_nodule_threshold(self):
 
-        predict_df_boxes_dict, ground_truth_boxes_dict = self.load_data()
+        predict_df_boxes_dict = self.predict_df_boxes_dict
+        ground_truth_boxes_dict = self.ground_truth_boxes_dict
 
         # 为了画ROC曲线做模型评分，我们取0.1到1的多个阈值并对predict_df_boxes做筛选
         for thresh in self.conf_thresh:
@@ -394,6 +395,7 @@ class LungNoduleEvaluatorOffline(object):
 
                 self.count_df = self.count_df.append({'nodule_class': cls,
                                                       'threshold': thresh,
+                                                      'nodule_count': self.nodule_count,
                                                       'tp_count': cls_metric.tp,
                                                       'fp_count': cls_metric.fp,
                                                       'fn_count': cls_metric.fn,
@@ -496,7 +498,8 @@ class LungNoduleEvaluatorOffline(object):
     # 二分类（检出）模型统计,将所有正样本类别统计在一起
     def binary_class_evaluation(self):
 
-        predict_df_boxes_dict, gt_df_boxes_dict = self.load_data()
+        predict_df_boxes_dict = self.predict_df_boxes_dict
+        gt_df_boxes_dict = self.ground_truth_boxes_dict
 
         # 为了画ROC曲线做模型评分，我们取0.1到1的多个阈值并对predict_df_boxes做筛选
         for thresh in self.conf_thresh:
@@ -648,7 +651,8 @@ class LungNoduleEvaluatorOffline(object):
     #先把框匹配成结节，再用阈值对结节的最高概率进行筛选
     def binary_class_evaluation_nodule_threshold(self):
 
-        predict_df_boxes_dict, gt_df_boxes_dict = self.load_data()
+        predict_df_boxes_dict = self.predict_df_boxes_dict
+        gt_df_boxes_dict = self.ground_truth_boxes_dict
 
         # 为了画ROC曲线做模型评分，我们取0.1到1的多个阈值并对predict_df_boxes做筛选
         for thresh in self.conf_thresh:
@@ -798,53 +802,7 @@ class LungNoduleEvaluatorOffline(object):
             js_opt_thresh = json.loads(json_opt_thresh, "utf-8")
             json.dump(js_opt_thresh, fp)
 
-    # 读入预测结果数据
 
-    def load_data(self):
-        """
-        读入模型输出的.json和ground truth的.xml标记
-        :return: 模型预测结果、ground truth标记按病人号排列的pandas.DataFrame
-        e.g. | Mask | instanceNumber | nodule_class | prob | sliceId | xmax | xmin | ymax | ymin |
-             |  []  |       106      | solid nodule | 0.9  | 105.0   | 207.0| 182.0| 230.0| 205.0|
-        """
-        predict_df_boxes_dict = {}
-        ground_truth_boxes_dict = {}
-        # 将所有预测病人的json/npy文件(包含所有层面所有种类的框)转换为DataFrame
-        for PatientID in os.listdir(self.data_dir):
-            if self.data_type == 'json':
-                predict_json_path = os.path.join(self.data_dir, PatientID, PatientID + '_predict.json')
-                try:
-                    predict_df_boxes = pd.read_json(predict_json_path).T
-                except:
-                    print ("broken directory structure, maybe no prediction json file found: %s" % predict_json_path)
-            elif self.data_type == 'npy':
-                predict_npy_path = os.path.join(self.data_dir, PatientID, PatientID + '_predict.npy')
-                try:
-                    predict_boxes = np.load(predict_npy_path)
-                except:
-                    print ("broken directory structure, maybe no prediction npy file found: %s" % predict_npy_path)
-                predict_df_boxes = init_df_boxes(return_boxes=predict_boxes, classes=self.cls_name)
-                predict_df_boxes = predict_df_boxes.sort_values(by=['prob'])
-                predict_df_boxes = predict_df_boxes.reset_index(drop=True)
-            else:
-                # 　尚未考虑其他数据存储格式，有需要的话日后添加
-                raise NotImplemented
-
-            ground_truth_path = os.path.join(self.anno_dir, PatientID)
-            try:
-                # 对于ground truth boxes,我们直接读取其xml标签。因为几乎所有CT图像少于1000个层，故我们在这里选择1000
-                ground_truth_boxes = xml_to_boxeslist(ground_truth_path, 1000)
-            except:
-                print ("broken directory structure, maybe no ground truth xml file found: %s" % ground_truth_path)
-                ground_truth_boxes = [[[[]]]]
-
-            ground_truth_boxes = init_df_boxes(return_boxes=ground_truth_boxes, classes=self.cls_name)
-            ground_truth_boxes = ground_truth_boxes.sort_values(by=['prob'])
-            ground_truth_boxes = ground_truth_boxes.reset_index(drop=True)
-
-            predict_df_boxes_dict[PatientID] = predict_df_boxes
-            ground_truth_boxes_dict[PatientID] = ground_truth_boxes
-        return predict_df_boxes_dict, ground_truth_boxes_dict
 
     # 由predict出的框和ground truth anno生成_nodules.json和_gt.json
     def generate_df_nodules_to_json(self):
@@ -852,7 +810,8 @@ class LungNoduleEvaluatorOffline(object):
         读入_predict.json及gt annotation文件，经过get_nodule_stat转换为json文件并存储到指定目录
         """
 
-        predict_df_boxes_dict, ground_truth_boxes_dict = self.load_data()
+        predict_df_boxes_dict = self.predict_df_boxes_dict
+        ground_truth_boxes_dict = self.ground_truth_boxes_dict
 
         # 将所有预测病人的json/npy文件(包含所有层面所有种类的框)转换为DataFrame
         for PatientID in os.listdir(self.data_dir):
@@ -916,9 +875,144 @@ class LungNoduleEvaluatorOffline(object):
                 js_gt = json.loads(str_gt, "utf-8")
                 json.dump(js_gt, fp)
 
-    # 筛选一定层厚以上的最终输出的结节（降假阳实验）
+
+class LungNoduleEvaluatorOffline(LungNoduleEvaluatorOnline):
+    '''
+    this class is designed for evaluation of our CT lung model offline. It can read anchor boxes from a selection of format (.json/.npy)
+    and generate spreadsheets of statistics (tp, fp, etc. see common/custom_metric) for each nodule class under customized
+    range of classification (softmax) probability threshold, which can be used for plotting ROC curve and calculating AUC.
+
+    :param data_dir: 存储模型预测出的框的信息的数据路径，我们读入数据的路径
+    :param data_type: 存储预测出的框的信息的数据格式，默认为.json，我们读入数据的格式。对于FRCNN,我们将clean_box_new输出的框存成.npy/.json供读取
+    :param anno_dir: 存储对应CT ground truth数据标记(annotation)的路径
+    :param score_type: 模型得分的函数，对于结节的检出、分类问题，我们默认用'fscore'
+    :param result_save_dir: 存放评估结果的路径
+    :param cls_name: 包含预测所有类别的列表，默认为config.CLASSES, 包含'__background__'类
+    :param cls_dict: 包含'rcnn/classname_labelname_mapping.xls'中label_name到class_name映射的字典，不包含'__background__'类
+    :param opt_thresh: 存储最终使得各类别模型预测结果最优的概率阈值及其对应tp,fp,score等信息的字典，index为预测的类别。每个index对应一个类似于
+    self.count_df的字典，最终存储在self.xlsx_name的'optimal threshold' sheet中
+    :param count_df: 初始化的pandas.DataFrame,用于存储最终输出的evaluation结果
+    :param result_save_dir:　存储输出.xlsx结果的路径
+    :param xlsx_name: 存储输出.xlsx文件的名字
+    :param json_name: 存储输出.json文件的名字，不带后缀
+    :param if_nodule_json:　是否根据ground truth annotation生成匹配后结节信息的.json文件
+    :param conf_thresh:　自定义的置信度概率阈值采样点，存在列表中，用于求最优阈值及画ROC曲线
+    :param nodule_cls_weights:　不同结节种类对于模型综合评分以及ObjMatch.ObjMatch.find_nodules算法中的权重，默认与结节分类信息一起从classname_labelname_mapping.xls中读取,类型为dict
+    :param cls_weight: 在求加权平均结果时，每个类别的权重，类型为list
+    :param cls_value: 在求加权平均结果时，每个类别的得分，类型为list
+    :param thickness_thresh: nodule_thickness_filter根据此阈值对结节的层厚进行筛选
+    :param nodule_compare_thresh: 比较两个结节是否算一个的IOU阈值
+    '''
+    def __init__(self, data_dir, data_type, anno_dir, score_type = 'fscore',  result_save_dir = os.path.join(os.getcwd(), 'LungNoduleEvaluation_result'),
+                 xlsx_name = 'LungNoduleEvaluation.xlsx', json_name = 'LungNoduleEvaluation', if_nodule_json = False,
+                 conf_thresh = config.TEST.CONF_THRESHOLD, nodule_cls_weights = config.CLASS_WEIGHTS,
+                 same_box_threshold_pred = config.FIND_NODULES.SAME_BOX_THRESHOLD_PRED, same_box_threshold_gt = config.FIND_NODULES.SAME_BOX_THRESHOLD_GT,
+                 score_threshold_pred = config.FIND_NODULES.SCORE_THRESHOLD_PRED, score_threshold_gt = config.FIND_NODULES.SCORE_THRESHOLD_GT,
+                 z_threshold_pred = config.CLASS_Z_THRESHOLD_PRED, z_threshold_gt = config.CLASS_Z_THRESHOLD_GT,
+                 nodule_compare_thresh = config.TEST.IOU_THRESHOLD, thickness_thresh = config.THICKNESS_THRESHOLD, if_nodule_threshold = False):
+        assert os.path.isdir(data_dir), 'must initialize it with a valid directory of bbox data'
+        self.data_dir = data_dir
+        self.data_type = data_type
+        self.anno_dir = anno_dir
+        # config.CLASSES 包含background class,是结节的粗分类(RCNN分类)
+        self.cls_name = config.CLASSES
+        self.cls_dict = config.CLASS_DICT
+        self.score_type = score_type
+        self.opt_thresh = {}
+
+        self.count_df = pd.DataFrame(
+                     columns=['nodule_class', 'threshold', 'nodule_count', 'tp_count', 'fp_count', 'fn_count',
+                              'accuracy', 'recall', 'precision',
+                              'fp/tp', self.score_type])
+
+        self.result_save_dir = result_save_dir
+        self.xlsx_name = xlsx_name
+        self.json_name = json_name
+        self.if_nodule_json = if_nodule_json
+        # customized confidence threshold for plotting ROC curve
+        self.conf_thresh = conf_thresh
+        self.nodule_cls_weights = nodule_cls_weights
+        self.patient_list = []
+        self.cls_weight = []
+        self.cls_value = {'accuracy': [], 'recall': [], 'precision': [], self.score_type: []}
+        # ObjMatch.ObjMatch.find_nodules算法的相关超参数，详见config文件
+        self.same_box_threshold_pred = same_box_threshold_pred
+        self.same_box_threshold_gt = same_box_threshold_gt
+        self.score_threshold_pred = score_threshold_pred
+        self.score_threshold_gt = score_threshold_gt
+        self.z_threshold_pred = z_threshold_pred
+        self.z_threshold_gt = z_threshold_gt
+        self.if_nodule_threshold = if_nodule_threshold
+
+        self.thickness_thresh = thickness_thresh
+        self.nodule_compare_thresh = nodule_compare_thresh
+        predict_df_boxes_dict, ground_truth_boxes_dict = self.load_data()
+        super(LungNoduleEvaluatorOffline, self).__init__(predict_df_boxes_dict=predict_df_boxes_dict,
+                                                         ground_truth_boxes_dict=ground_truth_boxes_dict,
+                                                         conf_thresh = self.conf_thresh,
+                                                         nodule_cls_weights = self.nodule_cls_weights,
+                                                         same_box_threshold_pred = self.same_box_threshold_pred,
+                                                         same_box_threshold_gt = self.same_box_threshold_gt,
+                                                         score_threshold_pred = self.score_threshold_pred,
+                                                         score_threshold_gt = self.score_threshold_gt,
+                                                         z_threshold_pred = self.z_threshold_pred,
+                                                         z_threshold_gt = self.z_threshold_gt,
+                                                         if_nodule_threshold = self.if_nodule_threshold,
+                                                         nodule_compare_thresh = self.nodule_compare_thresh)
+
+
+    # 读入预测结果数据
+    def load_data(self):
+        """
+        读入模型输出的.json和ground truth的.xml标记
+        :return: 模型预测结果、ground truth标记按病人号排列的pandas.DataFrame
+        e.g. | Mask | instanceNumber | nodule_class | prob | sliceId | xmax | xmin | ymax | ymin |
+             |  []  |       106      | solid nodule | 0.9  | 105.0   | 207.0| 182.0| 230.0| 205.0|
+        """
+        predict_df_boxes_dict = {}
+        ground_truth_boxes_dict = {}
+        # 将所有预测病人的json/npy文件(包含所有层面所有种类的框)转换为DataFrame
+        for PatientID in os.listdir(self.data_dir):
+            if self.data_type == 'json':
+                predict_json_path = os.path.join(self.data_dir, PatientID, PatientID + '_predict.json')
+                try:
+                    predict_df_boxes = pd.read_json(predict_json_path).T
+                except:
+                    print (
+                    "broken directory structure, maybe no prediction json file found: %s" % predict_json_path)
+            elif self.data_type == 'npy':
+                predict_npy_path = os.path.join(self.data_dir, PatientID, PatientID + '_predict.npy')
+                try:
+                    predict_boxes = np.load(predict_npy_path)
+                except:
+                    print ("broken directory structure, maybe no prediction npy file found: %s" % predict_npy_path)
+                predict_df_boxes = init_df_boxes(return_boxes=predict_boxes, classes=self.cls_name)
+                predict_df_boxes = predict_df_boxes.sort_values(by=['prob'])
+                predict_df_boxes = predict_df_boxes.reset_index(drop=True)
+            else:
+                # 　尚未考虑其他数据存储格式，有需要的话日后添加
+                raise NotImplemented
+
+            ground_truth_path = os.path.join(self.anno_dir, PatientID)
+            try:
+                # 对于ground truth boxes,我们直接读取其xml标签。因为几乎所有CT图像少于1000个层，故我们在这里选择1000
+                ground_truth_boxes = xml_to_boxeslist(ground_truth_path, 1000)
+            except:
+                print ("broken directory structure, maybe no ground truth xml file found: %s" % ground_truth_path)
+                ground_truth_boxes = [[[[]]]]
+
+            ground_truth_boxes = init_df_boxes(return_boxes=ground_truth_boxes, classes=self.cls_name)
+            ground_truth_boxes = ground_truth_boxes.sort_values(by=['prob'])
+            ground_truth_boxes = ground_truth_boxes.reset_index(drop=True)
+
+            predict_df_boxes_dict[PatientID] = predict_df_boxes
+            ground_truth_boxes_dict[PatientID] = ground_truth_boxes
+        return predict_df_boxes_dict, ground_truth_boxes_dict
+        # 筛选一定层厚以上的最终输出的结节（降假阳实验）
+
     def nodule_thickness_filter(self):
-        assert type(self.thickness_thresh) == int, "input thickness_thresh should be an integer, not %s" %self.thickness_thresh
+        assert type(
+            self.thickness_thresh) == int, "input thickness_thresh should be an integer, not %s" % self.thickness_thresh
         for PatientID in os.listdir(self.data_dir):
             if self.data_type == 'json':
                 predict_json_path = os.path.join(self.result_save_dir, PatientID, PatientID + '_nodule.json')
@@ -936,14 +1030,14 @@ class LungNoduleEvaluatorOffline(object):
             if not os.path.exists(self.result_save_dir):
                 os.mkdir(self.result_save_dir)
             json_patient_dir = os.path.join(self.result_save_dir, PatientID)
-            print ('processing patient: %s' %PatientID)
+            print ('processing patient: %s' % PatientID)
             print json_patient_dir
             if not os.path.exists(json_patient_dir):
                 os.mkdir(json_patient_dir)
-            with open(os.path.join(json_patient_dir, PatientID + '_nodule%s.json' %(self.thickness_thresh)), "w") as fp:
+            with open(os.path.join(json_patient_dir, PatientID + '_nodule%s.json' % (self.thickness_thresh)),
+                      "w") as fp:
                 js_nodules = json.loads(str_nodules, "utf-8")
                 json.dump(js_nodules, fp)
-
 
 class FindNodulesEvaluator(object):
     def __init__(self, gt_anno_dir, conf_thres = 1., result_save_dir = os.path.join(os.getcwd(), 'FindNodulesEvaluation_result'),

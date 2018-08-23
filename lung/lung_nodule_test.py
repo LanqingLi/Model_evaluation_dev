@@ -1,4 +1,4 @@
-import model_eval.lung.evaluator as evaluator
+import evaluator as evaluator
 import argparse
 import numpy as np
 

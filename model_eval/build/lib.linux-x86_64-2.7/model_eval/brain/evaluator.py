@@ -446,7 +446,10 @@ class BrainSemanticSegEvaluatorOffline(BrainSemanticSegEvaluatorOnline):
         super(BrainSemanticSegEvaluatorOffline, self).__init__(predict_data_list=predict_data_list,
                                                                gt_nrrd_list=gt_nrrd_list,
                                                                img_nrrd_list=img_nrrd_list,
-                                                               patient_list=self.patient_list)
+                                                               patient_list=self.patient_list,
+                                                               conf_thresh=self.conf_thresh,
+                                                               cls_weights=self.cls_weights,
+                                                               fscore_beta=self.fscore_beta)
     def load_data(self):
         '''
         data-storing convention:
