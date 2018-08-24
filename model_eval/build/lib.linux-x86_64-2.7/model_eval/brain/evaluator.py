@@ -81,6 +81,8 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
             # to shape (512, 512, figure number, 3(RGB channel))
             img_nrrd = data[self.img_key].transpose(2, 3, 0, 1)
             PatientID = data[self.patient_key]
+            # dim of the raw image
+            dim = [img_nrrd.shape[0], img_nrrd.shape[1]]
 
             print ('processing PatientID: %s' % PatientID)
             assert predict_data.shape[
@@ -110,9 +112,9 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
                 prob = predict_map[:, :, np.newaxis] * 255
                 prob = np.array(np.repeat(prob, axis=2, repeats=3), dtype=np.uint8)
 
-                to_show = np.zeros(shape=(512, 1024, 3), dtype=np.uint8)
-                to_show[:, :512, :] = img
-                to_show[:, 512:, :] = lab
+                to_show = np.zeros(shape=(dim[0], dim[1]*2, 3), dtype=np.uint8)
+                to_show[:, :dim[1], :] = img
+                to_show[:, dim[1]:, :] = lab
 
                 cv2.imwrite(os.path.join(self.img_save_dir, PatientID + '-' + str(fig_num).zfill(2) + '.jpg'), to_show)
 
@@ -132,6 +134,8 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
             # to shape (512, 512, figure number, 3(RGB channel))
             img_nrrd = data[self.img_key].transpose(2, 3, 0, 1)
             PatientID = data[self.patient_key]
+            # dim of the raw image
+            dim = [img_nrrd.shape[0], img_nrrd.shape[1]]
 
             print ('processing PatientID: %s' % PatientID)
             assert predict_data.shape[
@@ -164,9 +168,9 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
                     prob = predict_map[:, :, np.newaxis] * 255
                     prob = np.array(np.repeat(prob, axis=2, repeats=3), dtype=np.uint8)
 
-                    to_show = np.zeros(shape=(512, 1024, 3), dtype=np.uint8)
-                    to_show[:, :512, :] = img
-                    to_show[:, 512:, :] = lab
+                    to_show = np.zeros(shape=(dim[0], dim[1]*2, 3), dtype=np.uint8)
+                    to_show[:, :dim[1], :] = img
+                    to_show[:, dim[1]:, :] = lab
 
                 cv2.imwrite(os.path.join(self.img_save_dir, PatientID + '-' + str(fig_num).zfill(2) + '.jpg'),
                             to_show)
@@ -194,6 +198,7 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
                 predict_data = self.predictor(data[self.predict_key])
                 gt_nrrd = data[self.gt_key]
                 PatientID = data[self.patient_key]
+
                 print ('processing PatientID: %s' % PatientID)
                 # one has to make a copy of part of predict_data, otherwise it will implicitly convert float to int
                 predict_data_cpy = predict_data.copy()
@@ -538,6 +543,9 @@ class BrainSemanticSegEvaluatorOnline(object):
             # one has to make a copy of part of predict_data, otherwise it will implicitly convert float to int
             predict_data_cpy = predict_data[:, 1, :, :].copy()
             predict_data_cpy = predict_data_cpy.transpose((1, 2, 0))
+            # dim of the raw image
+            dim = [img_nrrd.shape[0], img_nrrd.shape[1]]
+
             # check if the predict and ground truth labels have the same shape
             if not predict_data_cpy.shape == gt_nrrd[0].shape:
                 raise Exception("predict and ground truth labels must have the same shape")
@@ -560,9 +568,9 @@ class BrainSemanticSegEvaluatorOnline(object):
                 prob = predict_map[:, :, np.newaxis] * 255
                 prob = np.array(np.repeat(prob, axis=2, repeats=3), dtype=np.uint8)
 
-                to_show = np.zeros(shape=(512, 1024, 3), dtype=np.uint8)
-                to_show[:, :512, :] = img
-                to_show[:, 512:, :] = lab
+                to_show = np.zeros(shape=(dim[0], dim[1]*2, 3), dtype=np.uint8)
+                to_show[:, :dim[1], :] = img
+                to_show[:, dim[1]:, :] = lab
 
                 cv2.imwrite(os.path.join(self.img_save_dir, PatientID + '-' + str(fig_num).zfill(2) + '.jpg'), to_show)
 
@@ -584,6 +592,9 @@ class BrainSemanticSegEvaluatorOnline(object):
             # one has to make a copy of part of predict_data, otherwise it will implicitly convert float to int
             predict_data_cpy = predict_data[:, 1, :, :].copy()
             predict_data_cpy = predict_data_cpy.transpose((1, 2, 0))
+            # dim of the raw image
+            dim = [img_nrrd.shape[0], img_nrrd.shape[1]]
+
             # check if the predict and ground truth labels have the same shape
             if not predict_data_cpy.shape == gt_nrrd[0].shape:
                 raise Exception("predict and ground truth labels must have the same shape")
@@ -609,9 +620,9 @@ class BrainSemanticSegEvaluatorOnline(object):
                     prob = predict_map[:, :, np.newaxis] * 255
                     prob = np.array(np.repeat(prob, axis=2, repeats=3), dtype=np.uint8)
 
-                    to_show = np.zeros(shape=(512, 1024, 3), dtype=np.uint8)
-                    to_show[:, :512, :] = img
-                    to_show[:, 512:, :] = lab
+                    to_show = np.zeros(shape=(dim[0], dim[1] * 2, 3), dtype=np.uint8)
+                    to_show[:, :dim[1], :] = img
+                    to_show[:, dim[1]:, :] = lab
 
                 cv2.imwrite(os.path.join(self.img_save_dir, PatientID + '-' + str(fig_num).zfill(2) + '.jpg'),
                             to_show)

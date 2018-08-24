@@ -7,11 +7,10 @@ import numpy as np
 import cv2
 import shutil
 import copy
-from objmatch.objmatch.common_metrics import AnchorMetric
+from common_metrics import AnchorMetric
 
-anchor_metric = AnchorMetric(dim=2)
 
-def df_to_cls_label(cls_predict_df_list, cls_gt_df_list, cls_list, thresh):
+def df_to_cls_label(cls_predict_df_list, cls_gt_df_list, cls_list, thresh, dim=2):
     """Convert list of pandas dataframe to list of list of cls labels, as input for custom_metric.ClassificationMetric
 
     :param cls_predict_df_list:
@@ -67,7 +66,7 @@ def df_to_cls_label(cls_predict_df_list, cls_gt_df_list, cls_list, thresh):
                 cls_gt_label.append(cls_list.index(row_gt['class']))
                 for j, row_pred in cls_predict_df.iterrows():
                     if object_compare(predict_slices=pred_object[j][0], ground_truth_slices=gt_object[i][0],
-                                      predict_bboxs=pred_object[j][1], ground_truth_bboxs=gt_object[i][1], thresh=thresh):
+                                      predict_bboxs=pred_object[j][1], ground_truth_bboxs=gt_object[i][1], thresh=thresh, dim=dim):
                         cov_matrix[i , j] = 1
                 if np.sum(cov_matrix[i, :]) > 0:
                     cls_predict_label.append(cls_list.index(row_gt['class']))
@@ -130,7 +129,7 @@ def object_slice_interpolate_gt(ground_truth_df_record):
 
     return ground_truth_slices, ground_truth_bboxs
 
-def object_compare(predict_slices, ground_truth_slices, predict_bboxs, ground_truth_bboxs, thresh):
+def object_compare(predict_slices, ground_truth_slices, predict_bboxs, ground_truth_bboxs, thresh, dim):
     """
     将一个预测结节和一个实际结节比较，给出是否匹配
     :param predict_df_record:一条预测记录,代表一个结节，DataFrame
@@ -149,7 +148,7 @@ def object_compare(predict_slices, ground_truth_slices, predict_bboxs, ground_tr
         predict_index = predict_slices.index(slice)
         ground_truth_index = ground_truth_slices.index(slice)
         # score = find_objects.calcDICE(predict_bboxs[predict_index], ground_truth_bboxs[ground_truth_index])
-        if_same_bbox = cal_same_bbox(ground_truth_bboxs[ground_truth_index], predict_bboxs[predict_index], thresh=thresh)
+        if_same_bbox = cal_same_bbox(np.asarray([ground_truth_bboxs[ground_truth_index]]), np.asarray([predict_bboxs[predict_index]]), thresh=thresh, dim=dim)
         # 只要有一对满足标准，就算对
         ret_if_same_bbox = ret_if_same_bbox or if_same_bbox
         if ret_if_same_bbox:
@@ -157,6 +156,7 @@ def object_compare(predict_slices, ground_truth_slices, predict_bboxs, ground_tr
     return ret_if_same_bbox
 
 
-def cal_same_bbox(bbox_gt, bbox_pt, thresh):
+def cal_same_bbox(bbox_gt, bbox_pt, thresh, dim):
+    anchor_metric = AnchorMetric(dim=dim)
     return anchor_metric.iou(bbox_gt, bbox_pt) > thresh
 

@@ -36,8 +36,11 @@ def RP_plot_xlsx(xlsx_save_dir, xlsx_name, sheet_name, if_AUC=True, xmin = 0., x
                 x.append(recall[i])
                 y.append(precision[i])
                 y.append(precision[i])
-        # if the recall values are all None except the first item 0, quit drawing for the corresponding class
-        if x.count(None) == len(x) - 1:
+                if i == len(precision) - 1:
+                    x.append(1)
+                    y.append(precision[i])
+        # if the recall values are all None except the first item 0 and the last item 1, quit drawing for the corresponding class
+        if x.count(None) == len(x) - 2:
             continue
         if if_AUC:
             area = cal_AUC(x, y, xmin, xmax)
@@ -86,8 +89,11 @@ def RP_plot_json(json_save_dir, json_name, sheet_name, if_AUC=True, xmin = 0., x
                 x.append(recall[i])
                 y.append(precision[i])
                 y.append(precision[i])
-        # if the recall values are all None except the first item 0, quit drawing for the corresponding class
-        if x.count(None) == len(x) - 1:
+                if i == len(precision) - 1:
+                    x.append(1)
+                    y.append(precision[i])
+        # if the recall values are all None except the first item 0 and the last item 1, quit drawing for the corresponding class
+        if x.count(None) == len(x) - 2:
             continue
         if if_AUC:
             print x

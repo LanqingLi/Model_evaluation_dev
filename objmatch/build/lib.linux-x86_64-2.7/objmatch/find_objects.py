@@ -2,13 +2,13 @@
 import pandas as pd
 import numpy as np
 import networkx as nx
-from objmatch.objmatch.common_metrics import AnchorMetric
+from common_metrics import AnchorMetric
 # this script was written based on networkx version <= 2.0, and cannot be applied to networkx version later than 2.0
 # one but not the only significant difference is that, networkx.algorithms.max_weight_matching <= 2.0 returns a dict,
 # whereas networkx.algorithms.max_weight_matching > 2.0 returns a set
 
 def get_bounding_box_nparray(bbox):
-    return np.array([[bbox["xmin"], bbox["ymin"]], [bbox["xmax"], bbox["ymax"]]])
+    return np.array([[bbox["xmin"], bbox["ymin"], bbox["xmax"], bbox["ymax"]]])
 
 def find_parent(id1, union_find_set):
     # 并查集用，查找功能

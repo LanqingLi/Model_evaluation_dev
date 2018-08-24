@@ -7,7 +7,7 @@ import numpy as np
 import cv2
 import shutil
 import copy
-from objmatch.objmatch.common_metrics import AnchorMetric
+from common_metrics import AnchorMetric
 
 anchor_metric = AnchorMetric(dim=2)
 
@@ -149,7 +149,7 @@ def object_compare(predict_slices, ground_truth_slices, predict_bboxs, ground_tr
         predict_index = predict_slices.index(slice)
         ground_truth_index = ground_truth_slices.index(slice)
         # score = find_objects.calcDICE(predict_bboxs[predict_index], ground_truth_bboxs[ground_truth_index])
-        if_same_bbox = cal_same_bbox(ground_truth_bboxs[ground_truth_index], predict_bboxs[predict_index], thresh=thresh)
+        if_same_bbox = cal_same_bbox(np.asarray([ground_truth_bboxs[ground_truth_index]]), np.asarray([predict_bboxs[predict_index]]), thresh=thresh)
         # 只要有一对满足标准，就算对
         ret_if_same_bbox = ret_if_same_bbox or if_same_bbox
         if ret_if_same_bbox:

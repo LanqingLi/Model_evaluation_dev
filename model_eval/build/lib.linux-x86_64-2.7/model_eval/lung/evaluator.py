@@ -11,7 +11,7 @@ from model_eval.common.custom_metric import ClassificationMetric, ClusteringMetr
 from model_eval.lung.xml_tools import xml_to_boxeslist, xml_to_boxeslist_with_nodule_num, xml_to_boxeslist_without_nodule_cls, \
     xml_to_boxeslist_with_nodule_num_without_nodule_cls, generate_xml
 from config import config
-from model_eval.lung.post_process import df_to_cls_label
+from objmatch.post_process import df_to_cls_label
 from model_eval.lung.get_df_nodules import get_nodule_stat, init_df_boxes
 
 class LungNoduleEvaluatorOffline(object):
@@ -59,7 +59,7 @@ class LungNoduleEvaluatorOffline(object):
         self.opt_thresh = {}
 
         self.count_df = pd.DataFrame(
-                     columns=['nodule_class', 'threshold', 'nodule_count', 'tp_count', 'fp_count', 'fn_count',
+                     columns=['class', 'threshold', 'nodule_count', 'tp_count', 'fp_count', 'fn_count',
                               'accuracy', 'recall', 'precision',
                               'fp/tp', self.score_type])
 
@@ -117,22 +117,22 @@ class LungNoduleEvaluatorOffline(object):
 
                     #　筛选probability超过规定阈值且预测为规定类别的框输入get_nodule_stat
                     if not predict_df_boxes_dict[key].empty:
-                        filtered_predict_boxes = predict_df_boxes[predict_df_boxes["nodule_class"] == cls]
+                        filtered_predict_boxes = predict_df_boxes[predict_df_boxes["class"] == cls]
                         print filtered_predict_boxes
                         filtered_predict_boxes = filtered_predict_boxes[filtered_predict_boxes["prob"] >= thresh]
                         filtered_predict_boxes = filtered_predict_boxes.reset_index(drop=True)
                     else:
                         filtered_predict_boxes = pd.DataFrame({'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                                                 'nodule_class': [], 'prob': [], 'Mask': []})
+                                                 'class': [], 'prob': [], 'mask': []})
 
                     if not ground_truth_boxes_dict[key].empty:
-                        filtered_gt_boxes = ground_truth_boxes[ground_truth_boxes["nodule_class"] == cls]
+                        filtered_gt_boxes = ground_truth_boxes[ground_truth_boxes["class"] == cls]
                         print filtered_gt_boxes
                         filtered_gt_boxes = filtered_gt_boxes[filtered_gt_boxes["prob"] >= thresh]
                         filtered_gt_boxes = filtered_gt_boxes.reset_index(drop=True)
                     else:
                         filtered_gt_boxes = pd.DataFrame({'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                                                 'nodule_class': [], 'prob': [], 'Mask': []})
+                                                 'class': [], 'prob': [], 'mask': []})
 
                     #　将模型预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
                     print "predict_boxes:"
@@ -183,26 +183,26 @@ class LungNoduleEvaluatorOffline(object):
                 cls_pred_labels, cls_gt_labels = df_to_cls_label(cls_predict_df_list, cls_gt_df_list, self.cls_name, thresh=self.nodule_compare_thresh)
 
                 # initialize ClassificationMetric class and update with ground truth/predict labels
-                cls_metric = ClassificationMetric(cls_num=i_cls)
+                cls_metric = ClassificationMetric(cls_num=len(self.cls_name)-1, if_binary=True, pos_cls_fusion=False)
 
-                cls_metric.update(cls_gt_labels, cls_pred_labels)
+                cls_metric.update(cls_gt_labels, cls_pred_labels, i_cls)
 
-                if cls_metric.tp == 0:
+                if cls_metric.tp[i_cls-1] == 0:
                     fp_tp = np.nan
                 else:
-                    fp_tp = cls_metric.fp / cls_metric.tp
+                    fp_tp = cls_metric.fp[i_cls-1] / cls_metric.tp[i_cls-1]
 
-                self.count_df = self.count_df.append({'nodule_class': cls,
+                self.count_df = self.count_df.append({'class': cls,
                                                       'threshold': thresh,
                                                       'nodule_count': self.nodule_count,
-                                                      'tp_count': cls_metric.tp,
-                                                      'fp_count': cls_metric.fp,
-                                                      'fn_count': cls_metric.fn,
-                                                      'accuracy': cls_metric.get_acc(),
-                                                      'recall': cls_metric.get_rec(),
-                                                      'precision': cls_metric.get_prec(),
+                                                      'tp_count': cls_metric.tp[i_cls-1],
+                                                      'fp_count': cls_metric.fp[i_cls-1],
+                                                      'fn_count': cls_metric.fn[i_cls-1],
+                                                      'accuracy': cls_metric.get_acc(i_cls),
+                                                      'recall': cls_metric.get_rec(i_cls),
+                                                      'precision': cls_metric.get_prec(i_cls),
                                                       'fp/tp': fp_tp,
-                                                      self.score_type: cls_metric.get_fscore(beta=self.fscore_beta)},
+                                                      self.score_type: cls_metric.get_fscore(cls_label=i_cls, beta=self.fscore_beta)},
                                                       ignore_index = True)
 
                 # find the optimal threshold
@@ -220,13 +220,13 @@ class LungNoduleEvaluatorOffline(object):
                         self.opt_thresh[cls] = self.count_df.iloc[-1]
                         self.opt_thresh[cls]["threshold"] = thresh
 
-                self.cls_value['accuracy'].append(cls_metric.get_acc())
-                self.cls_value['recall'].append(cls_metric.get_rec())
-                self.cls_value['precision'].append(cls_metric.get_prec())
-                self.cls_value[self.score_type].append(cls_metric.get_fscore(beta=self.fscore_beta))
+                self.cls_value['accuracy'].append(cls_metric.get_acc(i_cls))
+                self.cls_value['recall'].append(cls_metric.get_rec(i_cls))
+                self.cls_value['precision'].append(cls_metric.get_prec(i_cls))
+                self.cls_value[self.score_type].append(cls_metric.get_fscore(cls_label=i_cls, beta=self.fscore_beta))
 
             #增加多类别加权平均的结果
-            self.count_df = self.count_df.append({'nodule_class': 'average',
+            self.count_df = self.count_df.append({'class': 'average',
                                                   'threshold': thresh,
                                                   'tp_count': np.nan,
                                                   'fp_count': np.nan,
@@ -237,7 +237,7 @@ class LungNoduleEvaluatorOffline(object):
                                                   'fp/tp': np.nan,
                                                   self.score_type: cls_avg(self.cls_weight, self.cls_value[self.score_type])},
                                                   ignore_index=True)
-        self.count_df = self.count_df.sort_values(['nodule_class', 'threshold'])
+        self.count_df = self.count_df.sort_values(['class', 'threshold'])
 
         self.cls_weight = []
         self.cls_value = {'accuracy': [], 'recall': [], 'precision': [], self.score_type: []}
@@ -249,7 +249,7 @@ class LungNoduleEvaluatorOffline(object):
             self.cls_weight.append(self.nodule_cls_weights[key])
 
         opt_thresh = pd.DataFrame.from_dict(self.opt_thresh, orient='index')
-        opt_thresh = opt_thresh.append({'nodule_class': 'average',
+        opt_thresh = opt_thresh.append({'class': 'average',
                                               'threshold': np.nan,
                                               'tp_count': np.nan,
                                               'fp_count': np.nan,
@@ -322,22 +322,22 @@ class LungNoduleEvaluatorOffline(object):
 
                     # 　筛选probability超过规定阈值且预测为规定类别的框输入get_nodule_stat
                     if not predict_df_boxes_dict[key].empty:
-                        filtered_predict_boxes = predict_df_boxes[predict_df_boxes["nodule_class"] == cls]
+                        filtered_predict_boxes = predict_df_boxes[predict_df_boxes["class"] == cls]
                         print filtered_predict_boxes
                         filtered_predict_boxes = filtered_predict_boxes.reset_index(drop=True)
                     else:
                         filtered_predict_boxes = pd.DataFrame(
                             {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                             'nodule_class': [], 'prob': [], 'Mask': []})
+                             'class': [], 'prob': [], 'mask': []})
 
                     if not ground_truth_boxes_dict[key].empty:
-                        filtered_gt_boxes = ground_truth_boxes[ground_truth_boxes["nodule_class"] == cls]
+                        filtered_gt_boxes = ground_truth_boxes[ground_truth_boxes["class"] == cls]
                         print filtered_gt_boxes
                         filtered_gt_boxes = filtered_gt_boxes.reset_index(drop=True)
                     else:
                         filtered_gt_boxes = pd.DataFrame(
                             {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                             'nodule_class': [], 'prob': [], 'Mask': []})
+                             'class': [], 'prob': [], 'mask': []})
 
                     # 将模型预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
                     print "predict_boxes:"
@@ -393,26 +393,26 @@ class LungNoduleEvaluatorOffline(object):
                                                                  thresh=self.nodule_compare_thresh)
 
                 # initialize ClassificationMetric class and update with ground truth/predict labels
-                cls_metric = ClassificationMetric(cls_num=i_cls)
+                cls_metric = ClassificationMetric(cls_num=len(self.cls_name)-1, if_binary=True, pos_cls_fusion=False)
 
-                cls_metric.update(cls_gt_labels, cls_pred_labels)
+                cls_metric.update(cls_gt_labels, cls_pred_labels, i_cls)
 
-                if cls_metric.tp == 0:
+                if cls_metric.tp[i_cls-1] == 0:
                     fp_tp = np.nan
                 else:
-                    fp_tp = cls_metric.fp / cls_metric.tp
+                    fp_tp = cls_metric.fp[i_cls-1] / cls_metric.tp[i_cls-1]
 
-                self.count_df = self.count_df.append({'nodule_class': cls,
+                self.count_df = self.count_df.append({'class': cls,
                                                       'threshold': thresh,
                                                       'nodule_count': self.nodule_count,
-                                                      'tp_count': cls_metric.tp,
-                                                      'fp_count': cls_metric.fp,
-                                                      'fn_count': cls_metric.fn,
-                                                      'accuracy': cls_metric.get_acc(),
-                                                      'recall': cls_metric.get_rec(),
-                                                      'precision': cls_metric.get_prec(),
+                                                      'tp_count': cls_metric.tp[i_cls-1],
+                                                      'fp_count': cls_metric.fp[i_cls-1],
+                                                      'fn_count': cls_metric.fn[i_cls-1],
+                                                      'accuracy': cls_metric.get_acc(i_cls),
+                                                      'recall': cls_metric.get_rec(i_cls),
+                                                      'precision': cls_metric.get_prec(i_cls),
                                                       'fp/tp': fp_tp,
-                                                      self.score_type: cls_metric.get_fscore(beta=self.fscore_beta)},
+                                                      self.score_type: cls_metric.get_fscore(cls_label=i_cls, beta=self.fscore_beta)},
                                                      ignore_index=True)
 
                 # find the optimal threshold
@@ -428,13 +428,13 @@ class LungNoduleEvaluatorOffline(object):
                         self.opt_thresh[cls] = self.count_df.iloc[-1]
                         self.opt_thresh[cls]["threshold"] = thresh
 
-                self.cls_value['accuracy'].append(cls_metric.get_acc())
-                self.cls_value['recall'].append(cls_metric.get_rec())
-                self.cls_value['precision'].append(cls_metric.get_prec())
-                self.cls_value[self.score_type].append(cls_metric.get_fscore(beta=self.fscore_beta))
+                self.cls_value['accuracy'].append(cls_metric.get_acc(i_cls))
+                self.cls_value['recall'].append(cls_metric.get_rec(i_cls))
+                self.cls_value['precision'].append(cls_metric.get_prec(i_cls))
+                self.cls_value[self.score_type].append(cls_metric.get_fscore(cls_label=i_cls, beta=self.fscore_beta))
 
             # 增加多类别加权平均的结果
-            self.count_df = self.count_df.append({'nodule_class': 'average',
+            self.count_df = self.count_df.append({'class': 'average',
                                                   'threshold': thresh,
                                                   'tp_count': np.nan,
                                                   'fp_count': np.nan,
@@ -446,8 +446,8 @@ class LungNoduleEvaluatorOffline(object):
                                                   'fp/tp': np.nan,
                                                   self.score_type: cls_avg(self.cls_weight,
                                                                            self.cls_value[self.score_type])},
-                                                 ignore_index=True)
-        self.count_df = self.count_df.sort_values(['nodule_class', 'threshold'])
+                                                  ignore_index=True)
+        self.count_df = self.count_df.sort_values(['class', 'threshold'])
 
         self.cls_weight = []
         self.cls_value = {'accuracy': [], 'recall': [], 'precision': [], self.score_type: []}
@@ -459,7 +459,7 @@ class LungNoduleEvaluatorOffline(object):
             self.cls_weight.append(self.nodule_cls_weights[key])
 
         opt_thresh = pd.DataFrame.from_dict(self.opt_thresh, orient='index')
-        opt_thresh = opt_thresh.append({'nodule_class': 'average',
+        opt_thresh = opt_thresh.append({'class': 'average',
                                         'threshold': np.nan,
                                         'tp_count': np.nan,
                                         'fp_count': np.nan,
@@ -528,7 +528,7 @@ class LungNoduleEvaluatorOffline(object):
                 else:
                     filtered_predict_boxes = pd.DataFrame(
                         {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                         'nodule_class': [], 'prob': [], 'Mask': []})
+                         'class': [], 'prob': [], 'mask': []})
 
                 if not gt_df_boxes_dict[key].empty:
                     filtered_gt_boxes = gt_df_boxes[gt_df_boxes["prob"] >= thresh]
@@ -536,7 +536,7 @@ class LungNoduleEvaluatorOffline(object):
                 else:
                     filtered_gt_boxes = pd.DataFrame(
                         {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                         'nodule_class': [], 'prob': [], 'Mask': []})
+                         'class': [], 'prob': [], 'mask': []})
 
                 # 　将预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
                 print "predict_boxes:"
@@ -582,28 +582,28 @@ class LungNoduleEvaluatorOffline(object):
                 gt_df_list.append(json_df_2_df(gt_df))
 
             # convert pandas dataframe to list of class labels
-            cls_pred_labels, cls_gt_labels = df_to_cls_label(predict_df_list, gt_df_list, self.cls_name)
+            cls_pred_labels, cls_gt_labels = df_to_cls_label(predict_df_list, gt_df_list, self.cls_name, thresh=self.nodule_compare_thresh)
 
             # initialize ClassificationMetric class and update with ground truth/predict labels
-            cls_metric = ClassificationMetric(cls_num=1, pos_cls_fusion=True)
+            cls_metric = ClassificationMetric(cls_num=1, if_binary=True, pos_cls_fusion=True)
 
 
-            cls_metric.update(cls_gt_labels, cls_pred_labels)
-            if cls_metric.tp == 0:
+            cls_metric.update(cls_gt_labels, cls_pred_labels, cls_label=1)
+            if cls_metric.tp[0] == 0:
                 fp_tp = np.nan
             else:
-                fp_tp = cls_metric.fp / cls_metric.tp
-            self.count_df = self.count_df.append({'nodule_class': 'nodule',
+                fp_tp = cls_metric.fp[0] / cls_metric.tp[0]
+            self.count_df = self.count_df.append({'class': 'nodule',
                                                   'threshold': thresh,
                                                   'nodule_count': self.nodule_count,
-                                                  'tp_count': cls_metric.tp,
-                                                  'fp_count': cls_metric.fp,
-                                                  'fn_count': cls_metric.fn,
-                                                  'accuracy': cls_metric.get_acc(),
-                                                  'recall': cls_metric.get_rec(),
-                                                  'precision': cls_metric.get_prec(),
+                                                  'tp_count': cls_metric.tp[0],
+                                                  'fp_count': cls_metric.fp[0],
+                                                  'fn_count': cls_metric.fn[0],
+                                                  'accuracy': cls_metric.get_acc(cls_label=1),
+                                                  'recall': cls_metric.get_rec(cls_label=1),
+                                                  'precision': cls_metric.get_prec(cls_label=1),
                                                   'fp/tp': fp_tp,
-                                                  self.score_type: cls_metric.get_fscore(beta=self.fscore_beta)},
+                                                  self.score_type: cls_metric.get_fscore(cls_label=1, beta=self.fscore_beta)},
                                                  ignore_index=True)
 
             # find the optimal threshold
@@ -679,14 +679,14 @@ class LungNoduleEvaluatorOffline(object):
                 else:
                     filtered_predict_boxes = pd.DataFrame(
                         {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                         'nodule_class': [], 'prob': [], 'Mask': []})
+                         'class': [], 'prob': [], 'mask': []})
 
                 if not gt_df_boxes_dict[key].empty:
                     filtered_gt_boxes = gt_df_boxes.reset_index(drop=True)
                 else:
                     filtered_gt_boxes = pd.DataFrame(
                         {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                         'nodule_class': [], 'prob': [], 'Mask': []})
+                         'class': [], 'prob': [], 'mask': []})
 
                 # 将预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
                 print "predict_boxes:"
@@ -724,8 +724,9 @@ class LungNoduleEvaluatorOffline(object):
                                            skip_init=True)
                 print "gt_nodules:"
                 print gt_df
-                self.nodule_count += len(predict_df)
+
                 predict_df = predict_df[predict_df['prob'] >= thresh]
+                self.nodule_count += len(predict_df)
                 predict_df = predict_df.reset_index(drop=True)
                 predict_df_list.append(json_df_2_df(predict_df))
 
@@ -734,27 +735,27 @@ class LungNoduleEvaluatorOffline(object):
                 gt_df_list.append(json_df_2_df(gt_df))
 
             # convert pandas dataframe to list of class labels
-            cls_pred_labels, cls_gt_labels = df_to_cls_label(predict_df_list, gt_df_list, self.cls_name)
+            cls_pred_labels, cls_gt_labels = df_to_cls_label(predict_df_list, gt_df_list, self.cls_name, thresh=self.nodule_compare_thresh)
 
             # initialize ClassificationMetric class and update with ground truth/predict labels
-            cls_metric = ClassificationMetric(cls_num=1, pos_cls_fusion=True)
+            cls_metric = ClassificationMetric(cls_num=1, if_binary=True, pos_cls_fusion=True)
 
-            cls_metric.update(cls_gt_labels, cls_pred_labels)
-            if cls_metric.tp == 0:
+            cls_metric.update(cls_gt_labels, cls_pred_labels, cls_label=1)
+            if cls_metric.tp[0] == 0:
                 fp_tp = np.nan
             else:
-                fp_tp = cls_metric.fp / cls_metric.tp
-            self.count_df = self.count_df.append({'nodule_class': 'nodule',
+                fp_tp = cls_metric.fp[0] / cls_metric.tp[0]
+            self.count_df = self.count_df.append({'class': 'nodule',
                                                   'threshold': thresh,
                                                   'nodule_count': self.nodule_count,
-                                                  'tp_count': cls_metric.tp,
-                                                  'fp_count': cls_metric.fp,
-                                                  'fn_count': cls_metric.fn,
-                                                  'accuracy': cls_metric.get_acc(),
-                                                  'recall': cls_metric.get_rec(),
-                                                  'precision': cls_metric.get_prec(),
+                                                  'tp_count': cls_metric.tp[0],
+                                                  'fp_count': cls_metric.fp[0],
+                                                  'fn_count': cls_metric.fn[0],
+                                                  'accuracy': cls_metric.get_acc(cls_label=1),
+                                                  'recall': cls_metric.get_rec(cls_label=1),
+                                                  'precision': cls_metric.get_prec(cls_label=1),
                                                   'fp/tp': fp_tp,
-                                                  self.score_type: cls_metric.get_fscore(beta=self.fscore_beta)},
+                                                  self.score_type: cls_metric.get_fscore(cls_label=1, beta=self.fscore_beta)},
                                                  ignore_index=True)
 
             # find the optimal threshold
@@ -815,7 +816,7 @@ class LungNoduleEvaluatorOffline(object):
         """
         读入模型输出的.json和ground truth的.xml标记
         :return: 模型预测结果、ground truth标记按病人号排列的pandas.DataFrame
-        e.g. | Mask | instanceNumber | nodule_class | prob | sliceId | xmax | xmin | ymax | ymin |
+        e.g. | mask | instanceNumber | class | prob | sliceId | xmax | xmin | ymax | ymin |
              |  []  |       106      | solid nodule | 0.9  | 105.0   | 207.0| 182.0| 230.0| 205.0|
         """
         predict_df_boxes_dict = {}
@@ -826,6 +827,7 @@ class LungNoduleEvaluatorOffline(object):
                 predict_json_path = os.path.join(self.data_dir, PatientID, PatientID + '_predict.json')
                 try:
                     predict_df_boxes = pd.read_json(predict_json_path).T
+                    predict_df_boxes = predict_df_boxes.rename(index=str, columns={'nodule_class': 'class'})
                 except:
                     print ("broken directory structure, maybe no prediction json file found: %s" % predict_json_path)
                     raise NameError
@@ -874,13 +876,13 @@ class LungNoduleEvaluatorOffline(object):
 
             if predict_df_boxes.empty:
                 predict_df_boxes = pd.DataFrame({'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                                                   'nodule_class': [], 'prob': [], 'Mask': []})
+                                                   'class': [], 'prob': [], 'mask': []})
             else:
                 predict_df_boxes = predict_df_boxes.reset_index(drop=True)
 
             if ground_truth_boxes.empty:
                 ground_truth_boxes = pd.DataFrame({'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                                                   'nodule_class': [], 'prob': [], 'Mask': []})
+                                                   'class': [], 'prob': [], 'mask': []})
             else:
                 ground_truth_boxes = ground_truth_boxes.reset_index(drop=True)
 
@@ -1009,7 +1011,7 @@ class FindNodulesEvaluator(object):
             else:
                 filtered_gt_boxes = pd.DataFrame(
                     {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                     'nodule_class': [], 'prob': [], 'Mask': []})
+                     'class': [], 'prob': [], 'mask': []})
 
             # 将标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
             print "generating ground truth nodules:"
@@ -1035,7 +1037,7 @@ class FindNodulesEvaluator(object):
                     box2 = gt_box_list[0:4]
                     if box1 == box2:
                         gt_label.append(gt_box_list[6])
-                        post_find_nodules_label.append(box_lst.iloc[i]['nodule'])
+                        post_find_nodules_label.append(box_lst.iloc[i]['object'])
             gt_labels.append(gt_label)
             # # delete nodules that are labeled as -1 (not matched)
             post_find_nodules_labels.append(post_find_nodules_label)
@@ -1104,7 +1106,7 @@ class FindNodulesEvaluator(object):
             else:
                 filtered_gt_boxes = pd.DataFrame(
                     {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                     'nodule_class': [], 'prob': [], 'Mask': []})
+                     'class': [], 'prob': [], 'mask': []})
 
             # 将标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
             print "generating ground truth nodules:"
@@ -1258,13 +1260,13 @@ def predict_json_to_xml(data_dir, save_dir):
 
 
 def json_df_2_df(df):
-    ret_df = pd.DataFrame({'bbox': [], 'pid': [], 'slice': [], 'nodule_class': [], 'nodule_id': []})
+    ret_df = pd.DataFrame({'bbox': [], 'pid': [], 'slice': [], 'class': [], 'nodule_id': []})
     for index, row in df.iterrows():
         df_add_row = {'bbox': [bbox for bbox in row['Bndbox List']],
                       'pid': row['Pid'],
                       'slice': row['SliceRange'],
-                      'nodule_class': row['Type'],
-                      'nodule_id': row['Nodule Id'],
+                      'class': row['Type'],
+                      'nodule_id': row['Object Id'],
                       'prob': row['prob']}
         ret_df = ret_df.append(df_add_row, ignore_index=True)
     return ret_df

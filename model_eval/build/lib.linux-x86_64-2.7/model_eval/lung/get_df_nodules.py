@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from model_eval.tools.data_preprocess import get_instance_number
 
-from objmatch.find_nodules import find_nodules
+from objmatch.find_objects import find_objects
 
 # nodule_class = config.CLASSES
 PI = 3.141592654
@@ -32,7 +32,7 @@ def init_df_boxes(return_boxes, classes):
     '''
     flag_dcm_ins_num = False
     df_boxes = pd.DataFrame({'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                             'nodule_class': [], 'prob': [], 'Mask': []})
+                             'class': [], 'prob': [], 'mask': []})
     df_boxes['instanceNumber'] = df_boxes['instanceNumber'].astype(np.int64)
     for i_slice in range(len(return_boxes)):
         return_boxes_slice = return_boxes[i_slice]
@@ -50,7 +50,7 @@ def init_df_boxes(return_boxes, classes):
                     mask = []
                     df_add_row = {'sliceId': i_slice, 'instanceNumber': instance_number,
                                   'xmin': bndbox[0], 'ymin': bndbox[1], 'xmax': bndbox[2], 'ymax': bndbox[3],
-                                  'nodule_class': classes[i_cls + 1], 'prob': bndbox[4], 'Mask': mask}
+                                  'class': classes[i_cls + 1], 'prob': bndbox[4], 'mask': mask}
                     df_boxes = df_boxes.append(df_add_row, ignore_index=True)
     return df_boxes
 
@@ -148,28 +148,28 @@ def get_nodule_stat(dicom_names, return_boxes, prefix, classes, z_threshold, sam
         df_boxes = init_df_boxes(dicom_names, return_boxes, classes, if_dicom)
 
     # 调用find_nodules计算结节和获取结节编号
-    bbox_info, nodule_list = find_nodules(df_boxes, SAME_BOX_THRESHOLD=same_box_threshold, Z_THRESHOLD=z_threshold,
-                                          SCORE_THRESHOLD=score_threshold, nodule_cls_weights=nodule_cls_weights)
+    bbox_info, nodule_list = find_objects(df_boxes, SAME_BOX_THRESHOLD=same_box_threshold, Z_THRESHOLD=z_threshold,
+                                          SCORE_THRESHOLD=score_threshold, object_cls_weights=nodule_cls_weights)
     # 结节编号排序
     #如果df_boxes已有结节信息，例如ssd的数据，则需要先删掉'nodule'这一列才能添加find_nodules生成的结节信息,对于'minusNamePriority', 'minusProb'亦同理
     try:
-        df_boxes = df_boxes.drop(columns=['nodule', 'minusNamePriority', 'minusProb'])
+        df_boxes = df_boxes.drop(columns=['object', 'minusNamePriority', 'minusProb'])
     except:
-        print ("no 'nodule', 'minusNamePriority', or 'minusProb' in df_boxes")
+        print ("no 'object', 'minusNamePriority', or 'minusProb' in df_boxes")
 
-    df_boxes.insert(0, 'nodule', bbox_info['nodule'])
+    df_boxes.insert(0, 'object', bbox_info['object'])
 
-    list_name = list(df_boxes["nodule_class"])
+    list_name = list(df_boxes["class"])
 
     series_minus_priority = calc_series_minus_priority(list_name)
     series_minus_prob = -df_boxes["prob"]
     df_boxes.insert(0, 'minusNamePriority', series_minus_priority)
     df_boxes.insert(0, 'minusProb', series_minus_prob)
-    df_boxes = df_boxes.sort_values(['nodule', 'instanceNumber', 'minusNamePriority', 'minusProb'], ascending=True)
+    df_boxes = df_boxes.sort_values(['object', 'instanceNumber', 'minusNamePriority', 'minusProb'], ascending=True)
     df_boxes = df_boxes.reset_index(drop=True)
 
     # 初始化结节DataFrame
-    df_nodules = pd.DataFrame({'Bndbox List': [], 'Nodule Id': [], 'Pid': prefix, 'Type': [],
+    df_nodules = pd.DataFrame({'Bndbox List': [], 'Object Id': [], 'Pid': prefix, 'Type': [],
                                'SliceRange': [], 'prob': []})
     df_add_nodule = {}
     bndbox_list = []
@@ -183,7 +183,7 @@ def get_nodule_stat(dicom_names, return_boxes, prefix, classes, z_threshold, sam
         # 判断存储
         if i_row != len_df:
             row = df_boxes.iloc[i_row]
-            now_nodule = row["nodule"]
+            now_nodule = row["object"]
         else:
             now_nodule = ABNORMAL_VAL
 
@@ -212,7 +212,7 @@ def get_nodule_stat(dicom_names, return_boxes, prefix, classes, z_threshold, sam
             now_ins_num = ABNORMAL_VAL
             nodule_priority = ABNORMAL_VAL
             nodule_type = "NoType"
-            df_add_nodule = {'Nodule Id': now_nodule, 'Bndbox List': [], 'Type': ABNORMAL_VAL,
+            df_add_nodule = {'Object Id': now_nodule, 'Bndbox List': [], 'Type': ABNORMAL_VAL,
                              'Pid': prefix}
         # 跳过条件
         skip_flag = False
@@ -233,7 +233,7 @@ def get_nodule_stat(dicom_names, return_boxes, prefix, classes, z_threshold, sam
         row_priority = -row["minusNamePriority"]
         if row_priority > nodule_priority:  # 清空prob，如果priority更新
             nodule_priority = row_priority
-            nodule_type = row["nodule_class"]
+            nodule_type = row["class"]
             nodule_prob_list = []
         if row_priority == nodule_priority:
             nodule_prob_list.append(row["prob"])
