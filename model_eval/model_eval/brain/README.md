@@ -1,9 +1,11 @@
 # 模型评分系统脑部CT模块说明
 
-版本号：0.1.3
+版本号：0.1.4
 
 该模块主要功能是对脑部CT项目的模型输出进行评估，用以筛选最优模型。目前版本的主要功能是针对脑卒中出血的语义分割模型，统计其分类的tp、fp、fscore、出血体积等指标，画出分割的contour、RP、ROC曲线。
 最新版0.1.3实现了evaluator的offline(以文件形式读入模型预测结果，用于inference和evaluation的解耦运行)和online(直接将模型预测输出作为输入，实现inference和evaluation的一体化运行)功能
+0.1.4实现了evaluator的onlineiter(读入数据迭代器，可以直接与模型预测结合进行inference、evaluation一体化的运行，同时因为每次只读入一个病人，
+避免了数据过大内存不够用的问题)功能
 	
 ## 环境安装
 
@@ -21,7 +23,7 @@
  
 ### 安装model_eval
 
-先删除本地的`model_eval`
+先删除本地的model_eval
 
  -sudo pip uninstall model_eval
 
@@ -33,7 +35,7 @@
 详见https://git.infervision.com/T1745 中出血性卒中相关文档
 
 ##　文件说明
-evaluator.py:　模型评估的主要功能实现 
+evaluator.py: 模型评估的主要功能实现 
 
 - 目的：统计多阈值下模型分割的效果，并进行综合评分及筛选最优阈值，画出分割的contour、RP、ROC曲线
 
@@ -82,20 +84,22 @@ online模式：
 - 在inference时让模型输出predict_data_list, gt_nrrd_list, img_nrrd_list, patient_list, data_type,　各变量定义如下：
 
  - predict_data_list: list of predict class score, default type: float32, default shape: [figure number, class number, 512, 512] 
- (background class number = 0), softmax value in range [0, 1]
+ (background class number = 0), softmax value in range (0, 1)
  - gt_nrrd_list: list of ground truth nrrd mask, default type: int16, default shape: [512, 512, figure number]
- - img_nrrd_list: list of nrrd image, default type: int16, default shape: [512, 512, figure number]
+ - img_nrrd_list: list of nrrd image data, default type: int16, each element = list: [ground truth label/mask, shape = (512, 512, figure num(batch size)), info of ct scan]
  - patient_list: list of patient id, e.g.: [patient_id_1, patient_id_2, ...]
 
 !!!注意：此处patient_list的顺序必须与其余几个list顺序一致!!!
 
 之后初始化BrainSemanticSegEvaluatorOnline类：
 
+```
 brain_evaluator = evaluator.BrainSemanticSegEvaluatorOnline(predict_data_list=predict_data_list,
-                                          gt_nrrd_list=gt_nrrd_list,
-                                          img_nrrd_list=img_nrrd_list,
-                                          patient_list=patient_list)
-                                          
+                                                            gt_nrrd_list=gt_nrrd_list,
+                                                            img_nrrd_list=img_nrrd_list,
+                                                            patient_list=patient_list)
+```
+                                       
 之后调用brain_evaluator如下函数即可：
 
 1. 多分类(目前仅在二分类数据上有测试)：
@@ -114,6 +118,40 @@ brain_evaluator = evaluator.BrainSemanticSegEvaluatorOnline(predict_data_list=pr
  - 单阈值对比图 (调用binary_class_contour_plot_single_thresh，阈值在config.THRESH定义)
  　brain_evaluator.binary_class_contour_plot_single_thresh()
                                           
+onlineIter模式：
+
+此模式接收的是一个带有predict_key(模型预测结果关键词), gt_key(ground truth标记关键词), img_key(原图数据关键词)和patient_key(病人号关键词)
+的数据迭代器(data_iter),这样子在评估模型预测结果时会按照病人号逐个读取处理而不是一次性读入所有病人的数据，避免数据量大时内存不够的问题。
+
+具体操作，在生成data_iter后初始化BrainSemanticSegEvaluatorOnlineIter类：
+
+```
+brain_evaluator = evaluator.BrainSemanticSegEvaluatorOnlineIter(data_iter=data_iter,
+                                                                predictor=predictor.predict,
+                                                                predict_key=predict_key,
+                                                                gt_key=gt_key,
+                                                                img_key=img_key,
+                                                                patient_key=patient_key)
+```
+                                          
+之后调用brain_evaluator如下函数即可：
+
+1. 多分类(目前仅在二分类数据上有测试)：
+
+-调用multi_class_evaluation: brain_evaluator.multi_class_evaluation()
+
+2. 二分类：
+
+-调用binary_class_evaluation: brain_evaluator.binary_class_evaluation()
+ 
+3. 画分割区域轮廓图：
+
+- 二分类：
+ - 多阈值对比图　(调用binary_class_contour_plot_multi_thresh, 阈值在config.TEST.CONF_THRESHOLD定义):
+   brain_evaluator.binary_class_contour_plot_multi_thresh()
+ - 单阈值对比图 (调用binary_class_contour_plot_single_thresh，阈值在config.THRESH定义)
+ 　brain_evaluator.binary_class_contour_plot_single_thresh()
+ 
 ###　实例分割功能
 
 目前模型组业务中尚未涉及实例分割，今后会根据需求添加
@@ -128,9 +166,9 @@ BrainSemanticSegEvaluatorOffline类（语义分割模型评估）：
  - binary_class_contour_plot_multi_thresh: 画二分类分割模型多阈值的轮廓线(contour),与ground truth画成一张对照图，轮廓线使用cv2中从(255, 0, 0)
  到(0, 0, 255)的渐变彩虹色（类似热力图）
  
- - multi_class_evaluation: 多分类分割模型通用评分,用阈值筛选正类别，并在其中选取最大值作为one-hot label
+ - multi_class_evaluation: 分割模型评分,将每个类别单独拿出来，其余作为背景负样本，用阈值筛选类别，并在其中选取最大值作为one-hot label
  
- - binary_class_evaluation: 二分类分割模型评分，用阈值筛选正类别
+ - binary_class_evaluation: 分割模型评分，将所有正类别统一成一个类别，用阈值筛选
  
 BrainInstanceSegEvaluatorOffline（实例分割模型评估）：
 

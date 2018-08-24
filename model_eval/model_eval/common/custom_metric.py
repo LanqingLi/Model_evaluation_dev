@@ -11,10 +11,11 @@ from sklearn import metrics
 class ClassificationMetric(EvalMetric):
 
     def __init__(self, name='ClsMetric', cls_num=1, allow_extra_outputs=False, if_binary=True, pos_cls_fusion=True):
-        super(ClassificationMetric, self).__init__(name)
-        self._allow_extra_outputs = allow_extra_outputs
         # number of positive classes for the metric to account for
         self._cls_num = cls_num
+        super(ClassificationMetric, self).__init__(name)
+        self._allow_extra_outputs = allow_extra_outputs
+
         assert self._cls_num >= 1 and type(self._cls_num) == int, "the number of positive classes must be a positive integer!"
         self.tp = [0.0 for _ in range(self._cls_num)]
         self.fp = [0.0 for _ in range(self._cls_num)]
@@ -108,7 +109,7 @@ class ClassificationMetric(EvalMetric):
 
         :return: accuracy = (tp + tn) / (tp + fp + tn + fn)
         """
-        assert self.cls_label >= 1 and type(self.cls_label) == int, "cls_label must be a positive integer!"
+        assert cls_label >= 1 and type(cls_label) == int, "cls_label must be a positive integer!"
         tot_sample = self.tp[cls_label-1] + self.fp[cls_label-1] + self.tn[cls_label-1] + self.fn[cls_label-1]
         if tot_sample > 0:
             return (self.tp[cls_label-1] + self.tn[cls_label-1]) / tot_sample
@@ -121,7 +122,7 @@ class ClassificationMetric(EvalMetric):
 
         :return: recall
         """
-        assert self.cls_label >= 1 and type(self.cls_label) == int, "cls_label must be a positive integer!"
+        assert cls_label >= 1 and type(cls_label) == int, "cls_label must be a positive integer!"
         if self.tp[cls_label-1] + self.fn[cls_label-1] > 0.:
             return self.tp[cls_label-1] / (self.tp[cls_label-1] + self.fn[cls_label-1])
         else:
@@ -133,7 +134,7 @@ class ClassificationMetric(EvalMetric):
 
         :return: precision
         """
-        assert self.cls_label >= 1 and type(self.cls_label) == int, "cls_label must be a positive integer!"
+        assert cls_label >= 1 and type(cls_label) == int, "cls_label must be a positive integer!"
         if self.tp[cls_label-1] + self.fp[cls_label-1] > 0.:
             return self.tp[cls_label-1] / (self.tp[cls_label-1] + self.fp[cls_label-1])
         else:

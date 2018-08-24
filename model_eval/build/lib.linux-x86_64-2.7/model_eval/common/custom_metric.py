@@ -11,28 +11,39 @@ from sklearn import metrics
 class ClassificationMetric(EvalMetric):
 
     def __init__(self, name='ClsMetric', cls_num=1, allow_extra_outputs=False, if_binary=True, pos_cls_fusion=True):
+        # number of positive classes for the metric to account for
+        self._cls_num = cls_num
         super(ClassificationMetric, self).__init__(name)
         self._allow_extra_outputs = allow_extra_outputs
-        self.cls_num = cls_num
-        self.tp = 0.0
-        self.fp = 0.0
-        self.fn = 0.0
-        self.tn = 0.0
-        self.sum = 0.0
-        self.label_pos = 0.0
-        self.pred_pos = 0.0
+
+        assert self._cls_num >= 1 and type(self._cls_num) == int, "the number of positive classes must be a positive integer!"
+        self.tp = [0.0 for _ in range(self._cls_num)]
+        self.fp = [0.0 for _ in range(self._cls_num)]
+        self.fn = [0.0 for _ in range(self._cls_num)]
+        self.tn = [0.0 for _ in range(self._cls_num)]
+        self.sum = [0.0 for _ in range(self._cls_num)]
+        self.label_pos = [0.0 for _ in range(self._cls_num)]
+        self.pred_pos = [0.0 for _ in range(self._cls_num)]
         # keep track of the number of positive samples in gt and pred labels, for cerebrum segmentation, this is approximately
         # the intracerebral hemorrhage volume
-        self.gt_vol = 0.0
-        self.pred_vol = 0.0
+        self.gt_vol = [0.0 for _ in range(self._cls_num)]
+        self.pred_vol = [0.0 for _ in range(self._cls_num)]
         # whether it is binary classification
         self.if_binary = if_binary
         # In the context of binary classification, whether to regard all positive samples as the same class, or regard all classes (positive
         # and negative samples) but a single positive class as background (negative class). The former is usually adapted
         # for detection of positive samples (检出), the latter is usually used for detection of a specific class
         self.pos_cls_fusion = pos_cls_fusion
+        self.cls_label = 0
 
-    def update(self, labels, preds):
+    @property
+    def get_cls_num(self):
+        '''
+        :return: The number of positive classes in this metric
+        '''
+        return self._cls_num
+
+    def update(self, labels, preds, cls_label=1):
         """
         update the metric with ground truth and predicted labels
         :param labels: [[0, 1, 2]] each item of the list is a list of ground truth class numbers for a single patient
@@ -41,6 +52,9 @@ class ClassificationMetric(EvalMetric):
         :return:
         """
         check_label_shapes(labels, preds)
+        # the current postive class label to account for, if self.cls_label = 0 (default value), do nothing
+        self.cls_label = cls_label
+        assert self.cls_label >= 1 and type(self.cls_label) == int, "cls_label must be a positive integer!"
 
         for pred, label in zip(preds, labels):
             check_label_shapes(label, pred)
@@ -48,7 +62,7 @@ class ClassificationMetric(EvalMetric):
             label = np.asarray(label)
             check_label_shapes(label, pred_label)
 
-            ind = self.cls_num
+            ind = self.cls_label
             if self.if_binary:
                 # for binary classification, we either regard all labels that are not ind as negative (0) or regard all labels
                 # that are not negative as positive (the same class)
@@ -66,67 +80,68 @@ class ClassificationMetric(EvalMetric):
             pred_neg = (pred_label == 0)
             label_neg = (label == 0)
 
-            self.label_pos += np.asscalar(np.sum(label_pos))
-            self.pred_pos += np.asscalar(np.sum(pred_pos))
+            self.label_pos[self.cls_label - 1] += np.asscalar(np.sum(label_pos))
+            self.pred_pos[self.cls_label - 1] += np.asscalar(np.sum(pred_pos))
             tp = np.asscalar(np.sum(pred_pos * label_pos))
             tn = np.asscalar(np.sum(pred_neg * label_neg))
 
-            self.tp += tp
-            self.tn += tn
-            self.fp += np.asscalar(np.sum(pred_pos) - tp)
-            self.fn += np.asscalar(np.sum(label_pos) - tp)
-            self.sum += np.asscalar(np.sum(pred_pos) + np.sum(label_pos))
+            self.tp[self.cls_label - 1] += tp
+            self.tn[self.cls_label - 1] += tn
+            self.fp[self.cls_label - 1] += np.asscalar(np.sum(pred_pos) - tp)
+            self.fn[self.cls_label - 1] += np.asscalar(np.sum(label_pos) - tp)
+            self.sum[self.cls_label - 1] += np.asscalar(np.sum(pred_pos) + np.sum(label_pos))
 
     def reset(self):
         """Resets the internal evaluation result to initial state.  """
-        self.tp = 0.0
-        self.sum = 0.0
-        self.fp=0.0
-        self.fn = 0.0
-        self.tn = 0.0
-        self.label_pos = 0.0
-        self.pred_pos = 0.0
-        self.gt_vol = 0.0
-        self.pred_vol = 0.0
+        self.tp = [0.0 for _ in range(self._cls_num)]
+        self.fp = [0.0 for _ in range(self._cls_num)]
+        self.fn = [0.0 for _ in range(self._cls_num)]
+        self.tn = [0.0 for _ in range(self._cls_num)]
+        self.sum = [0.0 for _ in range(self._cls_num)]
+        self.label_pos = [0.0 for _ in range(self._cls_num)]
+        self.pred_pos = [0.0 for _ in range(self._cls_num)]
+        self.gt_vol = [0.0 for _ in range(self._cls_num)]
+        self.pred_vol = [0.0 for _ in range(self._cls_num)]
         self.if_binary = True
 
-    def get_acc(self):
+    def get_acc(self, cls_label):
         """Get the evaluated accuracy
 
         :return: accuracy = (tp + tn) / (tp + fp + tn + fn)
         """
-        tot_sample = self.tp + self.fp + self.tn + self.fn
+        assert cls_label >= 1 and type(cls_label) == int, "cls_label must be a positive integer!"
+        tot_sample = self.tp[cls_label-1] + self.fp[cls_label-1] + self.tn[cls_label-1] + self.fn[cls_label-1]
         if tot_sample > 0:
-            return (self.tp + self.tn) / tot_sample
+            return (self.tp[cls_label-1] + self.tn[cls_label-1]) / tot_sample
         else:
             print ZeroDivisionError
             return np.nan
 
-    def get_rec(self):
+    def get_rec(self, cls_label):
         """Get the evaluated recall.
 
         :return: recall
         """
-
-        if self.tp + self.fn > 0.:
-            return self.tp / (self.tp + self.fn)
+        assert cls_label >= 1 and type(cls_label) == int, "cls_label must be a positive integer!"
+        if self.tp[cls_label-1] + self.fn[cls_label-1] > 0.:
+            return self.tp[cls_label-1] / (self.tp[cls_label-1] + self.fn[cls_label-1])
         else:
             print ZeroDivisionError
             return np.nan
 
-    def get_prec(self):
+    def get_prec(self, cls_label):
         """Get the evaluated precision
 
         :return: precision
         """
-
-        if self.tp + self.fp > 0.:
-            return self.tp / (self.tp + self.fp)
+        assert cls_label >= 1 and type(cls_label) == int, "cls_label must be a positive integer!"
+        if self.tp[cls_label-1] + self.fp[cls_label-1] > 0.:
+            return self.tp[cls_label-1] / (self.tp[cls_label-1] + self.fp[cls_label-1])
         else:
             print ZeroDivisionError
             return np.nan
 
-    def get_fscore(self, beta=1.):
+    def get_fscore(self, cls_label, beta=1.):
         """Get the evaluated f score
 
         The F score is equivalent to weighted average of the precision and recall. The greater the beta, the more significant
@@ -140,11 +155,11 @@ class ClassificationMetric(EvalMetric):
         """
         if type(beta) is float:
             # if either precision or recall is nan, return nan
-            if math.isnan(self.get_prec()) or math.isnan(self.get_rec()):
+            if math.isnan(self.get_prec(cls_label)) or math.isnan(self.get_rec(cls_label)):
                 return np.nan
 
-            elif beta ** 2 * self.get_prec() + self.get_rec() > 0.:
-                return (1 + beta ** 2) * (self.get_rec() * self.get_prec()) / (beta ** 2 * self.get_prec() + self.get_rec())
+            elif beta ** 2 * self.get_prec(cls_label) + self.get_rec(cls_label) > 0.:
+                return (1 + beta ** 2) * (self.get_rec(cls_label) * self.get_prec(cls_label)) / (beta ** 2 * self.get_prec(cls_label) + self.get_rec(cls_label))
 
             # if both precision and recall are zero, return zero
             else:
@@ -154,11 +169,11 @@ class ClassificationMetric(EvalMetric):
             print ("fscore requires a float beta as input, not {}".format(beta))
             return ValueError
 
-    def get_gt_vol(self):
-        return self.label_pos
+    def get_gt_vol(self, cls_label):
+        return self.label_pos[cls_label-1]
 
-    def get_pred_vol(self):
-        return self.pred_pos
+    def get_pred_vol(self, cls_label):
+        return self.pred_pos[cls_label-1]
 
 def cls_avg(cls_weight, cls_value):
     assert len(cls_weight) == len(cls_value), 'weight and value list should contain the same number of classes'

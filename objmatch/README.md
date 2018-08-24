@@ -1,4 +1,4 @@
-# 版本0.1.1 说明
+# 版本0.0.2 说明
 该objmatch package封装了针对检测模型输出进行后处理的匹配算法。该版本目前只包含2D到3D的匹配功能(2D-3DMatch)。
 
 ## 2D-3DMatch 说明
@@ -46,15 +46,15 @@ misalign_suppress: exp(-sim_metric)，基于先验假设：结节具有在三维
 
 ####注意事项
 
-－find_nodules接收的df_boxes,作为一个pandas.DataFrame,!!!index必须从0开始依次加一递增排列!!!（可以通过reset_index(drop=True)来实现），
+- find_nodules接收的df_boxes,作为一个pandas.DataFrame,!!!index必须从0开始依次加一递增排列!!!（可以通过reset_index(drop=True)来实现），
 否则可能会出现union_find_set调用find_parent无限循环的bug。
 
 ### common_metrics说明
 
 #### AnchorMetric
 
-包含了对比两个锚框(anchor)相似度的相关函数，例如iou(intersection over union), center_deviation(中心点偏移)等，兼容各种维度，维度信息初始化时
-需要定义好。
+包含了对比两个锚框(anchor)相似度的相关函数，例如iou(intersection over union), center_deviation(中心点偏移)等，兼容各种维度，维度信息
+在类初始化时需要定义好。
 
 ### post_process说明
 

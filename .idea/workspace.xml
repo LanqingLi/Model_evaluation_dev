@@ -2,15 +2,30 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="acfa41cf-b818-403a-b6d1-bacf2c92adbd" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/dist/model_eval-0.1.3-py2-none-any.whl" afterPath="$PROJECT_DIR$/model_eval/dist/model_eval-0.1.3-py2-none-any.whl" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/dist/model_eval-0.1.3.tar.gz" afterPath="$PROJECT_DIR$/model_eval/dist/model_eval-0.1.3.tar.gz" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/ObjMatch.egg-info/PKG-INFO" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/ObjMatch.egg-info/SOURCES.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/ObjMatch.egg-info/dependency_links.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/ObjMatch.egg-info/entry_points.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/ObjMatch.egg-info/top_level.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/objmatch/dist/objmatch-0.0.1-py2-none-any.whl" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/objmatch/dist/objmatch-0.0.1.tar.gz" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/brain/evaluator.py" afterPath="$PROJECT_DIR$/brain/evaluator.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/lung/evaluator.py" afterPath="$PROJECT_DIR$/lung/evaluator.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/lung/lung_nodule_test.py" afterPath="$PROJECT_DIR$/lung/lung_nodule_test.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/brain/README.md" afterPath="$PROJECT_DIR$/brain/README.md" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/config.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/config.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/evaluator.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/evaluator.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/common/custom_metric.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/common/custom_metric.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval.egg-info/PKG-INFO" afterPath="$PROJECT_DIR$/model_eval/model_eval.egg-info/PKG-INFO" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/brain/README.md" afterPath="$PROJECT_DIR$/model_eval/model_eval/brain/README.md" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/brain/config.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/brain/config.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/common/custom_metric.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/common/custom_metric.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/setup.py" afterPath="$PROJECT_DIR$/model_eval/setup.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/README.md" afterPath="$PROJECT_DIR$/objmatch/README.md" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/build/lib.linux-x86_64-2.7/objmatch/__init__.py" afterPath="$PROJECT_DIR$/objmatch/build/lib.linux-x86_64-2.7/objmatch/__init__.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/objmatch.egg-info/PKG-INFO" afterPath="$PROJECT_DIR$/objmatch/objmatch.egg-info/PKG-INFO" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/objmatch.egg-info/SOURCES.txt" afterPath="$PROJECT_DIR$/objmatch/objmatch.egg-info/SOURCES.txt" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/objmatch/common_metrics.py" afterPath="$PROJECT_DIR$/objmatch/objmatch/common_metrics.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/setup.py" afterPath="$PROJECT_DIR$/objmatch/setup.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -28,30 +43,27 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="evaluator.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="360">
-              <caret line="435" column="117" lean-forward="false" selection-start-line="435" selection-start-column="117" selection-end-line="435" selection-end-column="117" />
-              <folding>
-                <element signature="e#22#40#0" expanded="true" />
-                <marker date="1535003476329" expanded="true" signature="30470:33356" ph="..." />
-                <marker date="1535003476329" expanded="true" signature="30889:33356" ph="..." />
-                <marker date="1535003476329" expanded="true" signature="31767:33356" ph="..." />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="README.md" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/brain/README.md">
           <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
             <state split_layout="SPLIT">
-              <first_editor relative-caret-position="0">
-                <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <first_editor relative-caret-position="864">
+                <caret line="180" column="0" lean-forward="false" selection-start-line="180" selection-start-column="0" selection-end-line="180" selection-end-column="0" />
                 <folding />
               </first_editor>
               <second_editor />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="common_metrics.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/objmatch/objmatch/common_metrics.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="427">
+              <caret line="209" column="4" lean-forward="false" selection-start-line="209" selection-start-column="6" selection-end-line="210" selection-end-column="54" />
+              <folding>
+                <element signature="e#1086#1097#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -69,68 +81,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="lung_nodule_test.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/lung/lung_nodule_test.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="324">
-              <caret line="18" column="33" lean-forward="false" selection-start-line="18" selection-start-column="33" selection-end-line="18" selection-end-column="33" />
-              <folding>
-                <element signature="e#0#29#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="evaluator.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/lung/evaluator.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="4227">
-              <caret line="397" column="88" lean-forward="false" selection-start-line="397" selection-start-column="88" selection-end-line="397" selection-end-column="88" />
-              <folding>
-                <element signature="e#22#33#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="test.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/heart_dev/test.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
-              <caret line="5" column="32" lean-forward="false" selection-start-line="5" selection-start-column="32" selection-end-line="5" selection-end-column="32" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="get_df_nodules.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/lung/get_df_nodules.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="18">
-              <caret line="1" column="0" lean-forward="false" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
-              <folding>
-                <element signature="e#15#33#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="find_objects.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/objmatch/objmatch/find_objects.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="234">
-              <caret line="91" column="38" lean-forward="false" selection-start-line="91" selection-start-column="38" selection-end-line="91" selection-end-column="38" />
-              <folding>
-                <element signature="e#18#37#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="find_nodules.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/objmatch/objmatch/find_nodules.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="542">
+            <state relative-caret-position="1602">
               <caret line="182" column="63" lean-forward="false" selection-start-line="182" selection-start-column="63" selection-end-line="182" selection-end-column="63" />
               <folding>
                 <element signature="e#18#37#0" expanded="true" />
@@ -139,13 +93,72 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="evaluator.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/brain/evaluator.py">
+      <file leaf-file-name="find_objects.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/objmatch/objmatch/find_objects.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="5688">
-              <caret line="451" column="91" lean-forward="false" selection-start-line="451" selection-start-column="91" selection-end-line="451" selection-end-column="91" />
+            <state relative-caret-position="1224">
+              <caret line="68" column="80" lean-forward="false" selection-start-line="68" selection-start-column="80" selection-end-line="68" selection-end-column="80" />
               <folding>
-                <element signature="e#22#40#0" expanded="true" />
+                <element signature="e#18#37#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="post_process.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/objmatch/objmatch/post_process.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-954">
+              <caret line="82" column="44" lean-forward="false" selection-start-line="82" selection-start-column="44" selection-end-line="82" selection-end-column="44" />
+              <folding>
+                <element signature="e#22#41#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="setup.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/objmatch/setup.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="522">
+              <caret line="50" column="5" lean-forward="false" selection-start-line="50" selection-start-column="5" selection-end-line="50" selection-end-column="5" />
+              <folding>
+                <element signature="e#186#229#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="README.md" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/objmatch/README.md">
+          <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+            <state split_layout="SPLIT">
+              <first_editor relative-caret-position="0">
+                <caret line="0" column="7" lean-forward="false" selection-start-line="0" selection-start-column="7" selection-end-line="0" selection-end-column="7" />
+                <folding />
+              </first_editor>
+              <second_editor />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="__init__.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/objmatch/__init__.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="__init__.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/objmatch/objmatch/__init__.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="72">
+              <caret line="4" column="27" lean-forward="false" selection-start-line="4" selection-start-column="27" selection-end-line="4" selection-end-column="27" />
+              <folding>
+                <element signature="e#18#45#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -218,7 +231,6 @@
         <option value="$PROJECT_DIR$/../0803/data_process.py" />
         <option value="$PROJECT_DIR$/brain/contour_draw.py" />
         <option value="$PROJECT_DIR$/lung/README.md" />
-        <option value="$PROJECT_DIR$/brain/README.md" />
         <option value="$PROJECT_DIR$/RP_plot.py" />
         <option value="$PROJECT_DIR$/ROC_plot.py" />
         <option value="$PROJECT_DIR$/tools/plot.py" />
@@ -230,13 +242,10 @@
         <option value="$PROJECT_DIR$/heart_dev/get_df_plaques.py" />
         <option value="$PROJECT_DIR$/lung/post_process.py" />
         <option value="$PROJECT_DIR$/heart_dev/evaluator.py" />
-        <option value="$PROJECT_DIR$/objmatch/objmatch/common_metrics.py" />
         <option value="$PROJECT_DIR$/objmatch/objmatch/find_objects.py" />
         <option value="$PROJECT_DIR$/objmatch/objmatch/post_process.py" />
         <option value="$PROJECT_DIR$/heart_dev/get_object_df.py" />
         <option value="$PROJECT_DIR$/objmatch/objmatch/__init__.py" />
-        <option value="$PROJECT_DIR$/objmatch/setup.py" />
-        <option value="$PROJECT_DIR$/objmatch/README.md" />
         <option value="$PROJECT_DIR$/common/custom_metric.py" />
         <option value="$PROJECT_DIR$/brain/config.py" />
         <option value="$PROJECT_DIR$/model_eval/setup.py" />
@@ -245,6 +254,10 @@
         <option value="$PROJECT_DIR$/brain/evaluator.py" />
         <option value="$PROJECT_DIR$/lung/lung_nodule_test.py" />
         <option value="$PROJECT_DIR$/lung/evaluator.py" />
+        <option value="$PROJECT_DIR$/brain/README.md" />
+        <option value="$PROJECT_DIR$/objmatch/objmatch/common_metrics.py" />
+        <option value="$PROJECT_DIR$/objmatch/README.md" />
+        <option value="$PROJECT_DIR$/objmatch/setup.py" />
       </list>
     </option>
   </component>
@@ -539,14 +552,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/heart/sample/SSD_pt_0.99/BJFW35284S6/BJFW35284S6_038.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/heart/common/custom_metric.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-4020">
@@ -759,31 +764,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="72">
-          <caret line="4" column="27" lean-forward="false" selection-start-line="4" selection-start-column="27" selection-end-line="4" selection-end-column="27" />
-          <folding>
-            <element signature="e#18#45#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/setup.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-1571">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/objmatch/setup.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-923">
-          <caret line="46" column="67" lean-forward="true" selection-start-line="46" selection-start-column="67" selection-end-line="46" selection-end-column="67" />
-          <folding>
-            <element signature="e#186#229#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -797,43 +782,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/post_process.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1058">
-          <caret line="82" column="44" lean-forward="false" selection-start-line="82" selection-start-column="44" selection-end-line="82" selection-end-column="44" />
-          <folding>
-            <element signature="e#22#41#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/common/metric.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="342">
           <caret line="19" column="6" lean-forward="false" selection-start-line="19" selection-start-column="6" selection-end-line="19" selection-end-column="6" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/objmatch/README.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="SPLIT">
-          <first_editor relative-caret-position="516">
-            <caret line="60" column="80" lean-forward="false" selection-start-line="60" selection-start-column="80" selection-end-line="60" selection-end-column="80" />
-            <folding />
-          </first_editor>
-          <second_editor />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/common_metrics.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1841">
-          <caret line="29" column="28" lean-forward="false" selection-start-line="29" selection-start-column="28" selection-end-line="29" selection-end-column="28" />
-          <folding>
-            <element signature="e#1086#1097#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -922,26 +876,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/find_nodules.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="542">
-          <caret line="182" column="63" lean-forward="false" selection-start-line="182" selection-start-column="63" selection-end-line="182" selection-end-column="63" />
-          <folding>
-            <element signature="e#18#37#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/find_objects.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="234">
-          <caret line="91" column="38" lean-forward="false" selection-start-line="91" selection-start-column="38" selection-end-line="91" selection-end-column="38" />
-          <folding>
-            <element signature="e#18#37#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/lung/get_df_nodules.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="18">
@@ -949,28 +883,6 @@
           <folding>
             <element signature="e#15#33#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/brain/README.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="SPLIT">
-          <first_editor relative-caret-position="0">
-            <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-            <folding />
-          </first_editor>
-          <second_editor />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/lung/README.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="SPLIT">
-          <first_editor relative-caret-position="-1944">
-            <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-            <folding />
-          </first_editor>
-          <second_editor />
         </state>
       </provider>
     </entry>
@@ -1005,12 +917,12 @@
     <entry file="file://$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="360">
-          <caret line="435" column="117" lean-forward="false" selection-start-line="435" selection-start-column="117" selection-end-line="435" selection-end-column="117" />
+          <caret line="494" column="117" lean-forward="false" selection-start-line="494" selection-start-column="117" selection-end-line="494" selection-end-column="117" />
           <folding>
             <element signature="e#22#40#0" expanded="true" />
-            <marker date="1535003476329" expanded="true" signature="30470:33356" ph="..." />
-            <marker date="1535003476329" expanded="true" signature="30889:33356" ph="..." />
-            <marker date="1535003476329" expanded="true" signature="31767:33356" ph="..." />
+            <marker date="1535084280229" expanded="true" signature="34583:37469" ph="..." />
+            <marker date="1535084280229" expanded="true" signature="35002:37469" ph="..." />
+            <marker date="1535084280229" expanded="true" signature="35880:37469" ph="..." />
           </folding>
         </state>
       </provider>
@@ -1021,6 +933,107 @@
           <caret line="451" column="91" lean-forward="false" selection-start-line="451" selection-start-column="91" selection-end-line="451" selection-end-column="91" />
           <folding>
             <element signature="e#22#40#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lung/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="-1944">
+            <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+            <folding />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/brain/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="864">
+            <caret line="180" column="0" lean-forward="false" selection-start-line="180" selection-start-column="0" selection-end-line="180" selection-end-column="0" />
+            <folding />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/find_nodules.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1602">
+          <caret line="182" column="63" lean-forward="false" selection-start-line="182" selection-start-column="63" selection-end-line="182" selection-end-column="63" />
+          <folding>
+            <element signature="e#18#37#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/post_process.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-954">
+          <caret line="82" column="44" lean-forward="false" selection-start-line="82" selection-start-column="44" selection-end-line="82" selection-end-column="44" />
+          <folding>
+            <element signature="e#22#41#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/find_objects.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1224">
+          <caret line="68" column="80" lean-forward="false" selection-start-line="68" selection-start-column="80" selection-end-line="68" selection-end-column="80" />
+          <folding>
+            <element signature="e#18#37#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/objmatch/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="72">
+          <caret line="4" column="27" lean-forward="false" selection-start-line="4" selection-start-column="27" selection-end-line="4" selection-end-column="27" />
+          <folding>
+            <element signature="e#18#45#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/common_metrics.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="427">
+          <caret line="209" column="4" lean-forward="false" selection-start-line="209" selection-start-column="6" selection-end-line="210" selection-end-column="54" />
+          <folding>
+            <element signature="e#1086#1097#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/objmatch/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="0">
+            <caret line="0" column="7" lean-forward="false" selection-start-line="0" selection-start-column="7" selection-end-line="0" selection-end-column="7" />
+            <folding />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/objmatch/setup.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="522">
+          <caret line="50" column="5" lean-forward="false" selection-start-line="50" selection-start-column="5" selection-end-line="50" selection-end-column="5" />
+          <folding>
+            <element signature="e#186#229#0" expanded="true" />
           </folding>
         </state>
       </provider>

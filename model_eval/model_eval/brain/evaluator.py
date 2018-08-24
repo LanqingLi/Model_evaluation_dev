@@ -12,9 +12,30 @@ from model_eval.common.custom_metric import ClassificationMetric
 
 class BrainSemanticSegEvaluatorOnlineIter(object):
     '''
-
+    This class has the same evaluation functionality as BrainSemanticSegEvaluatorOnline. But instead of taking lists
+    of input data sorted by patient ID, it takes a data iterator and a predictor function, and iterates through all
+    patients by key words. Therefore, it can be smoothly connected to model inference to produce evaluation result (end-to-end).
+    Parameters
+    ----------
+    data_iter: an iterator which takes a list of patient folder names and iterates through each patient (data folder).
+    All images of a single patient are considered a batch.
+        e.g.
+        data_iter = FileIter(
+            root_dir=config.validating.valid_dir,
+            persons=config.validating.valid_person,
+            is_train=False,
+            rgb_mean=(0, 0, 0)
+        )
+        whenever its next method is invoked, it returns a dictionary which contains the following items:
+        data =
+            {predict_key: image data after post-process, can be fed into predictor to perform inference, shape = (figure number(batch size), 3(RGB channel), 512, 512)
+             gt_key: list = [ground truth label/mask, shape = (512, 512, figure num), info of ct scan]
+             img_key: raw image, shape = (figure number, 3(RGB channel), 512, 512)
+             patient_key: patient ID
+            }
+    predictor: a predictor function which performs inference, it generates a np.ndarray, with shape = (batch size, num of classes, 512, 512)
     '''
-    def __init__(self, data_iter, predict_key, gt_key, img_key, patient_key, img_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_contour'),
+    def __init__(self, data_iter, predict_key, gt_key, img_key, patient_key, predictor, img_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_contour'),
                  score_type='fscore', result_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_result'),
                  xlsx_name='BrainSemanticSegEvaluation.xlsx', json_name='BrainSemanticSegEvaluation',
                  conf_thresh=config.TEST.CONF_THRESHOLD, cls_weights=config.CLASS_WEIGHTS,
@@ -24,6 +45,8 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
         self.gt_key = gt_key
         self.img_key = img_key
         self.patient_key = patient_key
+        # a predictor function to read data and generate predicted result
+        self.predictor = predictor
         self.img_save_dir = img_save_dir
         # config.CLASSES 包含background class,是模型预测的所有类别
         self.cls_name = config.CLASSES
@@ -48,9 +71,15 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
             os.mkdir(self.img_save_dir)
 
         for data in self.data_iter:
-            predict_data = data[self.predict_key]
+            if data is None:
+                break
+            if data[self.predict_key] is None:
+                continue
+            predict_data = self.predictor(data[self.predict_key])
             gt_nrrd = data[self.gt_key]
-            img_nrrd = data[self.img_key]
+            # the input raw data (images) have shape (figure number, 3(RGB channel), 512, 512), we need to transpose
+            # to shape (512, 512, figure number, 3(RGB channel))
+            img_nrrd = data[self.img_key].transpose(2, 3, 0, 1)
             PatientID = data[self.patient_key]
 
             print ('processing PatientID: %s' % PatientID)
@@ -67,8 +96,6 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
 
             for fig_num in range(predict_data_cpy.shape[-1]):
                 gt_img = img_nrrd[:, :, fig_num]
-                # copy original img three times for RGB channels
-                gt_img = np.repeat(gt_img[:, :, np.newaxis], axis=2, repeats=3)
                 gt_img = window_convert(gt_img, 40, 80)
                 gt_map = gt_nrrd[0][:, :, fig_num]
                 predict_map = predict_data_cpy[:, :, fig_num]
@@ -95,9 +122,15 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
             os.mkdir(self.img_save_dir)
 
         for data in self.data_iter:
-            predict_data = data[self.predict_key]
+            if data is None:
+                break
+            if data[self.predict_key] is None:
+                continue
+            predict_data = self.predictor(data[self.predict_key])
             gt_nrrd = data[self.gt_key]
-            img_nrrd = data[self.img_key]
+            # the input raw data (images) have shape (figure number, 3(RGB channel), 512, 512), we need to transpose
+            # to shape (512, 512, figure number, 3(RGB channel))
+            img_nrrd = data[self.img_key].transpose(2, 3, 0, 1)
             PatientID = data[self.patient_key]
 
             print ('processing PatientID: %s' % PatientID)
@@ -114,8 +147,6 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
 
             for fig_num in range(predict_data_cpy.shape[-1]):
                 gt_img = img_nrrd[:, :, fig_num]
-                # copy original img three times for RGB channels
-                gt_img = np.repeat(gt_img[:, :, np.newaxis], axis=2, repeats=3)
                 gt_img = window_convert(gt_img, 40, 80)
                 gt_map = gt_nrrd[0][:, :, fig_num]
                 predict_map = predict_data_cpy[:, :, fig_num]
@@ -144,6 +175,8 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
     def multi_class_evaluation(self):
 
         for thresh in self.conf_thresh:
+            # reset data iterator, otherwise we cannot perform new iteration
+            self.data_iter.reset()
             print ('threshold = %s' % thresh)
             # predict_data.shape() = [figure number, class number, 512, 512], gt_nrrd.shape() = [512, 512, figure number],
             # the pictures are arranged in the same order
@@ -154,7 +187,11 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
             pred_tot_phys_vol = [0. for _ in range(len(self.cls_name) - 1)]
 
             for data in self.data_iter:
-                predict_data = data[self.predict_key]
+                if data is None:
+                    break
+                if data[self.predict_key] is None:
+                    continue
+                predict_data = self.predictor(data[self.predict_key])
                 gt_nrrd = data[self.gt_key]
                 PatientID = data[self.patient_key]
                 print ('processing PatientID: %s' % PatientID)
@@ -169,6 +206,8 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
                 predict_data_slice_cpy = predict_data[:, 0, :, :].copy()
                 predict_data_slice_cpy = predict_data_slice_cpy.transpose((1, 2, 0))
                 # check if the predict and ground truth labels have the same shape
+                print (predict_data_slice_cpy.shape)
+                print (gt_nrrd[0].shape)
                 if not predict_data_slice_cpy.shape == gt_nrrd[0].shape:
                     raise Exception("predict and ground truth labels must have the same shape")
 
@@ -233,9 +272,9 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
                                                             'pred_phys_vol/mm^3': patient_metric.get_pred_vol(cls_label) * voxel_vol,
                                                             self.score_type: patient_metric.get_fscore(
                                                                 cls_label=cls_label, beta=self.fscore_beta)},
-                                                           ignore_index=True)
-                    gt_tot_phys_vol[cls_label-1] += cls_metric.get_gt_vol() * voxel_vol
-                    pred_tot_phys_vol[cls_label-1] += cls_metric.get_pred_vol() * voxel_vol
+                                                            ignore_index=True)
+                    gt_tot_phys_vol[cls_label-1] += patient_metric.get_gt_vol(cls_label) * voxel_vol
+                    pred_tot_phys_vol[cls_label-1] += patient_metric.get_pred_vol(cls_label) * voxel_vol
 
             for cls_label in range(len(self.cls_name)):
                 if self.cls_name[cls_label] == '__background__':
@@ -288,6 +327,8 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
     def binary_class_evaluation(self):
 
         for thresh in self.conf_thresh:
+            # reset data iterator, otherwise we cannot perform new iteration
+            self.data_iter.reset()
             print ('threshold = %s' % thresh)
             # predict_data.shape() = [figure number, class number, 512, 512], gt_nrrd.shape() = [512, 512, figure number],
             # the pictures are arranged in the same order
@@ -298,7 +339,11 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
             pred_tot_phys_vol = [0.]
 
             for data in self.data_iter:
-                predict_data = data[self.predict_key]
+                if data is None:
+                    break
+                if data[self.predict_key] is None:
+                    continue
+                predict_data = self.predictor(data[self.predict_key])
                 gt_nrrd = data[self.gt_key]
                 PatientID = data[self.patient_key]
                 print ('processing PatientID: %s' % PatientID)
@@ -359,7 +404,7 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
                     fp_tp = patient_metric.fp[0] / patient_metric.tp[0]
 
                 self.result_df = self.result_df.append({'PatientID': PatientID,
-                                                        'class': 'postive sample',
+                                                        'class': 'positive sample',
                                                         'threshold': thresh,
                                                         'tp_count': patient_metric.tp[0],
                                                         'tn_count': patient_metric.tn[0],
@@ -378,8 +423,8 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
                                                         self.score_type: patient_metric.get_fscore(
                                                             cls_label=1, beta=self.fscore_beta)},
                                                        ignore_index=True)
-                gt_tot_phys_vol[0] += cls_metric.get_gt_vol(cls_label=1) * voxel_vol
-                pred_tot_phys_vol[0] += cls_metric.get_pred_vol(cls_label=1) * voxel_vol
+                gt_tot_phys_vol[0] += patient_metric.get_gt_vol(cls_label=1) * voxel_vol
+                pred_tot_phys_vol[0] += patient_metric.get_pred_vol(cls_label=1) * voxel_vol
 
 
             if cls_metric.tp[0] == 0:
@@ -388,7 +433,7 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
                 fp_tp = cls_metric.fp[0] / cls_metric.tp[0]
 
             self.result_df = self.result_df.append({'PatientID': 'total',
-                                                    'class': 'positve sample',
+                                                    'class': 'positive sample',
                                                     'threshold': thresh,
                                                     'tp_count': cls_metric.tp[0],
                                                     'tn_count': cls_metric.tn[0],
@@ -407,7 +452,7 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
                                                    ignore_index=True)
 
             # find the optimal threshold
-            if 'postive sample' not in self.opt_thresh:
+            if 'positive sample' not in self.opt_thresh:
 
                 self.opt_thresh['positive sample'] = self.result_df.iloc[-1]
 
@@ -427,8 +472,22 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
 
 class BrainSemanticSegEvaluatorOnline(object):
     '''
-
-
+    This class takes lists of predicted data, ground truth data, raw image data and patient IDs to evaluate model performance.
+    The current version includes functionality of:
+        1. binary_class_contour_plot_single_thresh: take a single threshold to draw contour plot for binary-class segmentation,
+            both predicted result and ground truth are plotted in the same image (shape = (512, 1024, 3)), with predicted result on the left
+        2. binary_class_contour_plot_multi_thresh: take multiple thresholds to draw contour plot for binary-class segmentation,
+            both predicted result and ground truth are plotted in the same image (shape = (512, 1024, 3)), with predicted result on the left
+        3. multi_class_evaluation: take each class and regard all other classes as background, evaluate model performance,
+            compatible with only one positive class
+        4. binary_class_evaluation: take all positive classes and make them the same class (positive sample), evaluate
+            model performance.
+    Parameters
+    ----------
+    predict_data_list: list of predicted data, each element has shape = (figure num(batch size), 2 (cls num), 512, 512)
+    gt_nrrd_list: list of ground truth data, each element has shape = (512, 512, figure num(batch size))
+    img_nrrd_list: list of raw image data, each element = list: [ground truth label/mask, shape = (512, 512, figure num(batch size)), info of ct scan]
+    patient_list: list of patient ID
     '''
 
     def __init__(self, predict_data_list, gt_nrrd_list, img_nrrd_list, patient_list,
@@ -470,6 +529,7 @@ class BrainSemanticSegEvaluatorOnline(object):
 
         for predict_data, gt_nrrd, img_nrrd, PatientID in zip(predict_data_list, gt_nrrd_list, img_nrrd_list,
                                                               self.patient_list):
+
             print ('processing PatientID: %s' % PatientID)
             assert predict_data.shape[
                        1] == 2, 'the number of classes %s in predict labels should be 2 for binary classification' % (
@@ -653,8 +713,8 @@ class BrainSemanticSegEvaluatorOnline(object):
                                                             self.score_type: patient_metric.get_fscore(
                                                                 cls_label=cls_label, beta=self.fscore_beta)},
                                                            ignore_index=True)
-                    gt_tot_phys_vol[cls_label - 1] += cls_metric.get_gt_vol() * voxel_vol
-                    pred_tot_phys_vol[cls_label - 1] += cls_metric.get_pred_vol() * voxel_vol
+                    gt_tot_phys_vol[cls_label - 1] += patient_metric.get_gt_vol(cls_label) * voxel_vol
+                    pred_tot_phys_vol[cls_label - 1] += patient_metric.get_pred_vol(cls_label) * voxel_vol
 
             for cls_label in range(len(self.cls_name)):
                 if self.cls_name[cls_label] == '__background__':
@@ -702,6 +762,7 @@ class BrainSemanticSegEvaluatorOnline(object):
 
         save_xlsx_json(self.result_df, self.opt_thresh, self.result_save_dir, self.xlsx_name, self.json_name,
                        'multi-class_evaluation', 'optimal_threshold')
+
 
     # 二分类分割模型评分，用阈值筛选正类别
     def binary_class_evaluation(self):
@@ -776,7 +837,7 @@ class BrainSemanticSegEvaluatorOnline(object):
                     fp_tp = patient_metric.fp[0] / patient_metric.tp[0]
 
                 self.result_df = self.result_df.append({'PatientID': PatientID,
-                                                        'class': 'postive sample',
+                                                        'class': 'positive sample',
                                                         'threshold': thresh,
                                                         'tp_count': patient_metric.tp[0],
                                                         'tn_count': patient_metric.tn[0],
@@ -795,8 +856,8 @@ class BrainSemanticSegEvaluatorOnline(object):
                                                         self.score_type: patient_metric.get_fscore(
                                                             cls_label=1, beta=self.fscore_beta)},
                                                        ignore_index=True)
-                gt_tot_phys_vol[0] += cls_metric.get_gt_vol(cls_label=1) * voxel_vol
-                pred_tot_phys_vol[0] += cls_metric.get_pred_vol(cls_label=1) * voxel_vol
+                gt_tot_phys_vol[0] += patient_metric.get_gt_vol(cls_label=1) * voxel_vol
+                pred_tot_phys_vol[0] += patient_metric.get_pred_vol(cls_label=1) * voxel_vol
 
             if cls_metric.tp[0] == 0:
                 fp_tp = np.nan
@@ -804,7 +865,7 @@ class BrainSemanticSegEvaluatorOnline(object):
                 fp_tp = cls_metric.fp[0] / cls_metric.tp[0]
 
             self.result_df = self.result_df.append({'PatientID': 'total',
-                                                    'class': 'positve sample',
+                                                    'class': 'positive sample',
                                                     'threshold': thresh,
                                                     'tp_count': cls_metric.tp[0],
                                                     'tn_count': cls_metric.tn[0],
@@ -823,7 +884,7 @@ class BrainSemanticSegEvaluatorOnline(object):
                                                    ignore_index=True)
 
             # find the optimal threshold
-            if 'postive sample' not in self.opt_thresh:
+            if 'positive sample' not in self.opt_thresh:
 
                 self.opt_thresh['positive sample'] = self.result_df.iloc[-1]
 
@@ -841,10 +902,17 @@ class BrainSemanticSegEvaluatorOnline(object):
         save_xlsx_json(self.result_df, self.opt_thresh, self.result_save_dir, self.xlsx_name, self.json_name,
                        'binary-class_evaluation', 'optimal_threshold')
 
+
 class BrainSemanticSegEvaluatorOffline(BrainSemanticSegEvaluatorOnline):
     '''
-
-
+    This class is decoupled from model inference stage. It reads predicted data, ground truth data, raw image data and patient IDs
+    from designated directory to evaluate model performance. All functionality is inherited from BrainSemanticSegEvaluatorOnline.
+    Parameters
+    ----------
+    data_dir: directory of predicted data
+    data_type: type of predicted data, currently supports only npy
+    gt_dir: directory of ground truth data, nrrd by default
+    img_dir: directory of raw image data, nrrd by default
     '''
 
     def __init__(self, data_dir, data_type, gt_dir, img_dir, img_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_contour'),
