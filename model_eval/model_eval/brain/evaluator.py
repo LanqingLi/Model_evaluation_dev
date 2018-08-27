@@ -3,12 +3,14 @@ import numpy as np
 import os, json
 import argparse
 import pandas as pd
-from config import config
+#from config import config
+from config import BrainConfig
 import nrrd, cv2
 from model_eval.brain.contour_draw import contour_and_draw, contour_and_draw_rainbow
 from model_eval.tools.data_postprocess import save_xlsx_json
 from model_eval.tools.data_preprocess import window_convert
 from model_eval.common.custom_metric import ClassificationMetric
+
 
 class BrainSemanticSegEvaluatorOnlineIter(object):
     '''
@@ -35,11 +37,11 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
             }
     predictor: a predictor function which performs inference, it generates a np.ndarray, with shape = (batch size, num of classes, 512, 512)
     '''
-    def __init__(self, data_iter, predict_key, gt_key, img_key, patient_key, predictor, img_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_contour'),
+    def __init__(self, cls_label_xls_path, data_iter, predict_key, gt_key, img_key, patient_key, predictor, img_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_contour'),
                  score_type='fscore', result_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_result'),
                  xlsx_name='BrainSemanticSegEvaluation.xlsx', json_name='BrainSemanticSegEvaluation',
-                 conf_thresh=config.TEST.CONF_THRESHOLD, cls_weights=config.CLASS_WEIGHTS,
-                 fscore_beta=config.FSCORE_BETA):
+                 conf_thresh=np.linspace(0.1, 0.9, num=9).tolist(), fscore_beta=1., thresh=0.5):
+        config = BrainConfig(cls_label_xls_path=cls_label_xls_path)
         self.data_iter = data_iter
         self.predict_key = predict_key
         self.gt_key = gt_key
@@ -62,10 +64,11 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
         self.xlsx_name = xlsx_name
         self.json_name = json_name
         self.conf_thresh = conf_thresh
-        self.cls_weights = cls_weights
+        self.cls_weights = config.CLASS_WEIGHTS
         self.fscore_beta = fscore_beta
+        self.thresh = thresh
 
-    def binary_class_contour_plot_single_thresh(self, thresh):
+    def binary_class_contour_plot_single_thresh(self):
 
         if not os.path.exists(self.img_save_dir):
             os.mkdir(self.img_save_dir)
@@ -104,7 +107,7 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
                 img = cv2.cvtColor(gt_img, cv2.COLOR_BGR2RGB)
                 lab = cv2.cvtColor(gt_img, cv2.COLOR_BGR2RGB)
 
-                binary_pmap = np.array(predict_map > thresh, dtype=np.int)
+                binary_pmap = np.array(predict_map > self.thresh, dtype=np.int)
 
                 lab, _ = contour_and_draw(lab, gt_map)
                 img, _ = contour_and_draw(img, binary_pmap)
@@ -495,13 +498,14 @@ class BrainSemanticSegEvaluatorOnline(object):
     patient_list: list of patient ID
     '''
 
-    def __init__(self, predict_data_list, gt_nrrd_list, img_nrrd_list, patient_list,
+    def __init__(self, cls_label_xls_path, predict_data_list, gt_nrrd_list, img_nrrd_list, patient_list,
                  img_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_contour'),
                  score_type='fscore', result_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_result'),
                  xlsx_name='BrainSemanticSegEvaluation.xlsx', json_name='BrainSemanticSegEvaluation',
-                 conf_thresh=config.TEST.CONF_THRESHOLD, cls_weights=config.CLASS_WEIGHTS,
-                 fscore_beta=config.FSCORE_BETA
+                 conf_thresh=np.linspace(0.1, 0.9, num=9).tolist(),
+                 fscore_beta=1., thresh=0.5
                  ):
+        config = BrainConfig(cls_label_xls_path=cls_label_xls_path)
         self.predict_data_list = predict_data_list
         self.gt_nrrd_list = gt_nrrd_list
         self.img_nrrd_list = img_nrrd_list
@@ -521,10 +525,11 @@ class BrainSemanticSegEvaluatorOnline(object):
         self.xlsx_name = xlsx_name
         self.json_name = json_name
         self.conf_thresh = conf_thresh
-        self.cls_weights = cls_weights
+        self.cls_weights = config.CLASS_WEIGHTS
         self.fscore_beta = fscore_beta
+        self.thresh = thresh
 
-    def binary_class_contour_plot_single_thresh(self, thresh):
+    def binary_class_contour_plot_single_thresh(self):
         predict_data_list = self.predict_data_list
         gt_nrrd_list = self.gt_nrrd_list
         img_nrrd_list = self.img_nrrd_list
@@ -560,7 +565,7 @@ class BrainSemanticSegEvaluatorOnline(object):
                 img = cv2.cvtColor(gt_img, cv2.COLOR_BGR2RGB)
                 lab = cv2.cvtColor(gt_img, cv2.COLOR_BGR2RGB)
 
-                binary_pmap = np.array(predict_map > thresh, dtype=np.int)
+                binary_pmap = np.array(predict_map > self.thresh, dtype=np.int)
 
                 lab, _ = contour_and_draw(lab, gt_map)
                 img, _ = contour_and_draw(img, binary_pmap)
@@ -926,12 +931,12 @@ class BrainSemanticSegEvaluatorOffline(BrainSemanticSegEvaluatorOnline):
     img_dir: directory of raw image data, nrrd by default
     '''
 
-    def __init__(self, data_dir, data_type, gt_dir, img_dir, img_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_contour'),
+    def __init__(self, cls_label_xls_path, data_dir, data_type, gt_dir, img_dir, img_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_contour'),
                  score_type='fscore', result_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_result'),
                  xlsx_name ='BrainSemanticSegEvaluation.xlsx', json_name='BrainSemanticSegEvaluation',
-                 conf_thresh=config.TEST.CONF_THRESHOLD, cls_weights=config.CLASS_WEIGHTS, fscore_beta = config.FSCORE_BETA
+                 conf_thresh=np.linspace(0.1, 0.9, num=9).tolist(), fscore_beta=1., thresh=0.5
                  ):
-
+        config = BrainConfig(cls_label_xls_path=cls_label_xls_path)
         assert os.path.isdir(data_dir), 'must initialize it with a valid directory of segmentation data'
         self.data_dir = data_dir
         self.data_type = data_type
@@ -952,18 +957,20 @@ class BrainSemanticSegEvaluatorOffline(BrainSemanticSegEvaluatorOnline):
         self.xlsx_name = xlsx_name
         self.json_name = json_name
         self.conf_thresh = conf_thresh
-        self.cls_weights = cls_weights
+        self.cls_weights = config.CLASS_WEIGHTS
         self.fscore_beta = fscore_beta
+        self.thresh = thresh
         self.patient_list = []
 
         predict_data_list, gt_nrrd_list, img_nrrd_list = self.load_data()
-        super(BrainSemanticSegEvaluatorOffline, self).__init__(predict_data_list=predict_data_list,
+        super(BrainSemanticSegEvaluatorOffline, self).__init__(cls_label_xls_path=cls_label_xls_path,
+                                                               predict_data_list=predict_data_list,
                                                                gt_nrrd_list=gt_nrrd_list,
                                                                img_nrrd_list=img_nrrd_list,
                                                                patient_list=self.patient_list,
                                                                conf_thresh=self.conf_thresh,
-                                                               cls_weights=self.cls_weights,
-                                                               fscore_beta=self.fscore_beta)
+                                                               fscore_beta=self.fscore_beta,
+                                                               thresh=self.thresh)
     def load_data(self):
         '''
         data-storing convention:

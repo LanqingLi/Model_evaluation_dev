@@ -2,28 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="acfa41cf-b818-403a-b6d1-bacf2c92adbd" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/post_process.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/model_eval/lung/post_process.py" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/dist/model_eval-0.1.4-py2-none-any.whl" afterPath="$PROJECT_DIR$/model_eval/dist/model_eval-0.1.4-py2-none-any.whl" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/dist/model_eval-0.1.4.tar.gz" afterPath="$PROJECT_DIR$/model_eval/dist/model_eval-0.1.4.tar.gz" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/dist/objmatch-0.0.2-py2-none-any.whl" afterPath="$PROJECT_DIR$/objmatch/dist/objmatch-0.0.2-py2-none-any.whl" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/dist/objmatch-0.0.2.tar.gz" afterPath="$PROJECT_DIR$/objmatch/dist/objmatch-0.0.2.tar.gz" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/config.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/config.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/__init__.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/config.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/config.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/get_df_nodules.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/get_df_nodules.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval.egg-info/SOURCES.txt" afterPath="$PROJECT_DIR$/model_eval/model_eval.egg-info/SOURCES.txt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/brain/__init__.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/brain/__init__.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/brain/config.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/brain/config.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/common/__init__.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/common/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/lung/__init__.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/lung/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/lung/config.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/lung/config.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/lung/get_df_nodules.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/lung/get_df_nodules.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/tools/__init__.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/tools/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/build/lib.linux-x86_64-2.7/objmatch/common_metrics.py" afterPath="$PROJECT_DIR$/objmatch/build/lib.linux-x86_64-2.7/objmatch/common_metrics.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/build/lib.linux-x86_64-2.7/objmatch/post_process.py" afterPath="$PROJECT_DIR$/objmatch/build/lib.linux-x86_64-2.7/objmatch/post_process.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/objmatch/common_metrics.py" afterPath="$PROJECT_DIR$/objmatch/objmatch/common_metrics.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -116,10 +96,12 @@
         <entry file="file://$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="-230">
-              <caret line="958" column="8" lean-forward="false" selection-start-line="958" selection-start-column="8" selection-end-line="965" selection-end-column="92" />
+              <caret line="964" column="8" lean-forward="false" selection-start-line="964" selection-start-column="8" selection-end-line="972" selection-end-column="82" />
               <folding>
                 <element signature="e#22#40#0" expanded="true" />
-                <marker date="1535091512114" expanded="true" signature="34900:37894" ph="..." />
+                <marker date="1535359632492" expanded="true" signature="2528:3595" ph="..." />
+                <marker date="1535359632492" expanded="true" signature="31483:32457" ph="..." />
+                <marker date="1535359632492" expanded="true" signature="35108:38102" ph="..." />
               </folding>
             </state>
           </provider>
@@ -952,10 +934,12 @@
     <entry file="file://$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-230">
-          <caret line="958" column="8" lean-forward="false" selection-start-line="958" selection-start-column="8" selection-end-line="965" selection-end-column="92" />
+          <caret line="964" column="8" lean-forward="false" selection-start-line="964" selection-start-column="8" selection-end-line="972" selection-end-column="82" />
           <folding>
             <element signature="e#22#40#0" expanded="true" />
-            <marker date="1535091512114" expanded="true" signature="34900:37894" ph="..." />
+            <marker date="1535359632492" expanded="true" signature="2528:3595" ph="..." />
+            <marker date="1535359632492" expanded="true" signature="31483:32457" ph="..." />
+            <marker date="1535359632492" expanded="true" signature="35108:38102" ph="..." />
           </folding>
         </state>
       </provider>
