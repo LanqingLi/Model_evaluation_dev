@@ -153,9 +153,17 @@ def get_nodule_stat(dicom_names, return_boxes, prefix, classes, z_threshold, sam
     # 结节编号排序
     #如果df_boxes已有结节信息，例如ssd的数据，则需要先删掉'nodule'这一列才能添加find_nodules生成的结节信息,对于'minusNamePriority', 'minusProb'亦同理
     try:
-        df_boxes = df_boxes.drop(columns=['object', 'minusNamePriority', 'minusProb'])
+        df_boxes = df_boxes.drop(columns=['object'])
     except:
-        print ("no 'object', 'minusNamePriority', or 'minusProb' in df_boxes")
+        print ("no 'object' in df_boxes")
+    try:
+        df_boxes = df_boxes.drop(columns=['minusNamePriority'])
+    except:
+        print ("no 'minusNamePriority' in df_boxes")
+    try:
+        df_boxes = df_boxes.drop(columns=['minusProb'])
+    except:
+        print ("no 'minusProb' in df_boxes")
 
     df_boxes.insert(0, 'object', bbox_info['object'])
 

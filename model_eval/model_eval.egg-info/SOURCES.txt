@@ -22,7 +22,6 @@ model_eval/lung/classname_labelname_mapping.xls
 model_eval/lung/config.py
 model_eval/lung/evaluator.py
 model_eval/lung/get_df_nodules.py
-model_eval/lung/post_process.py
 model_eval/lung/xml_tools.py
 model_eval/tools/__init__.py
 model_eval/tools/data_postprocess.py

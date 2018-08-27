@@ -14,7 +14,7 @@
 # results and ground truth results, then use Patient.match to find match result. If your nodule/plaque information is
 # not as specified, you could write your own Patient list constructor.
 #
-# If you have any question, contact wjinyi@infervision.com
+# If you have any question, contact llanqing@infervision.com
 
 
 import math
@@ -195,10 +195,10 @@ class AnchorMetric(object):
         long_side = np.max(np.stack((box1[1] - box1[0], box2[1] - box2[0])), axis=0) / 2.
         return math.sqrt(np.sum(((center1 - center2)/long_side) ** 2))
 
-if __name__ == '__main__':
-    test_cls = AnchorMetric(dim=2)
-    box1 = np.asarray([[1.,2,4,7]])
-    box2 = np.asarray([[2,4.,6,8]])
+# if __name__ == '__main__':
+#     test_cls = AnchorMetric(dim=2)
+#     box1 = np.asarray([[1.,2,4,7]])
+#     box2 = np.asarray([[2,4.,6,8]])
     # print box1.shape
     # print test_cls.overlapND(box1, box2)
     # print test_cls.iou(box1, box2)
