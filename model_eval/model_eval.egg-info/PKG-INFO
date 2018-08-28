@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: model-eval
-Version: 0.1.4
+Version: 0.1.5
 Summary: Python package for model evaluation
 Home-page: https://github.com/LanqingLi/model_eval
 Author: Lanqing Li, Infervision Co., Ltd.
@@ -23,7 +23,7 @@ Description: # 模型组评分系统说明
         
         ### F-Score
         对于通过f-score选择最优模型的功能模块(lung, brain等)，在该模块目录下的配置文件config.py中可以设置config.FSCORE_BETA。该参数
-        为f-score中recall和precision的相对权重，越大则recall相对precision的权重越大，默认值为1,具体定义见https://en.wikipedia.org/wiki/F1_score
+        为f-score中recall和precision的相对权重，越大则recall相对precision的权重越大，默认值为1.,具体定义见https://en.wikipedia.org/wiki/F1_score
         
         ### confidence threshold
         对于具有多置信度概率筛选功能的模块(lung, brain等)，在该模块目录下的配置文件config.py中可以设置config.TEST.CONF_THRESHOLD。评估程序

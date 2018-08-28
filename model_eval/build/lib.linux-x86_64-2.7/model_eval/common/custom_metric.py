@@ -141,6 +141,20 @@ class ClassificationMetric(EvalMetric):
             print ZeroDivisionError
             return np.nan
 
+    def get_dice(self, cls_label):
+        """Get the evaluated dice (2*tp/(2*tp + fp + fn))
+
+        :param cls_label:
+        :return: dice
+        """
+        assert cls_label >= 1 and type(cls_label) == int, "cls_label must be a positive integer!"
+        if (2*self.tp[cls_label-1] + self.fp[cls_label-1] + self.fn[cls_label-1]) > 0.:
+            return 2*self.tp[cls_label-1] / (2*self.tp[cls_label-1] + self.fp[cls_label-1] + self.fn[cls_label-1])
+        else:
+            print ZeroDivisionError
+            return np.nan
+
+
     def get_fscore(self, cls_label, beta=1.):
         """Get the evaluated f score
 

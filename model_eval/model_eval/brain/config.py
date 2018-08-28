@@ -13,7 +13,7 @@ class BrainConfig(object):
             self.CLASSES_LABELS_XLS_FILE_NAME)
         self.NUM_CLASSES = len(self.CLASSES)
         self.FSCORE_BETA = fscore_beta
-        # binary classification threshold for drawing contour plot for single threshold for comparison
+        # binary classification threshold for drawing contour plot with single threshold for comparison
         self.THRESH = thresh
 
 

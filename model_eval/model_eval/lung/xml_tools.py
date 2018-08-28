@@ -1,7 +1,6 @@
 # ------ coding: utf-8 --------
 import os
 import xml.etree.cElementTree as ET
-from model_eval.lung.config import config
 
 
 # 输入一个xml文件(某个slice), 输出[[bbx1],[bbx2],[bbx3]]
@@ -9,7 +8,7 @@ from model_eval.lung.config import config
 #                     'calcific nodule', 'pgo', '10-30nodule', 'mass',
 #                     '0-5GGN', '5GGN', 'calcific',
 #                     'pleural nodule', 'quasi-nodule']
-def read_xml(xml_path, restrict_name_list=None):
+def read_xml(config, xml_path, restrict_name_list=None):
     '''
     读取xml
     :param xml_path: xml文件的路径
@@ -41,7 +40,7 @@ def read_xml(xml_path, restrict_name_list=None):
             pass
     return boxes
 
-def read_xml_without_nodule_cls(xml_path, restrict_name_list=None):
+def read_xml_without_nodule_cls(config, xml_path, restrict_name_list=None):
     '''
     读取xml
     :param xml_path: xml文件的路径
@@ -75,7 +74,7 @@ def read_xml_without_nodule_cls(xml_path, restrict_name_list=None):
             pass
     return boxes
 
-def read_xml_with_nodule_num(xml_path, xml_name, restrict_name_list=None):
+def read_xml_with_nodule_num(config, xml_path, xml_name, restrict_name_list=None):
     '''
     读取xml
     :param xml_path: xml文件的路径
@@ -110,7 +109,7 @@ def read_xml_with_nodule_num(xml_path, xml_name, restrict_name_list=None):
             pass
     return boxes
 
-def read_xml_with_nodule_num_without_nodule_cls(xml_path, xml_name, restrict_name_list=None):
+def read_xml_with_nodule_num_without_nodule_cls(config, xml_path, xml_name, restrict_name_list=None):
     '''
     读取xml
     :param xml_path: xml文件的路径
@@ -194,7 +193,7 @@ def generate_xml(data_dir, filename, name_bboxs_dict):
     tree.write(os.path.join(data_dir, filename))
 
 
-def xml_to_boxeslist_multi_classes(xml_dir, box_length):
+def xml_to_boxeslist_multi_classes(config, xml_dir, box_length):
     '''
     读取文件夹下的xml，返回和get_boxes返回格式一样的boxes
     :param xml_dir:
@@ -215,7 +214,7 @@ def xml_to_boxeslist_multi_classes(xml_dir, box_length):
         xml_names = os.listdir(xml_dir)
         for xml_name in xml_names:
             slice_id = int(xml_name.split("_")[-1].split(".")[0]) - 1
-            xml_path = xml_dir + "/" + xml_name
+            xml_path = os.path.join(xml_dir, xml_name)
             boxes = read_xml_for_multi_classes(xml_path,config.NODULE_CLASSES)
             for box in boxes:
                 name = box[-1]
@@ -223,7 +222,7 @@ def xml_to_boxeslist_multi_classes(xml_dir, box_length):
                 return_boxes_list[slice_id][id_cls].append(box[:-1])
     return return_boxes_list
 
-def xml_to_boxeslist(xml_dir, box_length):
+def xml_to_boxeslist(config, xml_dir, box_length):
     '''
     读取文件夹下的xml，返回和get_boxes返回格式一样的boxes
     :param xml_dir:
@@ -244,15 +243,15 @@ def xml_to_boxeslist(xml_dir, box_length):
         xml_names = os.listdir(xml_dir)
         for xml_name in xml_names:
             slice_id = int(xml_name.split("_")[-1].split(".")[0]) - 1
-            xml_path = xml_dir + "/" + xml_name
-            boxes = read_xml(xml_path, config.CLASSES)
+            xml_path = os.path.join(xml_dir, xml_name)
+            boxes = read_xml(config, xml_path, config.CLASSES)
             for box in boxes:
                 name = box[-1]
                 id_cls = config.CLASSES.index(name) - 1
                 return_boxes_list[slice_id][id_cls].append(box[:-1])
     return return_boxes_list
 
-def xml_to_boxeslist_without_nodule_cls(xml_dir, box_length):
+def xml_to_boxeslist_without_nodule_cls(config, xml_dir, box_length):
     '''
     读取文件夹下的xml，返回和get_boxes返回格式一样的boxes
     :param xml_dir:
@@ -274,15 +273,15 @@ def xml_to_boxeslist_without_nodule_cls(xml_dir, box_length):
         for xml_name in xml_names:
             #print xml_name
             slice_id = int(xml_name.split("_")[-1].split(".")[0]) - 1
-            xml_path = xml_dir + "/" + xml_name
-            boxes = read_xml_without_nodule_cls(xml_path, config.CLASSES)
+            xml_path = os.path.join(xml_dir, xml_name)
+            boxes = read_xml_without_nodule_cls(config, xml_path, config.CLASSES)
             for box in boxes:
                 name = box[-1]
                 id_cls = config.CLASSES.index(name) - 1
                 return_boxes_list[slice_id][id_cls].append(box[:-1])
     return return_boxes_list
 
-def xml_to_boxeslist_with_nodule_num(xml_dir, box_length):
+def xml_to_boxeslist_with_nodule_num(config, xml_dir, box_length):
     '''
     读取文件夹下的xml，返回和get_boxes返回格式一样的boxes
     :param xml_dir:
@@ -304,9 +303,9 @@ def xml_to_boxeslist_with_nodule_num(xml_dir, box_length):
         xml_names = os.listdir(xml_dir)
         for xml_name in xml_names:
             slice_id = int(xml_name.split("_")[-1].split(".")[0]) - 1
-            xml_path = xml_dir + "/" + xml_name
+            xml_path = os.path.join(xml_dir, xml_name)
             # nodule_num = boxes[6], nodule_class = boxes[5]
-            boxes = read_xml_with_nodule_num(xml_path, xml_name, config.CLASSES)
+            boxes = read_xml_with_nodule_num(config, xml_path, xml_name, config.CLASSES)
             for box in boxes:
                 name = box[-3]
                 id_cls = config.CLASSES.index(name) - 1
@@ -314,7 +313,7 @@ def xml_to_boxeslist_with_nodule_num(xml_dir, box_length):
                 box_list_all_slice.append(box)
     return return_boxes_list, box_list_all_slice
 
-def xml_to_boxeslist_with_nodule_num_without_nodule_cls(xml_dir, box_length):
+def xml_to_boxeslist_with_nodule_num_without_nodule_cls(config, xml_dir, box_length):
     '''
     读取文件夹下的xml，返回和get_boxes返回格式一样的boxes
     :param xml_dir:
@@ -336,9 +335,9 @@ def xml_to_boxeslist_with_nodule_num_without_nodule_cls(xml_dir, box_length):
         xml_names = os.listdir(xml_dir)
         for xml_name in xml_names:
             slice_id = int(xml_name.split("_")[-1].split(".")[0]) - 1
-            xml_path = xml_dir + "/" + xml_name
+            xml_path = os.path.join(xml_dir, xml_name)
             # nodule_num = boxes[6], nodule_class = boxes[5]
-            boxes = read_xml_with_nodule_num_without_nodule_cls(xml_path, xml_name, config.CLASSES)
+            boxes = read_xml_with_nodule_num_without_nodule_cls(config, xml_path, xml_name, config.CLASSES)
             for box in boxes:
                 name = box[-3]
                 id_cls = config.CLASSES.index(name) - 1

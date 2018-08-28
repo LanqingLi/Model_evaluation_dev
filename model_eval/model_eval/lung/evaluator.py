@@ -10,7 +10,8 @@ from model_eval.common.custom_metric import ClassificationMetric, ClusteringMetr
 
 from model_eval.lung.xml_tools import xml_to_boxeslist, xml_to_boxeslist_with_nodule_num, xml_to_boxeslist_without_nodule_cls, \
     xml_to_boxeslist_with_nodule_num_without_nodule_cls, generate_xml
-from config import config
+# from config import config
+from config import LungConfig
 from objmatch.post_process import df_to_cls_label
 from model_eval.lung.get_df_nodules import get_nodule_stat, init_df_boxes
 
@@ -41,20 +42,19 @@ class LungNoduleEvaluatorOffline(object):
     :param thickness_thresh: nodule_thickness_filter根据此阈值对结节的层厚进行筛选
     :param nodule_compare_thresh: 比较两个结节是否算一个的IOU阈值
     '''
-    def __init__(self, data_dir, data_type, anno_dir, score_type = 'fscore',  result_save_dir = os.path.join(os.getcwd(), 'LungNoduleEvaluation_result'),
+    def __init__(self, cls_label_xls_path, data_dir, data_type, anno_dir, score_type = 'fscore',  result_save_dir = os.path.join(os.getcwd(), 'LungNoduleEvaluation_result'),
                  xlsx_name = 'LungNoduleEvaluation.xlsx', json_name = 'LungNoduleEvaluation', if_nodule_json = False,
-                 conf_thresh = config.TEST.CONF_THRESHOLD, nodule_cls_weights = config.CLASS_WEIGHTS, fscore_beta = config.FSCORE_BETA,
-                 same_box_threshold_pred = config.FIND_NODULES.SAME_BOX_THRESHOLD_PRED, same_box_threshold_gt = config.FIND_NODULES.SAME_BOX_THRESHOLD_GT,
-                 score_threshold_pred = config.FIND_NODULES.SCORE_THRESHOLD_PRED, score_threshold_gt = config.FIND_NODULES.SCORE_THRESHOLD_GT,
-                 z_threshold_pred = config.CLASS_Z_THRESHOLD_PRED, z_threshold_gt = config.CLASS_Z_THRESHOLD_GT,
-                 nodule_compare_thresh = config.TEST.IOU_THRESHOLD, thickness_thresh = config.THICKNESS_THRESHOLD, if_nodule_threshold = False):
+                 conf_thresh = np.linspace(0.1, 0.9, num=9).tolist(), fscore_beta = 1.,
+                 same_box_threshold_pred = np.array([1.6, 1.6]), same_box_threshold_gt = np.array([0., 0.]),
+                 score_threshold_pred = 0.6, score_threshold_gt = 0.4, if_nodule_threshold = False, thickness_thresh = 0.):
+        self.config = LungConfig(cls_label_xls_path=cls_label_xls_path)
         assert os.path.isdir(data_dir), 'must initialize it with a valid directory of bbox data'
         self.data_dir = data_dir
         self.data_type = data_type
         self.anno_dir = anno_dir
         # config.CLASSES 包含background class,是结节的粗分类(RCNN分类)
-        self.cls_name = config.CLASSES
-        self.cls_dict = config.CLASS_DICT
+        self.cls_name = self.config.CLASSES
+        self.cls_dict = self.config.CLASS_DICT
         self.score_type = score_type
         self.opt_thresh = {}
 
@@ -69,22 +69,22 @@ class LungNoduleEvaluatorOffline(object):
         self.if_nodule_json = if_nodule_json
         # customized confidence threshold for plotting ROC curve
         self.conf_thresh = conf_thresh
-        self.nodule_cls_weights = nodule_cls_weights
+        self.nodule_cls_weights = self.config.CLASS_WEIGHTS
         self.fscore_beta = fscore_beta
         self.patient_list = []
         self.cls_weight = []
         self.cls_value = {'accuracy': [], 'recall': [], 'precision': [], self.score_type: []}
-        # objmatch.find_nodules算法的相关超参数，详见config文件
+        # objmatch.find_nodules/find_objects算法的相关超参数，详见config文件
         self.same_box_threshold_pred = same_box_threshold_pred
         self.same_box_threshold_gt = same_box_threshold_gt
         self.score_threshold_pred = score_threshold_pred
         self.score_threshold_gt = score_threshold_gt
-        self.z_threshold_pred = z_threshold_pred
-        self.z_threshold_gt = z_threshold_gt
+        self.z_threshold_pred = self.config.CLASS_Z_THRESHOLD_PRED
+        self.z_threshold_gt = self.config.CLASS_Z_THRESHOLD_GT
         self.if_nodule_threshold = if_nodule_threshold
 
         self.thickness_thresh = thickness_thresh
-        self.nodule_compare_thresh = nodule_compare_thresh
+        self.nodule_compare_thresh = self.config.TEST.IOU_THRESHOLD
 
         # keep track of the nodule count in the output of get_df_nodules, including false positives, initialized to be 0
         self.nodule_count = 0.
@@ -848,7 +848,7 @@ class LungNoduleEvaluatorOffline(object):
             ground_truth_path = os.path.join(self.anno_dir, PatientID)
             try:
                 # 对于ground truth boxes,我们直接读取其xml标签。因为几乎所有CT图像少于2000个层，故我们在这里选择2000
-                ground_truth_boxes = xml_to_boxeslist(ground_truth_path, 2000)
+                ground_truth_boxes = xml_to_boxeslist(config=self.config, xml_dir=ground_truth_path, box_length=2000)
             except:
                 print ("broken directory structure, maybe no ground truth xml file found: %s" % ground_truth_path)
                 ground_truth_boxes = [[[[]]]]
@@ -961,17 +961,17 @@ class LungNoduleEvaluatorOffline(object):
 
 
 class FindNodulesEvaluator(object):
-    def __init__(self, gt_anno_dir, conf_thres = 1., result_save_dir = os.path.join(os.getcwd(), 'FindNodulesEvaluation_result'),
+    def __init__(self, cls_label_xls_path, gt_anno_dir, conf_thres = 1., result_save_dir = os.path.join(os.getcwd(), 'FindNodulesEvaluation_result'),
                  xlsx_name = 'FindNodulesEvaluation', json_name = 'FindNodulesEvaluation', algorithm = 'find_nodules_new', if_nodule_cls = True,
-                 same_box_threshold_gt = config.FIND_NODULES.SAME_BOX_THRESHOLD_GT, score_threshold_gt = config.FIND_NODULES.SCORE_THRESHOLD_GT,
-                 z_threshold_gt = config.CLASS_Z_THRESHOLD_GT):
+                 same_box_threshold_gt = np.array([0., 0.]), score_threshold_gt = 0.4):
+        self.config = LungConfig(cls_label_xls_path=cls_label_xls_path)
         assert os.path.isdir(gt_anno_dir), 'must initialize it with a valid directory of annotation data'
         self.gt_anno_dir = gt_anno_dir
         self.result_save_dir = result_save_dir
         self.xlsx_name = xlsx_name
         self.json_name = json_name
         self.patient_list = []
-        self.cls_name = config.CLASSES
+        self.cls_name = self.config.CLASSES
         self.conf_thresh = conf_thres
         self.algorithm = algorithm
         self.result_df = pd.DataFrame(
@@ -981,10 +981,10 @@ class FindNodulesEvaluator(object):
             columns=['patientid', 'nodule_count'])
         # whether the ground truth labels include nodule class or not
         self.if_nodule_cls = if_nodule_cls
-        self.nodule_cls_weights = config.CLASS_WEIGHTS
+        self.nodule_cls_weights = self.config.CLASS_WEIGHTS
         self.same_box_threshold_gt = same_box_threshold_gt
         self.score_threshold_gt = score_threshold_gt
-        self.z_threshold_gt = z_threshold_gt
+        self.z_threshold_gt = self.config.CLASS_Z_THRESHOLD_GT
 
 
     def evaluation_with_nodule_num(self):
@@ -1163,7 +1163,7 @@ class FindNodulesEvaluator(object):
             ground_truth_path = os.path.join(self.gt_anno_dir, PatientID)
             try:
                 # 对于ground truth boxes,我们直接读取其xml标签。因为几乎所有CT图像少于2000个层，故我们在这里选择2000
-                ground_truth_boxes, ground_truth_boxes_all_slice= xml_to_boxeslist_with_nodule_num(ground_truth_path, 2000)
+                ground_truth_boxes, ground_truth_boxes_all_slice= xml_to_boxeslist_with_nodule_num(config=self.config, xml_dir=ground_truth_path, box_length=2000)
             except:
                 print ("broken directory structure, maybe no ground truth xml file found: %s" % ground_truth_path)
                 ground_truth_boxes = [[[[]]]]
@@ -1184,7 +1184,7 @@ class FindNodulesEvaluator(object):
             ground_truth_path = os.path.join(self.gt_anno_dir, PatientID)
             try:
             # 对于ground truth boxes,我们直接读取其xml标签。因为几乎所有CT图像少于2000个层，故我们在这里选择2000
-                ground_truth_boxes = xml_to_boxeslist_without_nodule_cls(ground_truth_path, 2000)
+                ground_truth_boxes = xml_to_boxeslist_without_nodule_cls(config=self.config, xml_dir=ground_truth_path, box_length=2000)
             except:
                 print ("broken directory structure, maybe no ground truth xml file found: %s" % ground_truth_path)
                 ground_truth_boxes = [[[[]]]]
@@ -1204,7 +1204,7 @@ class FindNodulesEvaluator(object):
             ground_truth_path = os.path.join(self.gt_anno_dir, PatientID)
             try:
             # 对于ground truth boxes,我们直接读取其xml标签。因为几乎所有CT图像少于2000个层，故我们在这里选择2000
-                ground_truth_boxes, ground_truth_boxes_all_slice= xml_to_boxeslist_with_nodule_num_without_nodule_cls(ground_truth_path, 2000)
+                ground_truth_boxes, ground_truth_boxes_all_slice= xml_to_boxeslist_with_nodule_num_without_nodule_cls(config=self.config, xml_dir=ground_truth_path, box_length=2000)
             except:
                 print ("broken directory structure, maybe no ground truth xml file found: %s" % ground_truth_path)
                 ground_truth_boxes = [[[[]]]]
