@@ -206,7 +206,7 @@ def xml_to_boxeslist_multi_classes(config, xml_dir, box_length):
     # 初始化空列表
     for i_row in range(box_length):
         slice_boxes = []
-        for i_cls in range(num_classes):
+        for i_cls in range(num_classes - 1):
             slice_boxes.append([])
         return_boxes_list.append(slice_boxes)
     if xml_dir != None:
@@ -218,7 +218,7 @@ def xml_to_boxeslist_multi_classes(config, xml_dir, box_length):
             boxes = read_xml_for_multi_classes(xml_path,config.NODULE_CLASSES)
             for box in boxes:
                 name = box[-1]
-                id_cls = config.NODULE_CLASSES.index(name)
+                id_cls = config.NODULE_CLASSES.index(name) - 1
                 return_boxes_list[slice_id][id_cls].append(box[:-1])
     return return_boxes_list
 

@@ -1,35 +1,37 @@
 # 模型评分系统脑部CT模块说明
 
-版本号：0.1.4
+版本号：0.1.6
 
-该模块主要功能是对脑部CT项目的模型输出进行评估，用以筛选最优模型。目前版本的主要功能是针对脑卒中出血的语义分割模型，统计其分类的tp、fp、fscore、出血体积等指标，画出分割的contour、RP、ROC曲线。
-最新版0.1.3实现了evaluator的offline(以文件形式读入模型预测结果，用于inference和evaluation的解耦运行)和online(直接将模型预测输出作为输入，实现inference和evaluation的一体化运行)功能
+该模块主要功能是对脑部CT项目的模型输出进行评估，用以筛选最优模型。目前版本的主要功能是针对脑卒中出血的语义分割模型，统计其分类的tp、fp、fscore、出血体积等指标，
+画出分割的contour、RP、ROC曲线。最新版0.1.3实现了evaluator的offline(以文件形式读入模型预测结果，用于inference和evaluation的解耦运行)和online(直接将模型预测输出作为输入，实现inference和evaluation的一体化运行)功能
 0.1.4实现了evaluator的onlineiter(读入数据迭代器，可以直接与模型预测结合进行inference、evaluation一体化的运行，同时因为每次只读入一个病人，
 避免了数据过大内存不够用的问题)功能
 	
 ## 环境安装
 
-请首先配置公司pypi源: 详见https://git.infervision.com/w/%E7%A0%94%E5%8F%91/%E5%86%85%E9%83%A8python%E4%BB%93%E5%BA%93%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E/
+请首先配置公司pypi源: 详见 https://git.infervision.com/w/%E7%A0%94%E5%8F%91/%E5%86%85%E9%83%A8python%E4%BB%93%E5%BA%93%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E/
 
 ### 安装objmatch
 
+对于以下操作，如想安装在虚拟环境中请删掉'sudo'指令
+
 先删除本地的`objmatch`
 
- -sudo pip uninstall objmatch
+ - sudo pip uninstall objmatch
 
 安装'objmatch'
 
- -sudo pip install objmatch
+ - sudo pip install objmatch
  
 ### 安装model_eval
 
 先删除本地的model_eval
 
- -sudo pip uninstall model_eval
+ - sudo pip uninstall model_eval
 
 安装'model_eval'
 
- -sudo pip install model_eval
+ - sudo pip install model_eval
  
 ## 输入输出测试集等相关格式
 详见https://git.infervision.com/T1745 中出血性卒中相关文档
@@ -39,14 +41,18 @@ evaluator.py: 模型评估的主要功能实现
 
 - 目的：统计多阈值下模型分割的效果，并进行综合评分及筛选最优阈值，画出分割的contour、RP、ROC曲线
 
-- 具体操作：读取分割模型输出的各像素点的mask(默认读取格式为.npy,可支持的数据文件格式为_predict.npy),以及
-人工标记的ground truth label的.nrrd文件，经过conf_thresh的阈值筛选后, 经过ClassificationMetric
+- 具体操作：
+ - OnlineIter模式：传入模型预测的预测器(predictor)及数据迭代器(data_iter),后续操作与Offline模式相同，相比Online不需要一次性将所有数据
+ 放入内存中，大大地减少了空间占用
+ - Online模式：传入以病人代号排列的模型预测结果、人工标记与原图的list，后续操作与Offline模式相同
+ - Offline模式：读取分割模型输出的各像素点的mask(默认读取格式为.npy,可支持的数据文件格式为_predict.npy),以及
+人工标记的ground truth label和原图的.nrrd文件，经过conf_thresh的阈值筛选后, 经过ClassificationMetric
 统计出对应threshold和class的recall, fp/tp, precision等信息,并进行可视化
 
 - 数据生成：
   调用预测函数predict得到预测结果（prob_map）, 直接np.save(save_path, prob_map)得到相应的patient_id_x_predict.npy
 
-config.py: 统一存放评估系统后处理相关参数默认值的配置文件,用户可以根据需求重新定义
+config.py: 定义了评估系统相关参数的配置参数类,默认值都是经测试选取的最优参数，但不适用于所有测试集，用户可以根据需求重新定义
 
 - 分类相关参数：默认值全部定义在brain.classname_labelname_mapping.xls中，依次包括分割细分类别（人工标记类别）、分割粗分类别（模型识别类别）、
 分割类别置信度概率阈值、分割类别权重
@@ -55,17 +61,17 @@ config.py: 统一存放评估系统后处理相关参数默认值的配置文件
 
 ### 语义分割功能
 
-offline模式：
+offline模式（继承于online模式，可以读入数据后初始化online模式）：
 
 1. 多分类(目前仅在二分类数据上有测试)：
 
--调用multi_class_evaluation:
+- 调用multi_class_evaluation:
  python -m brain.semantic_seg_test --gt_dir [ground truth label directory] --data_type npy --data_dir [predict label directory] \
  --img_dir [image directory] --multi_class
  
 2. 二分类：
 
--调用binary_class_evaluation:
+- 调用binary_class_evaluation:
  python -m brain.semantic_seg_test --gt_dir [ground truth label directory] --data_type npy --data_dir [predict label directory] \
  --img_dir [image directory]
  
@@ -94,17 +100,21 @@ online模式：
 之后初始化BrainSemanticSegEvaluatorOnline类：
 
 ```
-brain_evaluator = evaluator.BrainSemanticSegEvaluatorOnline(predict_data_list=predict_data_list,
+brain_evaluator = evaluator.BrainSemanticSegEvaluatorOnline(cls_label_xls_path=cls_label_xls_path,
+                                                            predict_data_list=predict_data_list,
                                                             gt_nrrd_list=gt_nrrd_list,
                                                             img_nrrd_list=img_nrrd_list,
-                                                            patient_list=patient_list)
+                                                            patient_list=self.patient_list,
+                                                            conf_thresh=self.conf_thresh,
+                                                            fscore_beta=self.fscore_beta,
+                                                            thresh=self.thresh)
 ```
                                        
 之后调用brain_evaluator如下函数即可：
 
 1. 多分类(目前仅在二分类数据上有测试)：
 
--调用multi_class_evaluation: brain_evaluator.multi_class_evaluation()
+- 调用multi_class_evaluation: brain_evaluator.multi_class_evaluation()
 
 2. 二分类：
 
@@ -123,32 +133,43 @@ onlineIter模式：
 此模式接收的是一个带有predict_key(模型预测结果关键词), gt_key(ground truth标记关键词), img_key(原图数据关键词)和patient_key(病人号关键词)
 的数据迭代器(data_iter),这样子在评估模型预测结果时会按照病人号逐个读取处理而不是一次性读入所有病人的数据，避免数据量大时内存不够的问题。
 
-具体操作，在生成data_iter后初始化BrainSemanticSegEvaluatorOnlineIter类：
+具体操作，在生成data_iter后初始化BrainSemanticSegEvaluatorOnlineIter类，通过if_save_mask可以选择是否在初始化时遍历将模型预测的mask
+按病人代号存储起来：
 
 ```
-brain_evaluator = evaluator.BrainSemanticSegEvaluatorOnlineIter(data_iter=data_iter,
-                                                                predictor=predictor.predict,
-                                                                predict_key=predict_key,
-                                                                gt_key=gt_key,
-                                                                img_key=img_key,
-                                                                patient_key=patient_key)
+brain_eval = BrainSemanticSegEvaluatorOnlineIter(cls_label_xls_path=cls_label_xls_path,
+                                                 data_iter=eval_data,
+                                                 predictor=predictor.predict,
+                                                 predict_key='data',
+                                                 gt_key='softmax_label',
+                                                 img_key='raw',
+                                                 patient_key='pid',
+                                                 conf_thresh=[0.1, 0.9],
+                                                 if_save_mask=True
+                                                 )
 ```
                                           
 之后调用brain_evaluator如下函数即可：
 
 1. 多分类(目前仅在二分类数据上有测试)：
 
--调用multi_class_evaluation: brain_evaluator.multi_class_evaluation()
+- 调用multi_class_evaluation: brain_evaluator.multi_class_evaluation(), 用阈值筛选正类别，并在其中选取最大值作为one-hot label
+
+- 调用multi_class_evaluation_light: brain_evaluator.multi_class_evaluation_light(), 轻量级版本，每张图只做一遍预测
 
 2. 二分类：
 
--调用binary_class_evaluation: brain_evaluator.binary_class_evaluation()
- 
+- 调用binary_class_evaluation: brain_evaluator.binary_class_evaluation(), 不管gt有多少类别，我们只关心检出(正样本全部归为一类,pos_cls_fusion=True)
+
+- 调用binary_class_evaluation_light: brain_evaluator.binary_class_evaluation_light(), 轻量级版本，每张图只做一遍预测
+
 3. 画分割区域轮廓图：
 
 - 二分类：
+
  - 多阈值对比图　(调用binary_class_contour_plot_multi_thresh, 阈值在config.TEST.CONF_THRESHOLD定义):
    brain_evaluator.binary_class_contour_plot_multi_thresh()
+ 
  - 单阈值对比图 (调用binary_class_contour_plot_single_thresh，阈值在config.THRESH定义)
  　brain_evaluator.binary_class_contour_plot_single_thresh()
  

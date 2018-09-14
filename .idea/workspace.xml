@@ -2,31 +2,40 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="acfa41cf-b818-403a-b6d1-bacf2c92adbd" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/dist/model_eval-0.1.4-py2-none-any.whl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/dist/model_eval-0.1.4.tar.gz" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/model_eval/__init__.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/objmatch/objmatch/object.py" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/dist/model_eval-0.1.5-py2-none-any.whl" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/dist/model_eval-0.1.5.tar.gz" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/objmatch/dist/objmatch-0.0.2-py2-none-any.whl" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/objmatch/dist/objmatch-0.0.2.tar.gz" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/README.md" afterPath="$PROJECT_DIR$/model_eval/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/__init__.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/config.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/config.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/contour_draw.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/contour_draw.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/evaluator.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/brain/evaluator.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/common/__init__.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/common/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/common/custom_metric.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/common/custom_metric.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/__init__.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/__init__.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/config.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/config.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/evaluator.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/evaluator.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/xml_tools.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/lung/xml_tools.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/tools/__init__.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/tools/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/tools/plot.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/tools/plot.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/tools/data_postprocess.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/tools/data_postprocess.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/tools/data_preprocess.py" afterPath="$PROJECT_DIR$/model_eval/build/lib.linux-x86_64-2.7/model_eval/tools/data_preprocess.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval.egg-info/PKG-INFO" afterPath="$PROJECT_DIR$/model_eval/model_eval.egg-info/PKG-INFO" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/brain/config.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/brain/config.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/brain/contour_draw.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/brain/contour_draw.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/__init__.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/__init__.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/brain/README.md" afterPath="$PROJECT_DIR$/model_eval/model_eval/brain/README.md" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/common/custom_metric.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/common/custom_metric.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/common/metric.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/common/metric.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/lung/README.md" afterPath="$PROJECT_DIR$/model_eval/model_eval/lung/README.md" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/lung/config.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/lung/config.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/lung/evaluator.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/lung/evaluator.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/lung/get_df_nodules.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/lung/get_df_nodules.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/lung/xml_tools.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/lung/xml_tools.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/tools/plot.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/tools/plot.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/tools/data_postprocess.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/tools/data_postprocess.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/tools/data_preprocess.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/tools/data_preprocess.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/setup.py" afterPath="$PROJECT_DIR$/model_eval/setup.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/README.md" afterPath="$PROJECT_DIR$/objmatch/README.md" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/build/lib.linux-x86_64-2.7/objmatch/post_process.py" afterPath="$PROJECT_DIR$/objmatch/build/lib.linux-x86_64-2.7/objmatch/post_process.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/objmatch.egg-info/PKG-INFO" afterPath="$PROJECT_DIR$/objmatch/objmatch.egg-info/PKG-INFO" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/objmatch/post_process.py" afterPath="$PROJECT_DIR$/objmatch/objmatch/post_process.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/setup.py" afterPath="$PROJECT_DIR$/objmatch/setup.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -44,25 +53,43 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="find_nodules.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/objmatch/objmatch/find_nodules.py">
+      <file leaf-file-name="evaluator.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/evaluator.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="306">
-              <caret line="182" column="63" lean-forward="false" selection-start-line="182" selection-start-column="63" selection-end-line="182" selection-end-column="63" />
-              <folding>
-                <element signature="e#18#37#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="373">
+              <caret line="1773" column="8" lean-forward="true" selection-start-line="1773" selection-start-column="8" selection-end-line="1773" selection-end-column="48" />
+              <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="find_objects.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/objmatch/objmatch/find_objects.py">
+      <file leaf-file-name="data_postprocess.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/model_eval/model_eval/tools/data_postprocess.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-648">
-              <caret line="21" column="40" lean-forward="false" selection-start-line="21" selection-start-column="40" selection-end-line="21" selection-end-column="40" />
+            <state relative-caret-position="346">
+              <caret line="90" column="81" lean-forward="false" selection-start-line="90" selection-start-column="81" selection-end-line="90" selection-end-column="81" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="custom_metric.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/common/custom_metric.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="108">
+              <caret line="9" column="6" lean-forward="false" selection-start-line="9" selection-start-column="6" selection-end-line="9" selection-end-column="6" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="custom_metric.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/model_eval/model_eval/common/custom_metric.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="360">
+              <caret line="20" column="53" lean-forward="false" selection-start-line="20" selection-start-column="53" selection-end-line="20" selection-end-column="53" />
               <folding>
-                <element signature="e#18#37#0" expanded="true" />
+                <element signature="e#22#40#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -71,33 +98,44 @@
       <file leaf-file-name="post_process.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/objmatch/objmatch/post_process.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="144">
-              <caret line="131" column="4" lean-forward="false" selection-start-line="131" selection-start-column="4" selection-end-line="131" selection-end-column="4" />
+            <state relative-caret-position="488">
+              <caret line="168" column="16" lean-forward="false" selection-start-line="168" selection-start-column="16" selection-end-line="169" selection-end-column="104" />
               <folding>
                 <element signature="e#22#41#0" expanded="true" />
+                <marker date="1536840304476" expanded="true" signature="1663:1750" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="__init__.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/objmatch/objmatch/__init__.py">
+      <file leaf-file-name="get_df_nodules.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/get_df_nodules.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="72">
-              <caret line="4" column="27" lean-forward="false" selection-start-line="4" selection-start-column="27" selection-end-line="4" selection-end-column="27" />
+            <state relative-caret-position="-52">
+              <caret line="118" column="46" lean-forward="false" selection-start-line="118" selection-start-column="46" selection-end-line="118" selection-end-column="46" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="get_df_objects.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/get_df_objects.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="192">
+              <caret line="94" column="4" lean-forward="false" selection-start-line="94" selection-start-column="4" selection-end-line="94" selection-end-column="4" />
               <folding>
-                <element signature="e#18#45#0" expanded="true" />
+                <element signature="e#15#33#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="README.md" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/objmatch/README.md">
+      <file leaf-file-name="README.md" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/README.md">
           <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
             <state split_layout="SPLIT">
-              <first_editor relative-caret-position="0">
-                <caret line="0" column="7" lean-forward="false" selection-start-line="0" selection-start-column="7" selection-end-line="0" selection-end-column="7" />
+              <first_editor relative-caret-position="673">
+                <caret line="221" column="44" lean-forward="false" selection-start-line="221" selection-start-column="44" selection-end-line="221" selection-end-column="44" />
                 <folding />
               </first_editor>
               <second_editor />
@@ -108,60 +146,20 @@
       <file leaf-file-name="xml_tools.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/xml_tools.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-756">
-              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="common_metrics.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/objmatch/objmatch/common_metrics.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="360">
-              <caret line="197" column="0" lean-forward="false" selection-start-line="197" selection-start-column="2" selection-end-line="200" selection-end-column="37" />
+            <state relative-caret-position="306">
+              <caret line="311" column="22" lean-forward="false" selection-start-line="311" selection-start-column="22" selection-end-line="311" selection-end-column="22" />
               <folding>
-                <element signature="e#1088#1099#0" expanded="true" />
+                <element signature="e#32#41#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="evaluator.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py">
+      <file leaf-file-name="object.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/objmatch/objmatch/object.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-230">
-              <caret line="1354" column="8" lean-forward="false" selection-start-line="1354" selection-start-column="8" selection-end-line="1362" selection-end-column="82" />
-              <folding>
-                <element signature="e#22#40#0" expanded="true" />
-                <marker date="1535451634569" expanded="true" signature="572:44081" ph="..." />
-                <marker date="1535451634569" expanded="true" signature="2690:4016" ph="..." />
-                <marker date="1535451634569" expanded="true" signature="9346:10364" ph="..." />
-                <marker date="1535451634569" expanded="true" signature="10616:21505" ph="..." />
-                <marker date="1535451634569" expanded="true" signature="57244:58248" ph="..." />
-                <marker date="1535451634569" expanded="true" signature="60899:63763" ph="..." />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="evaluator.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/heart_dev/evaluator.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-4698">
-              <caret line="18" column="41" lean-forward="false" selection-start-line="18" selection-start-column="41" selection-end-line="18" selection-end-column="41" />
-              <folding>
-                <element signature="e#22#33#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="evaluator.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/evaluator.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-14295">
-              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+            <state relative-caret-position="288">
+              <caret line="16" column="8" lean-forward="false" selection-start-line="16" selection-start-column="8" selection-end-line="16" selection-end-column="8" />
               <folding />
             </state>
           </provider>
@@ -179,7 +177,6 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>fill_eve</find>
-      <find>print</find>
       <find>registry</find>
       <find>Lice</find>
       <find>ObjMatch</find>
@@ -194,9 +191,25 @@
       <find>calcDice</find>
       <find>class</find>
       <find>nodule</find>
+      <find>arg_dict</find>
+      <find>max</find>
+      <find>slice_Id</find>
+      <find>prob_list</find>
+      <find>cur_ob</find>
+      <find>sliceId</find>
+      <find>now_nodul</find>
+      <find>cur_object</find>
+      <find>fn</find>
+      <find>print</find>
+      <find>now_nodule</find>
+      <find>ABNORMAL</find>
+      <find>rename</find>
     </findStrings>
     <replaceStrings>
       <replace>object</replace>
+      <replace>attr_dict</replace>
+      <replace>cur_nodule</replace>
+      <replace>object_prob_list</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -210,22 +223,10 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/model_eval/model_eval/3/__init__.py" />
-        <option value="$PROJECT_DIR$/model_eval/model_eval/lung/__init__.py" />
-        <option value="$PROJECT_DIR$/model_eval/model_eval/common/__init__.py" />
-        <option value="$PROJECT_DIR$/model_eval/model_eval/tools/__init__.py" />
-        <option value="$PROJECT_DIR$/model_eval/model_eval/__init__.py" />
-        <option value="$PROJECT_DIR$/model_eval/MANIFEST.in" />
-        <option value="$PROJECT_DIR$/lung/get_df_nodules.py" />
-        <option value="$PROJECT_DIR$/lung/find_nodules_test.py" />
-        <option value="$PROJECT_DIR$/lung/find_nodules_new.py" />
-        <option value="$PROJECT_DIR$/model_eval/model_eval/lung/config.py" />
-        <option value="$PROJECT_DIR$/model_eval/model_eval/lung/README.md" />
         <option value="$PROJECT_DIR$/lung/config.py" />
         <option value="$PROJECT_DIR$/brain/img_process.py" />
         <option value="$PROJECT_DIR$/model_eval/model_eval/tools/data_preprocess.py" />
         <option value="$PROJECT_DIR$/tools/data_postprocess.py" />
-        <option value="$PROJECT_DIR$/model_eval/model_eval/lung/evaluator.py" />
         <option value="$PROJECT_DIR$/tools/data_preprocess.py" />
         <option value="$PROJECT_DIR$/brain/semantic_seg_test.py" />
         <option value="$PROJECT_DIR$/model_eval/README.md" />
@@ -259,8 +260,20 @@
         <option value="$PROJECT_DIR$/objmatch/setup.py" />
         <option value="$PROJECT_DIR$/objmatch/objmatch/find_objects.py" />
         <option value="$PROJECT_DIR$/heart_dev/evaluator.py" />
-        <option value="$PROJECT_DIR$/objmatch/objmatch/post_process.py" />
         <option value="$PROJECT_DIR$/objmatch/objmatch/common_metrics.py" />
+        <option value="$PROJECT_DIR$/objmatch/objmatch/object/object.py" />
+        <option value="$PROJECT_DIR$/objmatch/objmatch/object.py" />
+        <option value="$PROJECT_DIR$/model_eval/model_eval/common/custom_metric.py" />
+        <option value="$PROJECT_DIR$/model_eval/model_eval/common/metric.py" />
+        <option value="$PROJECT_DIR$/model_eval/model_eval/__init__.py" />
+        <option value="$PROJECT_DIR$/model_eval/model_eval/lung/config.py" />
+        <option value="$PROJECT_DIR$/objmatch/objmatch/post_process.py" />
+        <option value="$PROJECT_DIR$/model_eval/model_eval/lung/get_df_objects.py" />
+        <option value="$PROJECT_DIR$/model_eval/model_eval/lung/xml_tools.py" />
+        <option value="$PROJECT_DIR$/model_eval/model_eval/lung/get_df_nodules.py" />
+        <option value="$PROJECT_DIR$/model_eval/model_eval/tools/data_postprocess.py" />
+        <option value="$PROJECT_DIR$/model_eval/model_eval/lung/evaluator.py" />
+        <option value="$PROJECT_DIR$/model_eval/model_eval/lung/README.md" />
       </list>
     </option>
   </component>
@@ -313,6 +326,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -410,24 +424,23 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scratches" />
       <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../0803/data_process.py" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../model_evaluation" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/objmatch/objmatch" />
-      <recent name="$PROJECT_DIR$/model_eval/model_eval" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/heart_dev" />
       <recent name="$PROJECT_DIR$/common" />
       <recent name="$PROJECT_DIR$/brain" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/objmatch/objmatch" />
+      <recent name="$PROJECT_DIR$/model_eval/model_eval" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -486,10 +499,10 @@
     <frame x="1946" y="24" width="1851" height="1056" extended-state="4" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15180056" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16232687" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16407983" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.16407983" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.13548388" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32903227" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -512,13 +525,13 @@
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1430096" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.16407983" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.13548388" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32903227" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.11308204" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16232687" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16442953" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -555,140 +568,7 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/.gitignore">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/find_plaques.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/heart/plaqify_boxes.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="184">
-          <caret line="142" column="4" lean-forward="false" selection-start-line="142" selection-start-column="4" selection-end-line="142" selection-end-column="4" />
-          <folding>
-            <element signature="e#749#761#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/local/lib/python2.7/dist-packages/pandas/core/base.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="192">
-          <caret line="280" column="4" lean-forward="false" selection-start-line="280" selection-start-column="4" selection-end-line="280" selection-end-column="4" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/heart/auto_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-457">
-          <caret line="59" column="15" lean-forward="false" selection-start-line="59" selection-start-column="15" selection-end-line="59" selection-end-column="15" />
-          <folding>
-            <element signature="e#3#41#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/heart/private_config.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/lung/find_nodules_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#34#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/heart_dev/get_df_nodules.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="21" column="0" lean-forward="true" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tools/data_preprocess.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="126">
-          <caret line="7" column="4" lean-forward="false" selection-start-line="7" selection-start-column="4" selection-end-line="7" selection-end-column="4" />
-          <folding>
-            <element signature="e#15#26#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/heart_dev/get_df_plaques.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="688">
-          <caret line="49" column="84" lean-forward="false" selection-start-line="49" selection-start-column="84" selection-end-line="49" selection-end-column="84" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tools/data_postprocess.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="22" column="66" lean-forward="false" selection-start-line="22" selection-start-column="66" selection-end-line="22" selection-end-column="66" />
-          <folding>
-            <element signature="e#22#40#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/lung/post_process.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="98" column="29" lean-forward="true" selection-start-line="0" selection-start-column="0" selection-end-line="208" selection-end-column="133" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/lung/config.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1836">
-          <caret line="102" column="20" lean-forward="false" selection-start-line="102" selection-start-column="20" selection-end-line="102" selection-end-column="20" />
-          <folding>
-            <element signature="e#22#40#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/heart_dev/get_object_df.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4410">
-          <caret line="245" column="31" lean-forward="true" selection-start-line="245" selection-start-column="31" selection-end-line="245" selection-end-column="31" />
-          <folding>
-            <element signature="e#15#33#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/threeD_test_tools.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-3834">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="21" selection-end-column="30" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/threeD_test_tools.py" />
     <entry file="file://$PROJECT_DIR$/setup.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-1571">
@@ -701,9 +581,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="180">
           <caret line="19" column="0" lean-forward="true" selection-start-line="19" selection-start-column="0" selection-end-line="19" selection-end-column="0" />
-          <folding>
-            <element signature="e#1113#1124#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -711,17 +588,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="342">
           <caret line="19" column="6" lean-forward="false" selection-start-line="19" selection-start-column="6" selection-end-line="19" selection-end-column="6" />
-          <folding>
-            <element signature="e#0#38#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/custom_metric.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="238">
-          <caret line="137" column="88" lean-forward="true" selection-start-line="134" selection-start-column="8" selection-end-line="137" selection-end-column="88" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -729,35 +595,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="72">
           <caret line="4" column="0" lean-forward="false" selection-start-line="4" selection-start-column="0" selection-end-line="5" selection-end-column="16" />
-          <folding>
-            <element signature="e#0#38#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="18">
-          <caret line="1" column="0" lean-forward="false" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
-          <folding>
-            <element signature="e#20#33#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/tools/data_postprocess.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/tools/data_preprocess.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -765,9 +602,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="918">
           <caret line="54" column="90" lean-forward="false" selection-start-line="54" selection-start-column="90" selection-end-line="54" selection-end-column="90" />
-          <folding>
-            <element signature="e#0#35#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -776,7 +610,6 @@
         <state split_layout="SPLIT">
           <first_editor relative-caret-position="180">
             <caret line="10" column="8" lean-forward="false" selection-start-line="10" selection-start-column="8" selection-end-line="10" selection-end-column="8" />
-            <folding />
           </first_editor>
           <second_editor />
         </state>
@@ -786,7 +619,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="684">
           <caret line="41" column="18" lean-forward="false" selection-start-line="41" selection-start-column="18" selection-end-line="41" selection-end-column="18" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -795,7 +627,6 @@
         <state split_layout="SPLIT">
           <first_editor relative-caret-position="2304">
             <caret line="128" column="26" lean-forward="false" selection-start-line="128" selection-start-column="26" selection-end-line="128" selection-end-column="26" />
-            <folding />
           </first_editor>
           <second_editor />
         </state>
@@ -805,19 +636,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="18">
           <caret line="1" column="0" lean-forward="false" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
-          <folding>
-            <element signature="e#15#33#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/lung/lung_nodule_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="324">
-          <caret line="18" column="33" lean-forward="false" selection-start-line="18" selection-start-column="33" selection-end-line="18" selection-end-column="33" />
-          <folding>
-            <element signature="e#0#29#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -825,17 +643,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="90">
           <caret line="5" column="32" lean-forward="false" selection-start-line="5" selection-start-column="32" selection-end-line="5" selection-end-column="32" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/lung/evaluator.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4227">
-          <caret line="397" column="88" lean-forward="false" selection-start-line="397" selection-start-column="88" selection-end-line="397" selection-end-column="88" />
-          <folding>
-            <element signature="e#22#33#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -843,9 +650,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="5688">
           <caret line="451" column="91" lean-forward="false" selection-start-line="451" selection-start-column="91" selection-end-line="451" selection-end-column="91" />
-          <folding>
-            <element signature="e#22#40#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -854,7 +658,6 @@
         <state split_layout="SPLIT">
           <first_editor relative-caret-position="-1944">
             <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-            <folding />
           </first_editor>
           <second_editor />
         </state>
@@ -865,7 +668,6 @@
         <state split_layout="SPLIT">
           <first_editor relative-caret-position="864">
             <caret line="180" column="0" lean-forward="false" selection-start-line="180" selection-start-column="0" selection-end-line="180" selection-end-column="0" />
-            <folding />
           </first_editor>
           <second_editor />
         </state>
@@ -875,7 +677,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -883,9 +684,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="342">
           <caret line="40" column="71" lean-forward="false" selection-start-line="40" selection-start-column="71" selection-end-line="40" selection-end-column="71" />
-          <folding>
-            <element signature="e#186#229#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -893,9 +691,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="4284">
           <caret line="247" column="39" lean-forward="false" selection-start-line="247" selection-start-column="39" selection-end-line="247" selection-end-column="39" />
-          <folding>
-            <element signature="e#32#41#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -903,9 +698,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-1404">
           <caret line="9" column="4" lean-forward="false" selection-start-line="9" selection-start-column="4" selection-end-line="9" selection-end-column="4" />
-          <folding>
-            <element signature="e#19#30#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -913,9 +705,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -923,9 +712,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-900">
           <caret line="13" column="103" lean-forward="false" selection-start-line="13" selection-start-column="103" selection-end-line="13" selection-end-column="103" />
-          <folding>
-            <element signature="e#18#78#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -933,47 +719,12 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="247">
           <caret line="32" column="4" lean-forward="false" selection-start-line="32" selection-start-column="4" selection-end-line="32" selection-end-column="4" />
-          <folding>
-            <element signature="e#0#35#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/evaluator.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-14295">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-230">
-          <caret line="1354" column="8" lean-forward="false" selection-start-line="1354" selection-start-column="8" selection-end-line="1362" selection-end-column="82" />
-          <folding>
-            <element signature="e#22#40#0" expanded="true" />
-            <marker date="1535451634569" expanded="true" signature="572:44081" ph="..." />
-            <marker date="1535451634569" expanded="true" signature="2690:4016" ph="..." />
-            <marker date="1535451634569" expanded="true" signature="9346:10364" ph="..." />
-            <marker date="1535451634569" expanded="true" signature="10616:21505" ph="..." />
-            <marker date="1535451634569" expanded="true" signature="57244:58248" ph="..." />
-            <marker date="1535451634569" expanded="true" signature="60899:63763" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/xml_tools.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-756">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/heart_dev/evaluator.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-4698">
+        <state relative-caret-position="54">
           <caret line="18" column="41" lean-forward="false" selection-start-line="18" selection-start-column="41" selection-end-line="18" selection-end-column="41" />
           <folding>
             <element signature="e#22#33#0" expanded="true" />
@@ -992,9 +743,19 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18">
+          <caret line="4" column="27" lean-forward="false" selection-start-line="4" selection-start-column="27" selection-end-line="4" selection-end-column="27" />
+          <folding>
+            <element signature="e#18#45#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/objmatch/objmatch/find_nodules.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
+        <state relative-caret-position="3240">
           <caret line="182" column="63" lean-forward="false" selection-start-line="182" selection-start-column="63" selection-end-line="182" selection-end-column="63" />
           <folding>
             <element signature="e#18#37#0" expanded="true" />
@@ -1002,43 +763,241 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/find_objects.py">
+    <entry file="file://$PROJECT_DIR$/lung/evaluator.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-648">
-          <caret line="21" column="40" lean-forward="false" selection-start-line="21" selection-start-column="40" selection-end-line="21" selection-end-column="40" />
+        <state relative-caret-position="342">
+          <caret line="19" column="44" lean-forward="false" selection-start-line="19" selection-start-column="44" selection-end-line="19" selection-end-column="44" />
           <folding>
-            <element signature="e#18#37#0" expanded="true" />
+            <element signature="e#22#33#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/lib/python2.7/dist-packages/objmatch/find_objects.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1353">
+          <caret line="97" column="49" lean-forward="true" selection-start-line="97" selection-start-column="49" selection-end-line="97" selection-end-column="49" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/lib/python2.7/dist-packages/model_eval/common/metric.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="true" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/objmatch/objmatch/common_metrics.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="360">
-          <caret line="197" column="0" lean-forward="false" selection-start-line="197" selection-start-column="2" selection-end-line="200" selection-end-column="37" />
+        <state relative-caret-position="414">
+          <caret line="35" column="14" lean-forward="false" selection-start-line="35" selection-start-column="14" selection-end-line="35" selection-end-column="48" />
           <folding>
             <element signature="e#1088#1099#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/post_process.py">
+    <entry file="file:///usr/local/lib/python2.7/dist-packages/model_eval/lung/get_df_nodules.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="144">
-          <caret line="131" column="4" lean-forward="false" selection-start-line="131" selection-start-column="4" selection-end-line="131" selection-end-column="4" />
+        <state relative-caret-position="121">
+          <caret line="24" column="4" lean-forward="false" selection-start-line="24" selection-start-column="4" selection-end-line="24" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/lib/python2.7/dist-packages/model_eval/lung/xml_tools.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1638">
+          <caret line="224" column="4" lean-forward="false" selection-start-line="224" selection-start-column="4" selection-end-line="224" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/find_objects.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2408">
+          <caret line="29" column="4" lean-forward="false" selection-start-line="29" selection-start-column="4" selection-end-line="29" selection-end-column="4" />
           <folding>
-            <element signature="e#22#41#0" expanded="true" />
+            <element signature="e#18#37#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/__init__.py">
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/tools/data_preprocess.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="112">
+          <caret line="112" column="4" lean-forward="false" selection-start-line="112" selection-start-column="4" selection-end-line="112" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lung/lung_nodule_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#29#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/common/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18">
+          <caret line="1" column="0" lean-forward="true" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+          <folding>
+            <element signature="e#16#43#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/common/registry.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="378">
+          <caret line="21" column="0" lean-forward="false" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
+          <folding>
+            <element signature="e#872#910#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/common/metric.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="522">
+          <caret line="29" column="29" lean-forward="false" selection-start-line="29" selection-start-column="29" selection-end-line="29" selection-end-column="29" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="72">
-          <caret line="4" column="27" lean-forward="false" selection-start-line="4" selection-start-column="27" selection-end-line="4" selection-end-column="27" />
+          <caret line="4" column="0" lean-forward="false" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
           <folding>
-            <element signature="e#18#45#0" expanded="true" />
+            <element signature="e#20#33#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/config.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="400">
+          <caret line="185" column="13" lean-forward="false" selection-start-line="185" selection-start-column="13" selection-end-line="185" selection-end-column="13" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/brain/config.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="36">
+          <caret line="2" column="18" lean-forward="false" selection-start-line="2" selection-start-column="18" selection-end-line="2" selection-end-column="18" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18">
+          <caret line="1" column="0" lean-forward="false" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+          <folding>
+            <element signature="e#22#40#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/common/custom_metric.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="108">
+          <caret line="9" column="6" lean-forward="false" selection-start-line="9" selection-start-column="6" selection-end-line="9" selection-end-column="6" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/post_process.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="488">
+          <caret line="168" column="16" lean-forward="false" selection-start-line="168" selection-start-column="16" selection-end-line="169" selection-end-column="104" />
+          <folding>
+            <element signature="e#22#41#0" expanded="true" />
+            <marker date="1536840304476" expanded="true" signature="1663:1750" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/common/custom_metric.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="20" column="53" lean-forward="false" selection-start-line="20" selection-start-column="53" selection-end-line="20" selection-end-column="53" />
+          <folding>
+            <element signature="e#22#40#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/object.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="288">
+          <caret line="16" column="8" lean-forward="false" selection-start-line="16" selection-start-column="8" selection-end-line="16" selection-end-column="8" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/xml_tools.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="306">
+          <caret line="311" column="22" lean-forward="false" selection-start-line="311" selection-start-column="22" selection-end-line="311" selection-end-column="22" />
+          <folding>
+            <element signature="e#32#41#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/get_df_nodules.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-52">
+          <caret line="118" column="46" lean-forward="false" selection-start-line="118" selection-start-column="46" selection-end-line="118" selection-end-column="46" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/get_df_objects.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="192">
+          <caret line="94" column="4" lean-forward="false" selection-start-line="94" selection-start-column="4" selection-end-line="94" selection-end-column="4" />
+          <folding>
+            <element signature="e#15#33#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/tools/data_postprocess.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="346">
+          <caret line="90" column="81" lean-forward="false" selection-start-line="90" selection-start-column="81" selection-end-line="90" selection-end-column="81" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/evaluator.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="373">
+          <caret line="1773" column="8" lean-forward="true" selection-start-line="1773" selection-start-column="8" selection-end-line="1773" selection-end-column="48" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="673">
+            <caret line="221" column="44" lean-forward="false" selection-start-line="221" selection-start-column="44" selection-end-line="221" selection-end-column="44" />
+            <folding />
+          </first_editor>
+          <second_editor />
         </state>
       </provider>
     </entry>

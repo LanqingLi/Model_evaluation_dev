@@ -1,6 +1,6 @@
 # 模型组评分系统说明
 
-目前最新的0.1.4版本涵盖了肺部、脑部两个模块，并修改了common.custom_metric中的ClassificationMetric,将多分类指标
+目前最新的0.1.6版本涵盖了肺部、脑部两个模块，并修改了common.custom_metric中的ClassificationMetric,将多分类指标
 按类别存成list列表，并兼容了泛化后的objmatch 0.0.2版本
 
 运行肺、心脏、脑部、胸腔等各项目的具体流程请见各项目子文件夹的README.md

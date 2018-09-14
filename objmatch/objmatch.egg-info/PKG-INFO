@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: objmatch
-Version: 0.0.2
+Version: 0.0.3
 Summary: Python package for matching model-detected objects, as part of post-process
 Home-page: https://github.com/LanqingLi/objmatch
 Author: Lanqing Li, Infervision Co., Ltd.
@@ -19,7 +19,36 @@ Description: # 版本0.0.2 说明
         numpy
         networkx: 目前只支持2.0或以下版本
         
-        ####　设计思路
+        #### 使用方法
+        find_nodules/find_objects为v0.0.2 objmatch的核心算法，定义在objmatch.find_nodules.py/objmatch.find_objects中。find_objects
+        为find_nodules的泛化版本，将所有包含'nodule'的关键词替换为'object',方便未来的其他需求的调用。具体使用时要求的输入输出如下：
+        
+         """将boundingbox转换为结节。
+            :param bboxInfo: Bounding Box表格（pandas.DataFrame类型）,index必须为自然顺序。
+                             每一行代表一个预测出来的bounding box，包含下面的列：
+                             * 'instanceNumber'列：表示当前bounding box所在的层面的InstanceNumber，编号从1开始。
+                             * 'xmin'列：表示当前bounding box的左上角x坐标（高度[H]方向）。
+                             * 'ymin'列：表示当前bounding box的左上角y坐标（左右[W]方向）。
+                             * 'xmax'列：表示当前bounding box的右下角x坐标（高度[H]方向）。
+                             * 'ymax'列：表示当前bounding box的右下角y坐标（左右[W]方向）。
+                             * 'nodule_class'列：表示当前bounding box的预测类别（如'nodule', 'mass'等）,在find_objects中为'class'。
+                             * 'prob'里：表示当前bounding box的预测概率。
+            :param Z_THRESHOLD： 每个新层面向前做贪心匹配时往前找的最大层面数，类别为一个字典，格式例如{'class_1': 1, 'class_2': 2, ...}
+            :param SAME_BOX_THRESHOLD: 判断同一层面两个框是否为等价类的中心点偏移阈值, e.g. : np.array([int x, int y])
+            :param SCORE_THRESHOLD: 判断不同层面两个框是否匹配的sim_metric_3d阈值
+            :param nodule_cls_weights:　检出框的类别的权重,与Z_THRESHOLD类似，类别为一个字典，格式例如{'class_1': 1, 'class_2': 2, ...}
+            :param same_cls_boost: 当不同层面两个框匹配时，如果类别相同的奖励系数
+            :return noduleInfo: 在bnd上附加一列'nodule'，取值为-1, 1..n。
+                                -1代表当前Bounding box不属于任何一个nodule;
+                                1..n代表当前bounding box所属的结节编号。
+                                我们不允许一个结节在同一个层面内存在多个重合的bounding box(一个等价类中没有匹配上的框设为-1)。
+            :return nodules: 结节信息的列表，每个元素为一个字典,储存一个匹配好的三维结节的信息,e.g.: 
+                             df_nodules = pd.DataFrame({'Bndbox List': [], 'Nodule Id': [], 'Pid': prefix, 'Type': [],
+                                       'SliceRange': [], 'prob': []})
+                             其中'Nodule Id'对于find_objects应替换为'Object Id'
+         """
+        
+        #### 设计思路
         该算法是基于韦人医生初版的find_nodules改进后的版本。原先的设计中，定义了等价类的树状数据结构（嵌入并查集unionFindSet中实现）。即在同一层面内，
         dice（similarity metric）大于一定阈值的两个框会归为同一颗等价类的树, 最终进行层面间结节匹配时只保留整个等价类的根节点(随机选取)，
         并且评判标准中没有考虑框的类别以及概率。本算法设计的初衷是为了解决原算法的如下问题：

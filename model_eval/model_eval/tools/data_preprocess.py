@@ -21,11 +21,14 @@ def get_label_classes_from_xls(filename):
     class_dict = dict()  # label to class
     conf_thresh = dict()
     cls_weight_dict = dict()
+    gt_cls_weight_dict = dict()
     cls_z_threshold_pred_dict = dict()
     cls_z_threshold_gt_dict = dict()
+    gt_cls_z_threshold_gt_dict = dict()
     conf_thresh['__background__'] = 1.0
     class_list = []
     class_list.append('__background__')
+    label_classes.append('__background__')
     for i in range(1, classDictSheet.nrows):
         # add class name
         label_name = classDictSheet.row(i)[0].value.strip(' ')
@@ -51,12 +54,15 @@ def get_label_classes_from_xls(filename):
         z_threshold_gt = classDictSheet.row(i)[5].value
         assert isinstance(z_threshold_gt, float), 'z_threshold_gt must be float type, check xls'
         cls_weight_dict[class_name] = weight
+        gt_cls_weight_dict[label_name] = weight
         cls_z_threshold_pred_dict[class_name] = z_threshold_pred
         cls_z_threshold_gt_dict[class_name] = z_threshold_gt
+        gt_cls_z_threshold_gt_dict[label_name] = z_threshold_gt
     # remove repeat element in class
     class_list1 = sorted(set(class_list), key=class_list.index)
 
-    return class_list1, label_classes, class_dict, conf_thresh, cls_weight_dict, cls_z_threshold_pred_dict, cls_z_threshold_gt_dict
+    return class_list1, label_classes, class_dict, conf_thresh, cls_weight_dict, gt_cls_weight_dict, cls_z_threshold_pred_dict, \
+           cls_z_threshold_gt_dict, gt_cls_z_threshold_gt_dict
 
 def get_label_classes_from_xls_seg(filename):
     '''

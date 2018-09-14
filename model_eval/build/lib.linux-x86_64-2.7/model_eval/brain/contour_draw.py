@@ -3,7 +3,7 @@ import numpy as np
 # red green
 color_lst = [(178, 34, 34), (0, 255, 0), (0, 255, 255), (0, 0, 255)]
 
-def contour_and_draw(image,label_map, n_class=2, shape=(512, 512)):
+def contour_and_draw(image, label_map, n_class=2, shape=(512, 512)):
     #image should be (512,512,3), label_map should be (512, 512)
     all_contours=[]
     for c_id in range(1, n_class):

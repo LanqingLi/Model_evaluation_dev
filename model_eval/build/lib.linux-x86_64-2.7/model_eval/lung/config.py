@@ -148,15 +148,15 @@ class LungConfig(object):
         self.TEST.CONF_THRESHOLD = np.linspace(0.1, 0.85, num=16).tolist() + np.linspace(0.9, 0.975, num=4).tolist() \
                                      + np.linspace(0.99, 0.9975, num=4).tolist() + np.linspace(0.999, 0.99975,
                                                                                                num=4).tolist()
-        # same-box IOU threshold, used in post_process
-        self.TEST.IOU_THRESHOLD = 0.5
+        # same-box threshold, used in post_process.object_compare
+        self.TEST.OBJECT_COMPARE_THRESHOLD = np.array([1.6, 1.6])
 
         ###########################
         # CONFIG FOR CLASSIFICATION
         ###########################
         self.CLASSES_LABELS_XLS_FILE_NAME = cls_label_xls_path
-        self.CLASSES, self.NODULE_CLASSES, self.CLASS_DICT, self.CONF_THRESH, self.CLASS_WEIGHTS, self.CLASS_Z_THRESHOLD_PRED, \
-        self.CLASS_Z_THRESHOLD_GT = get_label_classes_from_xls(self.CLASSES_LABELS_XLS_FILE_NAME)
+        self.CLASSES, self.NODULE_CLASSES, self.CLASS_DICT, self.CONF_THRESH, self.CLASS_WEIGHTS, self.GT_CLASSES_WEIGHTS, \
+        self.CLASS_Z_THRESHOLD_PRED, self.CLASS_Z_THRESHOLD_GT, self.GT_CLASS_Z_THRESHOLD_GT = get_label_classes_from_xls(self.CLASSES_LABELS_XLS_FILE_NAME)
         self.NUM_CLASSES = len(self.CLASSES)
 
         #########################

@@ -41,6 +41,7 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
     '''
     def __init__(self, cls_label_xls_path, data_iter, predict_key, gt_key, img_key, patient_key, predictor, post_processor=default_post_processor,
                  if_post_process = False, img_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_contour'),
+                 mask_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_mask'), if_save_mask = False,
                  score_type='fscore', result_save_dir=os.path.join(os.getcwd(), 'BrainSemanticSegEvaluation_result'),
                  xlsx_name='BrainSemanticSegEvaluation.xlsx', json_name='BrainSemanticSegEvaluation',
                  conf_thresh=np.linspace(0.1, 0.9, num=9).tolist(), fscore_beta=1., thresh=0.5):
@@ -57,6 +58,7 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
         self.post_processor = post_processor
         self.if_post_process = if_post_process
         self.img_save_dir = img_save_dir
+        self.mask_save_dir = mask_save_dir
         # config.CLASSES 包含background class,是模型预测的所有类别
         self.cls_name = config.CLASSES
         self.cls_dict = config.CLASS_DICT
@@ -66,7 +68,7 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
         self.result_df = pd.DataFrame(
             columns=['PatientID', 'class', 'threshold', 'tp_count', 'tn_count', 'fp_count', 'fn_count',
                      'accuracy', 'recall', 'precision', 'fp/tp', 'dice', 'gt_vol', 'pred_vol', 'gt_phys_vol/mm^3',
-                     'pred_phys_vol/mm^3', 'phys_vol_diff/mm^3', self.score_type])
+                     'pred_phys_vol/mm^3', 'phys_vol_diff/mm^3', self.score_type, 'Patient_Number'])
         self.result_save_dir = result_save_dir
         self.xlsx_name = xlsx_name
         self.json_name = json_name
@@ -74,10 +76,25 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
         self.cls_weights = config.CLASS_WEIGHTS
         self.fscore_beta = fscore_beta
         self.thresh = thresh
+        self.patient_num = 0.
+        # save predicted mask as .npy when if_save_mask=True
+        if if_save_mask:
+            if not os.path.exists(self.mask_save_dir):
+                os.mkdir(self.mask_save_dir)
+            for data in self.data_iter:
+                if data is None:
+                    break
+                if data[self.predict_key] is None:
+                    continue
+                if not os.path.exists(os.path.join(self.mask_save_dir, data['pid'])):
+                    os.mkdir(os.path.join(self.mask_save_dir, data['pid']))
+                predict_data = self.predictor(data[self.predict_key])
+                np.save(os.path.join(self.mask_save_dir, data['pid'], data['pid'] + '.npy'), predict_data)
+            self.data_iter.reset()
 
 
     def binary_class_contour_plot_single_thresh(self):
-
+        self.data_iter.reset()
         if not os.path.exists(self.img_save_dir):
             os.mkdir(self.img_save_dir)
 
@@ -138,7 +155,7 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
                 cv2.imwrite(os.path.join(self.img_save_dir, PatientID + '-' + str(fig_num).zfill(2) + 'thresh=%s.jpg' %(self.thresh)), to_show)
 
     def binary_class_contour_plot_multi_thresh(self):
-
+        self.data_iter.reset()
         if not os.path.exists(self.img_save_dir):
             os.mkdir(self.img_save_dir)
 
@@ -214,12 +231,14 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
             cls_metric = ClassificationMetric(cls_num=len(self.cls_name)-1, if_binary=True, pos_cls_fusion=False)
             gt_tot_phys_vol = [0. for _ in range(len(self.cls_name) - 1)]
             pred_tot_phys_vol = [0. for _ in range(len(self.cls_name) - 1)]
+            self.patient_num = 0.
 
             for data in self.data_iter:
                 if data is None:
                     break
                 if data[self.predict_key] is None:
                     continue
+                self.patient_num += 1.
                 predict_data = self.predictor(data[self.predict_key])
                 gt_nrrd = data[self.gt_key]
                 PatientID = data[self.patient_key]
@@ -336,7 +355,30 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
                                                         'pred_phys_vol/mm^3': pred_tot_phys_vol[cls_label-1],
                                                         'phys_vol_diff/mm^3': gt_tot_phys_vol[cls_label-1] - pred_tot_phys_vol[cls_label-1],
                                                         self.score_type: cls_metric.get_fscore(
-                                                            cls_label=cls_label, beta=self.fscore_beta)},
+                                                            cls_label=cls_label, beta=self.fscore_beta),
+                                                        'Patient_Number': self.patient_num},
+                                                       ignore_index=True)
+                self.result_df = self.result_df.append({'PatientID': 'average',
+                                                        'class': self.cls_name[cls_label],
+                                                        'threshold': thresh,
+                                                        'tp_count': cls_metric.tp[cls_label - 1]/self.patient_num,
+                                                        'tn_count': cls_metric.tn[cls_label - 1]/self.patient_num,
+                                                        'fp_count': cls_metric.fp[cls_label - 1]/self.patient_num,
+                                                        'fn_count': cls_metric.fn[cls_label - 1]/self.patient_num,
+                                                        'accuracy': cls_metric.get_acc(cls_label),
+                                                        'recall': cls_metric.get_rec(cls_label),
+                                                        'precision': cls_metric.get_prec(cls_label),
+                                                        'fp/tp': fp_tp,
+                                                        'dice': cls_metric.get_dice(cls_label),
+                                                        'gt_vol': cls_metric.get_gt_vol(cls_label)/self.patient_num,
+                                                        'pred_vol': cls_metric.get_pred_vol(cls_label)/self.patient_num,
+                                                        'gt_phys_vol/mm^3': gt_tot_phys_vol[cls_label - 1]/self.patient_num,
+                                                        'pred_phys_vol/mm^3': pred_tot_phys_vol[cls_label - 1]/self.patient_num,
+                                                        'phys_vol_diff/mm^3': (gt_tot_phys_vol[cls_label - 1] -
+                                                                              pred_tot_phys_vol[cls_label - 1])/self.patient_num,
+                                                        self.score_type: cls_metric.get_fscore(
+                                                            cls_label=cls_label, beta=self.fscore_beta),
+                                                        'Patient_Number': self.patient_num},
                                                        ignore_index=True)
 
                 # find the optimal threshold
@@ -358,12 +400,13 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
         save_xlsx_json(self.result_df, self.opt_thresh, self.result_save_dir, self.xlsx_name, self.json_name,
                        'multi-class_evaluation', 'optimal_threshold')
 
-        # 多分类分割模型通用评分,用阈值筛选正类别，并在其中选取最大值作为one-hot label
 
+    # 多分类分割模型通用评分轻量级版本，每张图只做一遍预测,用阈值筛选正类别，并在其中选取最大值作为one-hot label
     def multi_class_evaluation_light(self):
         cls_metric_list = []
         gt_tot_phys_vol = []
         pred_tot_phys_vol = []
+        self.data_iter.reset()
         for thresh in self.conf_thresh:
             print ('threshold = %s' % thresh)
             # predict_data.shape() = [figure number, class number, 512, 512], gt_nrrd.shape() = [512, 512, figure number],
@@ -374,11 +417,14 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
             gt_tot_phys_vol.append([0. for _ in range(len(self.cls_name) - 1)])
             pred_tot_phys_vol.append([0. for _ in range(len(self.cls_name) - 1)])
 
+        self.patient_num = 0.
+
         for data in self.data_iter:
             if data is None:
                 break
             if data[self.predict_key] is None:
                 continue
+            self.patient_num += 1.
             predict_data = self.predictor(data[self.predict_key])
             gt_nrrd = data[self.gt_key]
             PatientID = data[self.patient_key]
@@ -504,7 +550,30 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
                                                         'phys_vol_diff/mm^3': gt_tot_phys_vol[index][cls_label - 1] -
                                                                               pred_tot_phys_vol[index][cls_label - 1],
                                                         self.score_type: cls_metric_list[index].get_fscore(
-                                                            cls_label=cls_label, beta=self.fscore_beta)},
+                                                            cls_label=cls_label, beta=self.fscore_beta),
+                                                        'Patient_Number': self.patient_num},
+                                                       ignore_index=True)
+                self.result_df = self.result_df.append({'PatientID': 'average',
+                                                        'class': self.cls_name[cls_label],
+                                                        'threshold': thresh,
+                                                        'tp_count': cls_metric_list[index].tp[cls_label - 1]/self.patient_num,
+                                                        'tn_count': cls_metric_list[index].tn[cls_label - 1]/self.patient_num,
+                                                        'fp_count': cls_metric_list[index].fp[cls_label - 1]/self.patient_num,
+                                                        'fn_count': cls_metric_list[index].fn[cls_label - 1]/self.patient_num,
+                                                        'accuracy': cls_metric_list[index].get_acc(cls_label),
+                                                        'recall': cls_metric_list[index].get_rec(cls_label),
+                                                        'precision': cls_metric_list[index].get_prec(cls_label),
+                                                        'fp/tp': fp_tp,
+                                                        'dice': cls_metric_list[index].get_dice(cls_label),
+                                                        'gt_vol': cls_metric_list[index].get_gt_vol(cls_label)/self.patient_num,
+                                                        'pred_vol': cls_metric_list[index].get_pred_vol(cls_label)/self.patient_num,
+                                                        'gt_phys_vol/mm^3': gt_tot_phys_vol[index][cls_label - 1]/self.patient_num,
+                                                        'pred_phys_vol/mm^3': pred_tot_phys_vol[index][cls_label - 1]/self.patient_num,
+                                                        'phys_vol_diff/mm^3': (gt_tot_phys_vol[index][cls_label - 1] -
+                                                                              pred_tot_phys_vol[index][cls_label - 1])/self.patient_num,
+                                                        self.score_type: cls_metric_list[index].get_fscore(
+                                                            cls_label=cls_label, beta=self.fscore_beta),
+                                                        'Patient_Number': self.patient_num},
                                                        ignore_index=True)
 
                 # find the optimal threshold
@@ -540,12 +609,14 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
             cls_metric = ClassificationMetric(cls_num=1, if_binary=True, pos_cls_fusion=True)
             gt_tot_phys_vol = [0.]
             pred_tot_phys_vol = [0.]
+            self.patient_num = 0.
 
             for data in self.data_iter:
                 if data is None:
                     break
                 if data[self.predict_key] is None:
                     continue
+                self.patient_num += 1.
                 predict_data = self.predictor(data[self.predict_key])
                 gt_nrrd = data[self.gt_key]
                 PatientID = data[self.patient_key]
@@ -671,7 +742,29 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
                                                     'pred_phys_vol/mm^3': pred_tot_phys_vol[0],
                                                     'phys_vol_diff/mm^3': gt_tot_phys_vol[0] - pred_tot_phys_vol[0],
                                                     self.score_type: cls_metric.get_fscore(
-                                                        cls_label=1, beta=self.fscore_beta)},
+                                                        cls_label=1, beta=self.fscore_beta),
+                                                    'Patient_Number': self.patient_num},
+                                                   ignore_index=True)
+            self.result_df = self.result_df.append({'PatientID': 'average',
+                                                    'class': 'positive sample',
+                                                    'threshold': thresh,
+                                                    'tp_count': cls_metric.tp[0]/self.patient_num,
+                                                    'tn_count': cls_metric.tn[0]/self.patient_num,
+                                                    'fp_count': cls_metric.fp[0]/self.patient_num,
+                                                    'fn_count': cls_metric.fn[0]/self.patient_num,
+                                                    'accuracy': cls_metric.get_acc(cls_label=1),
+                                                    'recall': cls_metric.get_rec(cls_label=1),
+                                                    'precision': cls_metric.get_prec(cls_label=1),
+                                                    'fp/tp': fp_tp,
+                                                    'dice': cls_metric.get_dice(cls_label=1),
+                                                    'gt_vol': cls_metric.get_gt_vol(cls_label=1)/self.patient_num,
+                                                    'pred_vol': cls_metric.get_pred_vol(cls_label=1)/self.patient_num,
+                                                    'gt_phys_vol/mm^3': gt_tot_phys_vol[0]/self.patient_num,
+                                                    'pred_phys_vol/mm^3': pred_tot_phys_vol[0]/self.patient_num,
+                                                    'phys_vol_diff/mm^3': (gt_tot_phys_vol[0] - pred_tot_phys_vol[0])/self.patient_num,
+                                                    self.score_type: cls_metric.get_fscore(
+                                                        cls_label=1, beta=self.fscore_beta),
+                                                    'Patient_Number': self.patient_num},
                                                    ignore_index=True)
 
             # find the optimal threshold
@@ -693,11 +786,12 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
         save_xlsx_json(self.result_df, self.opt_thresh, self.result_save_dir, self.xlsx_name, self.json_name,
                        'binary-class_evaluation', 'optimal_threshold')
 
-    # 二分类分割模型评分，用阈值筛选正类别,不管gt有多少类别，我们只关心检出(正样本全部归为一类,pos_cls_fusion=True)
+    # 二分类分割模型评分的轻量级版本，每张图只做一遍预测，用阈值筛选正类别,不管gt有多少类别，我们只关心检出(正样本全部归为一类,pos_cls_fusion=True)
     def binary_class_evaluation_light(self):
         cls_metric_list = []
         gt_tot_phys_vol = []
         pred_tot_phys_vol = []
+        self.data_iter.reset()
         for thresh in self.conf_thresh:
             # reset data iterator, otherwise we cannot perform new iteration
             self.data_iter.reset()
@@ -710,11 +804,14 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
             gt_tot_phys_vol.append([0.])
             pred_tot_phys_vol.append([0.])
 
+        self.patient_num = 0.
+
         for data in self.data_iter:
             if data is None:
                 break
             if data[self.predict_key] is None:
                 continue
+            self.patient_num += 1.
             predict_data = self.predictor(data[self.predict_key])
             gt_nrrd = data[self.gt_key]
             PatientID = data[self.patient_key]
@@ -835,7 +932,30 @@ class BrainSemanticSegEvaluatorOnlineIter(object):
                                                     'pred_phys_vol/mm^3': pred_tot_phys_vol[index][0],
                                                     'phys_vol_diff/mm^3': gt_tot_phys_vol[index][0] - pred_tot_phys_vol[index][0],
                                                     self.score_type: cls_metric_list[index].get_fscore(
-                                                        cls_label=1, beta=self.fscore_beta)},
+                                                        cls_label=1, beta=self.fscore_beta),
+                                                    'Patient_Number': self.patient_num},
+                                                   ignore_index=True)
+            self.result_df = self.result_df.append({'PatientID': 'average',
+                                                    'class': 'positive sample',
+                                                    'threshold': thresh,
+                                                    'tp_count': cls_metric_list[index].tp[0]/self.patient_num,
+                                                    'tn_count': cls_metric_list[index].tn[0]/self.patient_num,
+                                                    'fp_count': cls_metric_list[index].fp[0]/self.patient_num,
+                                                    'fn_count': cls_metric_list[index].fn[0]/self.patient_num,
+                                                    'accuracy': cls_metric_list[index].get_acc(cls_label=1),
+                                                    'recall': cls_metric_list[index].get_rec(cls_label=1),
+                                                    'precision': cls_metric_list[index].get_prec(cls_label=1),
+                                                    'fp/tp': fp_tp,
+                                                    'dice': cls_metric_list[index].get_dice(cls_label=1),
+                                                    'gt_vol': cls_metric_list[index].get_gt_vol(cls_label=1)/self.patient_num,
+                                                    'pred_vol': cls_metric_list[index].get_pred_vol(cls_label=1)/self.patient_num,
+                                                    'gt_phys_vol/mm^3': gt_tot_phys_vol[index][0]/self.patient_num,
+                                                    'pred_phys_vol/mm^3': pred_tot_phys_vol[index][0]/self.patient_num,
+                                                    'phys_vol_diff/mm^3': (gt_tot_phys_vol[index][0] -
+                                                                          pred_tot_phys_vol[index][0])/self.patient_num,
+                                                    self.score_type: cls_metric_list[index].get_fscore(
+                                                        cls_label=1, beta=self.fscore_beta),
+                                                    'Patient_Number': self.patient_num},
                                                    ignore_index=True)
 
             # find the optimal threshold
