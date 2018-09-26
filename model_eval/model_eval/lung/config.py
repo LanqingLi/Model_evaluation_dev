@@ -1,9 +1,8 @@
 # -- coding: utf-8 --
 import sys
-sys.path.append('/mnt/data2/model_evaluation_dev')
 import numpy as np
 from easydict import EasyDict as edict
-from model_eval.model_eval.tools.data_preprocess import get_label_classes_from_xls
+from model_eval.tools.data_preprocess import get_label_classes_from_xls
 
 # config = edict()
 # config.seqlen = 9

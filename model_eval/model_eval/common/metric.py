@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from collections import OrderedDict
 import numpy as np
-from common import registry
+from model_eval.common import registry
 
 def check_label_shapes(labels, preds, shape=0):
     if shape == 0:

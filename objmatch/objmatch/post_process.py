@@ -103,7 +103,6 @@ def df_to_xlsx_file(cls_predict_df_list, cls_gt_df_list,thresh, dim=2):
     fp_list = []
     tp_list = []
     for cls_predict_df, cls_gt_df in zip(cls_predict_df_list, cls_gt_df_list):
-
         # No ground truth objects, all fp
         if cls_gt_df is None:
             for index, row in cls_predict_df.iterrows():
@@ -184,6 +183,7 @@ def object_slice_interpolate_pred(predict_df_record, z_threshold=1):
     :param z_threshold:上下多找多少张
 
     """
+    print predict_df_record['pid']
     predict_slices = range(predict_df_record['slice'][0] - z_threshold,
                            predict_df_record['slice'][-1] + 1 + z_threshold)
 
@@ -207,6 +207,7 @@ def object_slice_interpolate_gt(ground_truth_df_record):
     """
     :param ground_truth_df_record:一条ground truth记录，代表一个结节，DataFrame
     """
+    print ground_truth_df_record['pid']
     ground_truth_slices = range(ground_truth_df_record['slice'][0],
                                 ground_truth_df_record['slice'][-1] + 1)
 

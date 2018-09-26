@@ -1,7 +1,8 @@
 # coding:utf-8
+import sys
 import numpy as np
 import pandas as pd
-from model_eval.tools.data_preprocess import get_instance_number
+
 
 from objmatch.find_objects import find_objects
 
@@ -116,7 +117,7 @@ def add_nodule_to_df(df_add_nodule, df_nodules, bndbox_list, slice_range, nodule
 
     df_add_nodule['Bndbox List'] = bndbox_list
     df_add_nodule['SliceRange'] = slice_range
-    df_add_nodule['prob'] = nodule_prob
+    df_add_nodule['Prob'] = nodule_prob
     df_add_nodule['Type'] = nodule_type
     return df_nodules.append(df_add_nodule, ignore_index=True)
 
@@ -178,7 +179,7 @@ def get_nodule_stat(dicom_names, return_boxes, prefix, classes, z_threshold, sam
 
     # 初始化结节DataFrame
     df_nodules = pd.DataFrame({'Bndbox List': [], 'Object Id': [], 'Pid': prefix, 'Type': [],
-                               'SliceRange': [], 'prob': []})
+                               'SliceRange': [], 'Prob': []})
     df_add_nodule = {}
     bndbox_list = []
     slice_range = []

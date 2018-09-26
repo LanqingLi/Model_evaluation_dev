@@ -1,11 +1,10 @@
 # coding:utf-8
 import sys
-sys.path.append('/mnt/data2/model_evaluation_dev')
 import numpy as np
 import pandas as pd
 
 
-from objmatch.objmatch.find_objects import find_objects
+from objmatch.find_objects import find_objects
 
 # nodule_class = config.CLASSES
 PI = 3.141592654

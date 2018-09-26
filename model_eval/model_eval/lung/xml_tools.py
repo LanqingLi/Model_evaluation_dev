@@ -2,8 +2,7 @@
 import os
 import sys
 import xml.etree.cElementTree as ET
-sys.path.append('/mnt/data2/model_evaluation_dev')
-from objmatch.objmatch.object import Anchor
+from objmatch.object import Anchor
 import numpy as np
 
 

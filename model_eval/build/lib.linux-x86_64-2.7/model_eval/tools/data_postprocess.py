@@ -87,7 +87,8 @@ def save_xlsx_json_three_sheets(result_df, gt_cls_df, opt_thresh, result_save_di
         js_opt_thresh = json.loads(json_opt_thresh, "utf-8")
         json.dump(js_opt_thresh, fp)
 
-def save_xlsx_sheets(summary_count_df,result_save_dir,xlsx_name,json_name):
+def save_xlsx_sheets(summary_count_df,result_save_dir,xlsx_name,json_name, columns= ['PatientID', 'PreSlices', 'Prebbox', 'GtSlices',
+               'Gtbbox', 'Result', 'predict_class', 'ground_truth_class','Prob']):
     if not os.path.exists(result_save_dir):
         os.makedirs(result_save_dir)
     print ("saving %s" % os.path.join(result_save_dir, xlsx_name))
@@ -98,7 +99,7 @@ def save_xlsx_sheets(summary_count_df,result_save_dir,xlsx_name,json_name):
 
     writer = pd.ExcelWriter(os.path.join(result_save_dir, xlsx_name))
     for thresh,summary_df in summary_count_df.items():
-        summary_df.to_excel(writer,'summary_count_df'+'_%02d'%(int(100*thresh)),index=False)
+        summary_df.to_excel(writer,'summary_count_df'+'_%02d'%(int(100*thresh)),index=False, columns=columns)
 
     writer.save()
 

@@ -1,7 +1,7 @@
 # -- coding: utf-8 --
 import numpy as np
 import math
-from model_eval.common.metric import EvalMetric, check_label_shapes
+from metric import EvalMetric, check_label_shapes
 from sklearn import metrics
 
 ########################

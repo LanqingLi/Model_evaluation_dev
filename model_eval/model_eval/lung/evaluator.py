@@ -1,22 +1,22 @@
 # -- coding: utf-8 --
 import sys
-sys.path.append('/mnt/data2/model_evaluation_dev')
 import json
 import pandas as pd
 import numpy as np
 import os
 import argparse
 import shutil
+import logging
 from collections import OrderedDict
-from model_eval.model_eval.common.custom_metric import ClassificationMetric, ClusteringMetric, cls_avg
+from model_eval.common.custom_metric import ClassificationMetric, ClusteringMetric, cls_avg
 
-from model_eval.model_eval.lung.xml_tools import xml_to_boxeslist, xml_to_boxeslist_with_nodule_num, xml_to_boxeslist_without_nodule_cls, \
+from model_eval.lung.xml_tools import xml_to_boxeslist, xml_to_boxeslist_with_nodule_num, xml_to_boxeslist_without_nodule_cls, \
     xml_to_boxeslist_with_nodule_num_without_nodule_cls, xml_to_boxeslist_multi_classes, generate_xml, xml_to_anchorlist, xml_to_anchorlist_multi_classes
-from config import LungConfig
-from objmatch.objmatch.post_process import df_to_cls_label,df_to_xlsx_file
-from model_eval.model_eval.lung.get_df_objects import get_object_stat, init_df_objects
-from model_eval.model_eval.lung.get_df_nodules import get_nodule_stat, init_df_boxes
-from model_eval.model_eval.tools.data_postprocess import save_xlsx_json, save_xlsx_json_three_sheets,save_xlsx_sheets
+from model_eval.lung.config import LungConfig
+from objmatch.post_process import df_to_cls_label,df_to_xlsx_file
+from model_eval.lung.get_df_objects import get_object_stat, init_df_objects
+from model_eval.lung.get_df_nodules import get_nodule_stat, init_df_boxes
+from model_eval.tools.data_postprocess import save_xlsx_json, save_xlsx_json_three_sheets,save_xlsx_sheets
 
 class LungNoduleAnchorEvaluatorOffline(object):
     '''
@@ -603,7 +603,7 @@ class LungNoduleAnchorEvaluatorOffline(object):
                 gt_df_multi_classes=gt_df_multi_classes.reset_index(drop=True)
                 gt_df_multi_list.append(json_df_2_df(gt_df_multi_classes))
 
-            summary_count_df=df_to_xlsx_file(predict_df_list,gt_df_multi_list,thresh=self.nodule_compare_thresh)
+            summary_count_df = df_to_xlsx_file(predict_df_list,gt_df_multi_list,thresh=self.nodule_compare_thresh)
 
             summary_count_df = summary_count_df.sort_values(by=['PatientID'])
             summary_count_df = summary_count_df.reset_index(drop=True)
@@ -892,6 +892,10 @@ class LungNoduleAnchorEvaluatorOffline(object):
                 except:
                     print ("broken directory structure, maybe no prediction json file found: %s" % predict_json_path)
                     raise NameError
+                try:
+                    check_insnum_sliceid(predict_df_anchors)
+                except:
+                    logging.exception('%s has inconsistent instanceNumber and sliceId' %PatientID)
             elif self.data_type == 'npy':
                 predict_npy_path = os.path.join(self.data_dir, PatientID, PatientID + '_predict.npy')
                 try:
@@ -923,12 +927,12 @@ class LungNoduleAnchorEvaluatorOffline(object):
 
             ground_truth_anchors = init_df_objects(slice_object_list=ground_truth_anchors, key_list=self.key_list,
                                                      class_key=self.class_key)
-            ground_truth_anchors = ground_truth_anchors.sort_values(by=['prob'])
+            ground_truth_anchors = ground_truth_anchors.sort_values(by=['instanceNumber'])
             ground_truth_anchors = ground_truth_anchors.reset_index(drop=True)
 
             ground_truth_anchors_multi_classes = init_df_objects(slice_object_list=ground_truth_anchors_multi_classes, key_list=self.key_list,
                                                                class_key=self.class_key)
-            ground_truth_anchors_multi_classes = ground_truth_anchors_multi_classes.sort_values(by=['prob'])
+            ground_truth_anchors_multi_classes = ground_truth_anchors_multi_classes.sort_values(by=['instanceNumber'])
             ground_truth_anchors_multi_classes = ground_truth_anchors_multi_classes.reset_index(drop=True)
 
             predict_df_anchors_dict[PatientID] = predict_df_anchors
@@ -2182,6 +2186,10 @@ class LungNoduleEvaluatorOffline(object):
                 except:
                     print ("broken directory structure, maybe no prediction json file found: %s" % predict_json_path)
                     raise NameError
+                try:
+                    check_insnum_sliceid(predict_df_boxes)
+                except:
+                    logging.exception('%s has inconsistent instanceNumber and sliceId' %PatientID)
             elif self.data_type == 'npy':
                 predict_npy_path = os.path.join(self.data_dir, PatientID, PatientID + '_predict.npy')
                 try:
@@ -2664,6 +2672,15 @@ def slice_num_to_three_digit_str(slice_num):
 def df_2_box_list(df):
     raise NotImplemented
 
+
+def check_insnum_sliceid(df):
+    '''
+    Check instance number and slice id consistency
+    :param df:
+    :return:
+    '''
+    for _, row in df.iterrows():
+        assert row['instanceNumber'] == row['sliceId'] + 1, 'instanceNumber != sliceId + 1'
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Infervision auto test')

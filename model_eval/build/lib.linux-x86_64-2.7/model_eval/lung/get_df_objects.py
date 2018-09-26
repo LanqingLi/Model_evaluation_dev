@@ -111,7 +111,7 @@ def get_object_stat(slice_object_list, prefix, classes, z_threshold, key_list, c
         df_objects = init_df_objects(slice_object_list, key_list, class_key)
 
     # 调用find_nodules计算结节和获取结节编号
-    object_info, _ = find_objects(df_objects, SAME_BOX_THRESHOLD=same_box_threshold, Z_THRESHOLD=z_threshold,
+    object_info, object_list = find_objects(df_objects, SAME_BOX_THRESHOLD=same_box_threshold, Z_THRESHOLD=z_threshold,
                                           SCORE_THRESHOLD=score_threshold, object_cls_weights=nodule_cls_weights)
     # 结节编号排序
     #如果df_boxes已有结节信息，例如ssd的数据，则需要先删掉'nodule'这一列才能添加find_nodules生成的结节信息,对于'minusNamePriority', 'minusProb'亦同理

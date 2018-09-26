@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: objmatch
-Version: 0.0.3
+Version: 0.0.4
 Summary: Python package for matching model-detected objects, as part of post-process
 Home-page: https://github.com/LanqingLi/objmatch
 Author: Lanqing Li, Infervision Co., Ltd.

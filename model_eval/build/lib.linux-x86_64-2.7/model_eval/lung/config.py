@@ -1,4 +1,5 @@
 # -- coding: utf-8 --
+import sys
 import numpy as np
 from easydict import EasyDict as edict
 from model_eval.tools.data_preprocess import get_label_classes_from_xls
@@ -177,6 +178,26 @@ class LungConfig(object):
         self.FIND_NODULES.SCORE_THRESHOLD_PRED = 0.6
         self.FIND_NODULES.SCORE_THRESHOLD_GT = 0.4
 
+        ##########################
+        # CONFIG FOR OBJECT
+        ##########################
+
+        self.ANCHOR = edict()
+
+        self.ANCHOR.CLASS_KEY = 'name'
+        self.ANCHOR.BNDBOX_KEY = 'bndbox'
+        self.ANCHOR.ADD_KW = ['prob']
+        self.ANCHOR.ADD_VALUE = [1.]
+        self.ANCHOR.KEY_LIST = ['name', 'Diameter', 'CT_value']
+        self.ANCHOR.BNDBOX_KEY_LIST = ['xmin', 'ymin', 'xmax', 'ymax']
+        self.ANCHOR.ALL_KEY_LIST = self.ANCHOR.BNDBOX_KEY_LIST + self.ANCHOR.ADD_KW + self.ANCHOR.KEY_LIST + ['sliceId']
+        self.ANCHOR.MATCHED_KEY_LIST = ['Bndbox List', 'Object Id', 'Pid', 'Type', 'SliceRange', 'Prob', 'Diameter', 'CT_value']
+
+        ##########################
+        # OTHER CONFIG
+        ##########################
+
         self.THICKNESS_THRESHOLD = 0
         self.FSCORE_BETA = 1.0
+
 

@@ -62,7 +62,7 @@ def df_to_cls_label(cls_predict_df_list, cls_gt_df_list, cls_list, thresh, dim=2
             cov_matrix = np.zeros([len(cls_gt_df), len(cls_predict_df)])
             for i, row_gt in cls_gt_df.iterrows():
                 # To account for all samples, we compare each detected object with gt, if it doesnt belong to gt, we add a new one and label it as fp
-                # Note that for object detection, we didnt account for the background class when run the prediction code, so tn = 0.
+                # Note that for object detection, we didnt account for the background class when running the prediction code, so tn = 0.
                 cls_gt_label.append(cls_list.index(row_gt['class']))
                 for j, row_pred in cls_predict_df.iterrows():
                     if object_compare(predict_slices=pred_object[j][0], ground_truth_slices=gt_object[i][0],
@@ -103,7 +103,6 @@ def df_to_xlsx_file(cls_predict_df_list, cls_gt_df_list,thresh, dim=2):
     fp_list = []
     tp_list = []
     for cls_predict_df, cls_gt_df in zip(cls_predict_df_list, cls_gt_df_list):
-
         # No ground truth objects, all fp
         if cls_gt_df is None:
             for index, row in cls_predict_df.iterrows():
@@ -148,28 +147,32 @@ def df_to_xlsx_file(cls_predict_df_list, cls_gt_df_list,thresh, dim=2):
             for index in range(gt_count):
                 if np.sum(cov_matrix[index])==0:
                     fn_list.append([cls_gt_df.iloc[index]['pid'],np.nan,np.nan,cls_gt_df.iloc[index]['slice'],cls_gt_df.iloc[index]['bbox'],'FN',
-                                    np.nan,cls_gt_df.iloc[index]['class'],cls_gt_df.loc[index,'prob']])
+                                    np.nan,cls_gt_df.iloc[index]['class'],cls_gt_df.loc[index,'prob'], cls_gt_df.loc[index, 'diameter'], cls_gt_df.loc[index, 'ct_value']])
                 else:
+                    print 'cls_predict_df'
+                    print cls_predict_df
                     pred_class = list(cls_predict_df.loc[cov_matrix[index].astype(np.bool), 'class'])
                     pred_slice = list(cls_predict_df.loc[cov_matrix[index].astype(np.bool), 'slice'])
                     gt_slice = cls_gt_df.loc[index, 'slice']
                     pre_bbox = list(cls_predict_df.loc[cov_matrix[index].astype(np.bool), 'bbox'])
                     gt_bbox = cls_gt_df.loc[index, 'bbox']
-                    pre_prob = list(cls_predict_df.loc[cov_matrix[index].astype(np.bool), 'prob'])
+                    pre_prob = max(cls_predict_df.loc[cov_matrix[index].astype(np.bool), 'prob'])
                     gt_class=cls_gt_df.loc[index,'class']
+                    gt_diameter = cls_gt_df.loc[index, 'diameter']
+                    gt_hu = cls_gt_df.loc[index, 'ct_value']
 
                     tp_list.append(
                         [cls_gt_df.loc[index,'pid'], pred_slice, pre_bbox, gt_slice, gt_bbox, 'TP', pred_class,
-                         gt_class, pre_prob])
+                         gt_class, pre_prob, gt_diameter, gt_hu])
 
-    columns = ['PatientID', 'PreSlices', 'Prebbox', 'GtSlices',
-               'Gtbbox', 'Result', 'predict_class', 'ground_truth_class','prob']
-    ret_df = pd.DataFrame(columns=columns)
-    ret_df = ret_df.append(pd.DataFrame(fp_list, columns=columns))
-    ret_df = ret_df.append(pd.DataFrame(fn_list, columns=columns))
-    ret_df = ret_df.append(pd.DataFrame(tp_list, columns=columns))
-
-
+    columns_gt = ['PatientID', 'PreSlices', 'Prebbox', 'GtSlices',
+               'Gtbbox', 'Result', 'predict_class', 'ground_truth_class','Prob', 'Diameter', 'CT_value']
+    columns_pred = ['PatientID', 'PreSlices', 'Prebbox', 'GtSlices',
+               'Gtbbox', 'Result', 'predict_class', 'ground_truth_class','Prob']
+    ret_df = pd.DataFrame(columns=columns_gt)
+    ret_df = ret_df.append(pd.DataFrame(fp_list, columns=columns_pred))
+    ret_df = ret_df.append(pd.DataFrame(fn_list, columns=columns_gt))
+    ret_df = ret_df.append(pd.DataFrame(tp_list, columns=columns_gt))
     return ret_df
 
 
@@ -180,6 +183,7 @@ def object_slice_interpolate_pred(predict_df_record, z_threshold=1):
     :param z_threshold:上下多找多少张
 
     """
+    print predict_df_record['pid']
     predict_slices = range(predict_df_record['slice'][0] - z_threshold,
                            predict_df_record['slice'][-1] + 1 + z_threshold)
 
@@ -203,6 +207,7 @@ def object_slice_interpolate_gt(ground_truth_df_record):
     """
     :param ground_truth_df_record:一条ground truth记录，代表一个结节，DataFrame
     """
+    print ground_truth_df_record['pid']
     ground_truth_slices = range(ground_truth_df_record['slice'][0],
                                 ground_truth_df_record['slice'][-1] + 1)
 

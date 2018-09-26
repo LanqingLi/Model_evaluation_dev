@@ -78,6 +78,10 @@ misalign_suppress: exp(-sim_metric)，基于先验假设：结节具有在三维
 - find_nodules接收的df_boxes,作为一个pandas.DataFrame,!!!index必须从0开始依次加一递增排列!!!（可以通过reset_index(drop=True)来实现），
 否则可能会出现union_find_set调用find_parent无限循环的bug。
 
+- post_process中比较gt与pred的匹配结果时默认SliceRange会按instanceNumber按正序排列，但有时数据会出现instanceNumber反序的情况，需要规范数据
+同时在经过post_process之前对此进行排查。当然，一旦出现反序大概率会使得一个结节所有层面为空(原来range(smin, smax)变成了range(smax, smin)=0,
+但注意代码会有一到两层的层面延伸操作)，则会在差值补全层面时报错
+
 ### common_metrics说明
 
 #### AnchorMetric

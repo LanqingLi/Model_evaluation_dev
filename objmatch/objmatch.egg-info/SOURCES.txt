@@ -4,6 +4,7 @@ objmatch/__init__.py
 objmatch/common_metrics.py
 objmatch/find_nodules.py
 objmatch/find_objects.py
+objmatch/object.py
 objmatch/post_process.py
 objmatch.egg-info/PKG-INFO
 objmatch.egg-info/SOURCES.txt
