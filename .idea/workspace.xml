@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="acfa41cf-b818-403a-b6d1-bacf2c92adbd" name="Default" comment="">
+<<<<<<< HEAD
       <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/dist/model_eval-0.1.7-py2-none-any.whl" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/model_eval/dist/model_eval-0.1.7.tar.gz" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/objmatch/dist/objmatch-0.0.3-py2-none-any.whl" afterPath="" />
@@ -33,6 +34,19 @@
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/objmatch.egg-info/SOURCES.txt" afterPath="$PROJECT_DIR$/objmatch/objmatch.egg-info/SOURCES.txt" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/objmatch/post_process.py" afterPath="$PROJECT_DIR$/objmatch/objmatch/post_process.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/objmatch/setup.py" afterPath="$PROJECT_DIR$/objmatch/setup.py" />
+=======
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/model_eval/model_eval/heart/classname_labelname_mapping.xls" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/model_eval/model_eval/heart/__init__.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/model_eval/model_eval/heart/config.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/model_eval/model_eval/heart/evaluator.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/model_eval/model_eval/brain/contour_draw.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/tools/contour_draw.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/__init__.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/__init__.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/brain/__init__.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/brain/__init__.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/model_eval/common/custom_metric.py" afterPath="$PROJECT_DIR$/model_eval/model_eval/common/custom_metric.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model_eval/setup.py" afterPath="$PROJECT_DIR$/model_eval/setup.py" />
+>>>>>>> master_dev
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -50,6 +64,7 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+<<<<<<< HEAD
       <file leaf-file-name="get_df_objects.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/get_df_objects.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -58,10 +73,31 @@
               <folding>
                 <element signature="e#15#33#0" expanded="true" />
               </folding>
+=======
+      <file leaf-file-name="custom_metric.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/model_eval/model_eval/common/custom_metric.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="274">
+              <caret line="311" column="8" lean-forward="false" selection-start-line="311" selection-start-column="8" selection-end-line="311" selection-end-column="8" />
+              <folding>
+                <element signature="e#22#40#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
+      <file leaf-file-name="evaluator.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/model_eval/model_eval/heart/evaluator.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="4500">
+              <caret line="250" column="80" lean-forward="false" selection-start-line="250" selection-start-column="80" selection-end-line="250" selection-end-column="80" />
+              <folding />
+>>>>>>> master_dev
+            </state>
+          </provider>
+        </entry>
+      </file>
+<<<<<<< HEAD
       <file leaf-file-name="get_df_nodules.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/get_df_nodules.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -69,21 +105,42 @@
               <caret line="203" column="30" lean-forward="false" selection-start-line="203" selection-start-column="30" selection-end-line="203" selection-end-column="30" />
               <folding>
                 <element signature="e#15#25#0" expanded="true" />
+=======
+      <file leaf-file-name="__init__.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/model_eval/model_eval/__init__.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="90">
+              <caret line="5" column="12" lean-forward="true" selection-start-line="5" selection-start-column="12" selection-end-line="5" selection-end-column="12" />
+              <folding>
+                <element signature="e#20#33#0" expanded="true" />
+>>>>>>> master_dev
               </folding>
             </state>
           </provider>
         </entry>
       </file>
+<<<<<<< HEAD
       <file leaf-file-name="find_objects.py" pinned="false" current-in-tab="false">
         <entry file="file:///usr/local/lib/python2.7/dist-packages/objmatch/find_objects.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="2304">
               <caret line="131" column="104" lean-forward="false" selection-start-line="131" selection-start-column="104" selection-end-line="131" selection-end-column="104" />
               <folding />
+=======
+      <file leaf-file-name="__init__.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/model_eval/model_eval/heart/__init__.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="36">
+              <caret line="2" column="23" lean-forward="false" selection-start-line="2" selection-start-column="23" selection-end-line="2" selection-end-column="23" />
+              <folding>
+                <element signature="e#15#35#0" expanded="true" />
+              </folding>
+>>>>>>> master_dev
             </state>
           </provider>
         </entry>
       </file>
+<<<<<<< HEAD
       <file leaf-file-name="evaluator.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/evaluator.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -91,11 +148,33 @@
               <caret line="605" column="31" lean-forward="false" selection-start-line="605" selection-start-column="31" selection-end-line="605" selection-end-column="31" />
               <folding>
                 <element signature="e#22#32#0" expanded="true" />
+=======
+      <file leaf-file-name="__init__.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/__init__.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="18">
+              <caret line="1" column="0" lean-forward="true" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+              <folding>
+                <element signature="e#14#34#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
+      <file leaf-file-name="contour_draw.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/model_eval/model_eval/tools/contour_draw.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+>>>>>>> master_dev
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+<<<<<<< HEAD
       <file leaf-file-name="check_json.py" pinned="false" current-in-tab="false">
         <entry file="file://$USER_HOME$/Desktop/test_json/check_json.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -103,11 +182,31 @@
               <caret line="28" column="93" lean-forward="false" selection-start-line="28" selection-start-column="93" selection-end-line="28" selection-end-column="93" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
+=======
+      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="__init__.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/model_eval/model_eval/brain/__init__.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="18">
+              <caret line="1" column="0" lean-forward="true" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+              <folding>
+                <element signature="e#15#35#0" expanded="true" />
+>>>>>>> master_dev
               </folding>
             </state>
           </provider>
         </entry>
       </file>
+<<<<<<< HEAD
       <file leaf-file-name="README.md" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/objmatch/README.md">
           <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
@@ -117,10 +216,19 @@
                 <folding />
               </first_editor>
               <second_editor />
+=======
+      <file leaf-file-name="setup.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/model_eval/setup.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-1482">
+              <caret line="41" column="18" lean-forward="false" selection-start-line="41" selection-start-column="18" selection-end-line="41" selection-end-column="18" />
+              <folding />
+>>>>>>> master_dev
             </state>
           </provider>
         </entry>
       </file>
+<<<<<<< HEAD
       <file leaf-file-name="post_process.py" pinned="false" current-in-tab="false">
         <entry file="file:///usr/local/lib/python2.7/dist-packages/objmatch/post_process.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -139,11 +247,21 @@
               <folding>
                 <element signature="e#22#41#0" expanded="true" />
                 <marker date="1537524091227" expanded="true" signature="1663:1750" ph="..." />
+=======
+      <file leaf-file-name="evaluator.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/brain/evaluator.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="414">
+              <caret line="23" column="47" lean-forward="true" selection-start-line="23" selection-start-column="47" selection-end-line="23" selection-end-column="47" />
+              <folding>
+                <element signature="e#22#40#0" expanded="true" />
+>>>>>>> master_dev
               </folding>
             </state>
           </provider>
         </entry>
       </file>
+<<<<<<< HEAD
       <file leaf-file-name="object.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/objmatch/objmatch/object.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -167,6 +285,8 @@
           </provider>
         </entry>
       </file>
+=======
+>>>>>>> master_dev
     </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
@@ -249,7 +369,10 @@
         <option value="$PROJECT_DIR$/objmatch/objmatch/__init__.py" />
         <option value="$PROJECT_DIR$/common/custom_metric.py" />
         <option value="$PROJECT_DIR$/brain/config.py" />
+<<<<<<< HEAD
         <option value="$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py" />
+=======
+>>>>>>> master_dev
         <option value="$PROJECT_DIR$/model_eval/model_eval/brain/README.md" />
         <option value="$PROJECT_DIR$/brain/evaluator.py" />
         <option value="$PROJECT_DIR$/lung/lung_nodule_test.py" />
@@ -261,6 +384,7 @@
         <option value="$PROJECT_DIR$/objmatch/objmatch/common_metrics.py" />
         <option value="$PROJECT_DIR$/objmatch/objmatch/object/object.py" />
         <option value="$PROJECT_DIR$/objmatch/objmatch/object.py" />
+<<<<<<< HEAD
         <option value="$PROJECT_DIR$/model_eval/model_eval/common/custom_metric.py" />
         <option value="$PROJECT_DIR$/model_eval/model_eval/tools/data_postprocess.py" />
         <option value="$PROJECT_DIR$/model_eval/model_eval/lung/README.md" />
@@ -269,14 +393,27 @@
         <option value="$PROJECT_DIR$/model_eval/model_eval/lung/get_df_nodules.py" />
         <option value="$PROJECT_DIR$/model_eval/model_eval/lung/xml_tools.py" />
         <option value="$PROJECT_DIR$/model_eval/setup.py" />
+=======
+>>>>>>> master_dev
         <option value="$PROJECT_DIR$/model_eval/model_eval/common/metric.py" />
         <option value="$PROJECT_DIR$/model_eval/model_eval/lung/config.py" />
         <option value="$PROJECT_DIR$/model_eval/model_eval/lung/get_df_objects.py" />
         <option value="$PROJECT_DIR$/model_eval/model_eval/lung/check_json.py" />
         <option value="$PROJECT_DIR$/objmatch/objmatch/post_process.py" />
         <option value="$PROJECT_DIR$/model_eval/model_eval/lung/evaluator.py" />
+<<<<<<< HEAD
         <option value="$USER_HOME$/Desktop/test_json/check_json.py" />
         <option value="$PROJECT_DIR$/objmatch/README.md" />
+=======
+        <option value="$PROJECT_DIR$/model_eval/model_eval/lung/README.md" />
+        <option value="$PROJECT_DIR$/model_eval/model_eval/heart/config.py" />
+        <option value="$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py" />
+        <option value="$PROJECT_DIR$/model_eval/model_eval/common/custom_metric.py" />
+        <option value="$PROJECT_DIR$/model_eval/model_eval/heart/evaluator.py" />
+        <option value="$PROJECT_DIR$/model_eval/model_eval/__init__.py" />
+        <option value="$PROJECT_DIR$/model_eval/setup.py" />
+        <option value="$PROJECT_DIR$/model_eval/model_eval/heart/__init__.py" />
+>>>>>>> master_dev
       </list>
     </option>
   </component>
@@ -289,11 +426,11 @@
   <component name="NodePackageJsonFileManager">
     <packageJsonPaths />
   </component>
-  <component name="ProjectFrameBounds" extendedState="4">
-    <option name="x" value="1946" />
-    <option name="y" value="24" />
+  <component name="ProjectFrameBounds">
+    <option name="x" value="56" />
+    <option name="y" value="22" />
     <option name="width" value="1851" />
-    <option name="height" value="1056" />
+    <option name="height" value="1028" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -331,6 +468,7 @@
     <panes>
       <pane id="Scope" />
       <pane id="Scratches" />
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -352,12 +490,6 @@
               <item name="model_evaluation_dev" type="b2602c69:ProjectViewProjectNode" />
               <item name="model_evaluation_dev" type="462c0819:PsiDirectoryNode" />
               <item name="heart" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="model_evaluation_dev" type="b2602c69:ProjectViewProjectNode" />
-              <item name="model_evaluation_dev" type="462c0819:PsiDirectoryNode" />
-              <item name="heart" type="462c0819:PsiDirectoryNode" />
-              <item name="common" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="model_evaluation_dev" type="b2602c69:ProjectViewProjectNode" />
@@ -399,6 +531,13 @@
               <item name="model_evaluation_dev" type="462c0819:PsiDirectoryNode" />
               <item name="model_eval" type="462c0819:PsiDirectoryNode" />
               <item name="model_eval" type="462c0819:PsiDirectoryNode" />
+              <item name="heart" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="model_evaluation_dev" type="b2602c69:ProjectViewProjectNode" />
+              <item name="model_evaluation_dev" type="462c0819:PsiDirectoryNode" />
+              <item name="model_eval" type="462c0819:PsiDirectoryNode" />
+              <item name="model_eval" type="462c0819:PsiDirectoryNode" />
               <item name="lung" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -432,18 +571,24 @@
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
+<<<<<<< HEAD
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../calcium_scoring" />
+=======
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+>>>>>>> master_dev
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/model_eval/model_eval/tools" />
+      <recent name="$PROJECT_DIR$/objmatch/objmatch" />
+      <recent name="$PROJECT_DIR$/model_eval/model_eval" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/model_eval/model_eval/heart" />
       <recent name="$PROJECT_DIR$/heart_dev" />
       <recent name="$PROJECT_DIR$/common" />
       <recent name="$PROJECT_DIR$/brain" />
-    </key>
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/objmatch/objmatch" />
-      <recent name="$PROJECT_DIR$/model_eval/model_eval" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -499,10 +644,14 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1946" y="24" width="1851" height="1056" extended-state="4" />
+    <frame x="56" y="22" width="1851" height="1028" extended-state="0" />
     <editor active="true" />
     <layout>
+<<<<<<< HEAD
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16565096" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+=======
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16398892" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+>>>>>>> master_dev
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.16407983" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -571,6 +720,19 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
+<<<<<<< HEAD
+=======
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/brain/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="2304">
+            <caret line="128" column="26" lean-forward="false" selection-start-line="128" selection-start-column="26" selection-end-line="128" selection-end-column="26" />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+>>>>>>> master_dev
     <entry file="file://$PROJECT_DIR$/lung/get_df_nodules.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="18">
@@ -582,13 +744,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="90">
           <caret line="5" column="32" lean-forward="false" selection-start-line="5" selection-start-column="32" selection-end-line="5" selection-end-column="32" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/brain/evaluator.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="5688">
-          <caret line="451" column="91" lean-forward="false" selection-start-line="451" selection-start-column="91" selection-end-line="451" selection-end-column="91" />
         </state>
       </provider>
     </entry>
@@ -677,8 +832,13 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lung/evaluator.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
         <state relative-caret-position="342">
           <caret line="19" column="44" lean-forward="false" selection-start-line="19" selection-start-column="44" selection-end-line="19" selection-end-column="44" />
+=======
+        <state relative-caret-position="3240">
+          <caret line="182" column="63" lean-forward="false" selection-start-line="182" selection-start-column="63" selection-end-line="182" selection-end-column="63" />
+>>>>>>> master_dev
         </state>
       </provider>
     </entry>
@@ -706,7 +866,11 @@
     <entry file="file://$PROJECT_DIR$/lung/lung_nodule_test.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
+<<<<<<< HEAD
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+=======
+          <caret line="0" column="0" lean-forward="true" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+>>>>>>> master_dev
         </state>
       </provider>
     </entry>
@@ -719,22 +883,37 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/common/custom_metric.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
         <state relative-caret-position="108">
           <caret line="9" column="6" lean-forward="false" selection-start-line="9" selection-start-column="6" selection-end-line="9" selection-end-column="6" />
+=======
+        <state relative-caret-position="121">
+          <caret line="24" column="4" lean-forward="false" selection-start-line="24" selection-start-column="4" selection-end-line="24" selection-end-column="4" />
+>>>>>>> master_dev
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/lung/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+=======
+        <state relative-caret-position="1638">
+          <caret line="224" column="4" lean-forward="false" selection-start-line="224" selection-start-column="4" selection-end-line="224" selection-end-column="4" />
+>>>>>>> master_dev
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
         <state relative-caret-position="72">
           <caret line="4" column="28" lean-forward="false" selection-start-line="4" selection-start-column="28" selection-end-line="4" selection-end-column="28" />
+=======
+        <state relative-caret-position="-2408">
+          <caret line="29" column="4" lean-forward="false" selection-start-line="29" selection-start-column="4" selection-end-line="29" selection-end-column="4" />
+>>>>>>> master_dev
         </state>
       </provider>
     </entry>
@@ -755,14 +934,23 @@
     <entry file="file://$PROJECT_DIR$/model_eval/model_eval/tools/data_postprocess.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="18">
+<<<<<<< HEAD
           <caret line="1" column="0" lean-forward="false" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+=======
+          <caret line="1" column="0" lean-forward="true" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+>>>>>>> master_dev
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/model_eval/model_eval/tools/data_preprocess.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
         <state relative-caret-position="18">
           <caret line="1" column="0" lean-forward="false" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+=======
+        <state relative-caret-position="378">
+          <caret line="21" column="0" lean-forward="false" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
+>>>>>>> master_dev
         </state>
       </provider>
     </entry>
@@ -773,6 +961,7 @@
         </state>
       </provider>
     </entry>
+<<<<<<< HEAD
     <entry file="file://$PROJECT_DIR$/objmatch/objmatch/common_metrics.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="468">
@@ -781,12 +970,16 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/objmatch/objmatch/find_nodules.py">
+=======
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/config.py">
+>>>>>>> master_dev
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3276">
           <caret line="182" column="63" lean-forward="false" selection-start-line="182" selection-start-column="63" selection-end-line="182" selection-end-column="63" />
         </state>
       </provider>
     </entry>
+<<<<<<< HEAD
     <entry file="file://$PROJECT_DIR$/objmatch/objmatch/find_objects.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-2408">
@@ -833,11 +1026,154 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="72">
           <caret line="4" column="16" lean-forward="false" selection-start-line="4" selection-start-column="16" selection-end-line="4" selection-end-column="16" />
+=======
+    <entry file="file://$PROJECT_DIR$/common/custom_metric.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="108">
+          <caret line="9" column="6" lean-forward="false" selection-start-line="9" selection-start-column="6" selection-end-line="9" selection-end-column="6" />
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/common/custom_metric.py">
+    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/post_process.py">
       <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3042">
+          <caret line="169" column="16" lean-forward="false" selection-start-line="169" selection-start-column="16" selection-end-line="169" selection-end-column="16" />
+          <folding>
+            <element signature="e#22#41#0" expanded="true" />
+            <marker date="1537939885012" expanded="true" signature="3600:4188" ph="..." />
+            <marker date="1537939885012" expanded="true" signature="4187:4188" ph="..." />
+            <marker date="1537939885012" expanded="true" signature="9350:10063" ph="..." />
+            <marker date="1537939885012" expanded="true" signature="9590:9889" ph="..." />
+            <marker date="1537939885012" expanded="true" signature="10169:11179" ph="..." />
+            <marker date="1537939885012" expanded="true" signature="10174:10390" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885012" expanded="true" signature="10633:11151" ph="..." />
+            <marker date="1537939885012" expanded="true" signature="11234:11332" ph="..." />
+            <marker date="1537939885012" expanded="true" signature="11387:11723" ph="..." />
+            <marker date="1537939885012" expanded="true" signature="11392:11600" ph="&quot;&quot;&quot;determine whether two bounding boxes are the same according to AnchorMetric.center_deviation_iou metric...&quot;&quot;&quot;" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/objmatch/objmatch/object.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="288">
+          <caret line="16" column="8" lean-forward="false" selection-start-line="16" selection-start-column="8" selection-end-line="16" selection-end-column="8" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/xml_tools.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5526">
+          <caret line="312" column="22" lean-forward="false" selection-start-line="312" selection-start-column="22" selection-end-line="312" selection-end-column="22" />
+          <folding>
+            <element signature="e#32#41#0" expanded="true" />
+            <marker date="1537939885008" expanded="true" signature="205:483" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="540:1740" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="545:722" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="837:1723" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="913:1212" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="948:1211" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="1225:1690" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="1325:1690" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="1827:3823" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="1832:2141" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="2407:3800" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="2470:2702" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="2741:3070" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="2776:3069" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="3196:3800" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="3924:5782" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="3929:4238" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="4504:5759" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="4567:4799" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="4838:5199" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="4873:5198" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="5272:5759" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="5859:7137" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="5864:6041" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="6181:7120" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="6316:6615" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="6351:6614" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="6628:7087" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="6728:7087" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="7221:8591" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="7226:7412" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="7614:8574" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="7742:8041" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="7777:8040" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="8054:8541" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="8154:8541" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="8694:10029" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="8699:8885" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="9062:10012" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="9180:9479" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="9215:9478" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="9492:9979" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="9592:9979" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="10099:11154" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="10104:10281" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="10396:11137" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="10472:10690" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="10507:10689" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="10703:11104" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="10746:11104" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="11211:12017" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="11381:11936" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="12072:13028" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="12077:12251" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="12327:12402" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="12434:12539" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="12692:12997" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="13069:14003" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="13074:13248" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="13322:13397" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="13429:13534" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="13685:13974" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="14069:15202" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="14074:14342" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="14492:14643" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="14667:15173" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="14777:15173" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="15011:15173" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="15249:16361" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="15254:15522" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="15665:15816" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="15840:16332" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="15950:16332" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="16168:16332" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="16414:17526" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="16419:16687" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="16830:16981" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="17005:17497" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="17115:17497" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="17333:17497" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="17597:18748" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="17602:17870" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="18013:18164" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="18188:18719" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="18298:18719" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="18563:18719" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="18816:20120" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="18821:19108" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="19279:19430" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="19454:20071" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="19564:20071" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="19869:20071" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="20212:20499" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="20670:20821" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="20845:21481" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="20955:21481" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="21279:21481" ph="..." />
+          </folding>
+>>>>>>> master_dev
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/get_df_nodules.py">
+      <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
         <state relative-caret-position="360">
           <caret line="20" column="53" lean-forward="false" selection-start-line="20" selection-start-column="53" selection-end-line="20" selection-end-column="53" />
         </state>
@@ -864,10 +1200,51 @@
           <caret line="130" column="35" lean-forward="false" selection-start-line="130" selection-start-column="35" selection-end-line="130" selection-end-column="35" />
           <folding>
             <element signature="e#15#33#0" expanded="true" />
+=======
+        <state relative-caret-position="2034">
+          <caret line="119" column="45" lean-forward="false" selection-start-line="119" selection-start-column="45" selection-end-line="119" selection-end-column="45" />
+          <folding>
+            <marker date="1537939885008" expanded="true" signature="290:487" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="295:430" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="532:1943" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="537:750" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="809:943" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="1067:1923" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="1194:1923" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="1369:1923" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="1478:1923" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="1585:1844" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="2016:2564" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="2053:2336" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="2086:2335" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="2386:2539" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="2596:3135" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="2601:2729" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="2901:3109" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="3264:3758" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="3269:3478" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="4048:4420" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1537939885008" expanded="true" signature="4479:4763" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="4512:4762" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="5171:5289" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="6209:6331" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="6514:8886" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="6557:6635" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="6717:6761" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="6822:7829" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="6835:6871" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="6926:6996" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="7031:7391" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="7720:7828" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="8120:8213" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="8223:8319" ph="..." />
+            <marker date="1537939885008" expanded="true" signature="8411:8550" ph="..." />
+>>>>>>> master_dev
           </folding>
         </state>
       </provider>
     </entry>
+<<<<<<< HEAD
     <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/get_df_nodules.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3564">
@@ -882,47 +1259,131 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1746">
           <caret line="105" column="0" lean-forward="false" selection-start-line="105" selection-start-column="0" selection-end-line="105" selection-end-column="0" />
+=======
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/tools/data_postprocess.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1584">
+          <caret line="90" column="81" lean-forward="false" selection-start-line="90" selection-start-column="81" selection-end-line="90" selection-end-column="81" />
+>>>>>>> master_dev
           <folding />
         </state>
       </provider>
     </entry>
+<<<<<<< HEAD
     <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/evaluator.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="10584">
           <caret line="605" column="31" lean-forward="false" selection-start-line="605" selection-start-column="31" selection-end-line="605" selection-end-column="31" />
           <folding>
             <element signature="e#22#32#0" expanded="true" />
+=======
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="673">
+            <caret line="221" column="44" lean-forward="false" selection-start-line="221" selection-start-column="44" selection-end-line="221" selection-end-column="44" />
+            <folding />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/heart/config.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="108">
+          <caret line="6" column="11" lean-forward="false" selection-start-line="6" selection-start-column="11" selection-end-line="6" selection-end-column="11" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
+>>>>>>> master_dev
           </folding>
         </state>
       </provider>
     </entry>
+<<<<<<< HEAD
     <entry file="file://$PROJECT_DIR$/objmatch/objmatch/object.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="288">
           <caret line="16" column="8" lean-forward="false" selection-start-line="16" selection-start-column="8" selection-end-line="16" selection-end-column="8" />
+=======
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/brain/config.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="10" column="36" lean-forward="false" selection-start-line="10" selection-start-column="36" selection-end-line="10" selection-end-column="36" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/evaluator.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="36">
+          <caret line="2" column="0" lean-forward="false" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="50" />
+>>>>>>> master_dev
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/objmatch/objmatch/post_process.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
         <state relative-caret-position="3078">
           <caret line="179" column="7" lean-forward="false" selection-start-line="179" selection-start-column="7" selection-end-line="179" selection-end-column="7" />
           <folding>
             <element signature="e#22#41#0" expanded="true" />
             <marker date="1537524091227" expanded="true" signature="1663:1750" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/local/lib/python2.7/dist-packages/objmatch/find_objects.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2304">
-          <caret line="131" column="104" lean-forward="false" selection-start-line="131" selection-start-column="104" selection-end-line="131" selection-end-column="104" />
+=======
+        <state relative-caret-position="-618">
+          <caret line="95" column="4" lean-forward="false" selection-start-line="95" selection-start-column="4" selection-end-line="95" selection-end-column="4" />
           <folding />
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/brain/evaluator.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-450">
+          <caret line="2" column="16" lean-forward="true" selection-start-line="2" selection-start-column="16" selection-end-line="2" selection-end-column="49" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/common/custom_metric.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="274">
+          <caret line="311" column="8" lean-forward="false" selection-start-line="311" selection-start-column="8" selection-end-line="311" selection-end-column="8" />
+          <folding>
+            <element signature="e#22#40#0" expanded="true" />
+>>>>>>> master_dev
+          </folding>
+        </state>
+      </provider>
+    </entry>
+<<<<<<< HEAD
+    <entry file="file:///usr/local/lib/python2.7/dist-packages/objmatch/find_objects.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2304">
+          <caret line="131" column="104" lean-forward="false" selection-start-line="131" selection-start-column="104" selection-end-line="131" selection-end-column="104" />
+=======
+    <entry file="file://$PROJECT_DIR$/brain/evaluator.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="414">
+          <caret line="23" column="47" lean-forward="true" selection-start-line="23" selection-start-column="47" selection-end-line="23" selection-end-column="47" />
+          <folding>
+            <element signature="e#22#40#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/heart/evaluator.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4500">
+          <caret line="250" column="80" lean-forward="false" selection-start-line="250" selection-start-column="80" selection-end-line="250" selection-end-column="80" />
+>>>>>>> master_dev
+          <folding />
+        </state>
+      </provider>
+    </entry>
+<<<<<<< HEAD
     <entry file="file://$USER_HOME$/Desktop/test_json/check_json.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="486">
@@ -952,6 +1413,71 @@
             <folding />
           </first_editor>
           <second_editor />
+=======
+    <entry file="file://$PROJECT_DIR$/model_eval/setup.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1482">
+          <caret line="41" column="18" lean-forward="false" selection-start-line="41" selection-start-column="18" selection-end-line="41" selection-end-column="18" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="5" column="12" lean-forward="true" selection-start-line="5" selection-start-column="12" selection-end-line="5" selection-end-column="12" />
+          <folding>
+            <element signature="e#20#33#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/brain/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18">
+          <caret line="1" column="0" lean-forward="true" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+          <folding>
+            <element signature="e#15#35#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/heart/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="36">
+          <caret line="2" column="23" lean-forward="false" selection-start-line="2" selection-start-column="23" selection-end-line="2" selection-end-column="23" />
+          <folding>
+            <element signature="e#15#35#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/lung/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18">
+          <caret line="1" column="0" lean-forward="true" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+          <folding>
+            <element signature="e#14#34#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_eval/model_eval/tools/contour_draw.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+>>>>>>> master_dev
         </state>
       </provider>
     </entry>
