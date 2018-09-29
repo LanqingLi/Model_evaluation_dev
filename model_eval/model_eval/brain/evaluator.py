@@ -9,10 +9,10 @@ import pandas as pd
 from config import BrainConfig
 import nrrd, cv2
 
-from model_eval.model_eval.tools.contour_draw import contour_and_draw, contour_and_draw_rainbow
-from model_eval.model_eval.tools.data_postprocess import save_xlsx_json
-from model_eval.model_eval.tools.data_preprocess import window_convert
-from model_eval.model_eval.common.custom_metric import ClassificationMetric
+from model_eval.tools.contour_draw import contour_and_draw, contour_and_draw_rainbow
+from model_eval.tools.data_postprocess import save_xlsx_json
+from model_eval.tools.data_preprocess import window_convert
+from model_eval.common.custom_metric import ClassificationMetric
 
 def default_post_processor(img_array, prob_map_array):
     return prob_map_array

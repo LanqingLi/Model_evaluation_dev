@@ -1,8 +1,10 @@
 # -- coding: utf-8 --
 import numpy as np
 import math
+import SimpleITK as sitk
 from metric import EvalMetric, check_label_shapes
 from sklearn import metrics
+
 
 ########################
 # CLASSIFICATION METRICS
@@ -281,6 +283,99 @@ class ClusteringMetric(EvalMetric):
         for label, pred in zip(self.labels_gt, self.labels_pred):
             silhouette_score.append(np.nan)
         return silhouette_score
+
+
+########################
+# CUSTOMIZED SCORE
+########################
+
+# coronary artery calcium score
+class CAC_Score(EvalMetric):
+    '''
+
+
+    '''
+    def __init__(self, name='CACScore', allow_extra_outputs=False):
+        super(CAC_Score, self).__init__(name)
+        self._allow_extra_outputs = allow_extra_outputs
+
+    def default_calcium_cate(hu_value):
+        assert hu_value >= 130, 'hu_value must be greater than 130'
+        if hu_value >= 400:
+            return 4
+        elif hu_value >= 300:
+            return 3
+        elif hu_value >= 200:
+            return 2
+        elif hu_value >= 130:
+            return 1
+
+    def default_risk_cate(self, score):
+        if not type(score) == float or score < 0:
+            return TypeError('input argument %s of type %s must be a positive float!' %(score, type(score)))
+        elif score == 0:
+            return 'Zero'
+        elif score < 100:
+            return 'Mild'
+        elif score < 300:
+            return 'Moderate'
+        else:
+            return 'Severe'
+
+    def check_binary_mask(self, binary_mask):
+        num_zero = np.sum(binary_mask == 0)
+        num_one = np.sum(binary_mask == 1)
+        return num_one + num_zero == np.prod(binary_mask.shape)
+
+    def get_CAC_score(self, image, binary_mask, voxel_volume, calcium_cate=default_calcium_cate, thresh=130, dim=2):
+        '''
+        :param image: raw image data, shape = [H, W, D]
+        :param binary_mask: binary mask for coronary artery calcium (CAC) region , shape = [H, W, D]
+        :param calcium_cate: function for determining calcium category (score) for each calcified region
+        :param voxel_volume: voxel volume computed from voxel spacing of the image array
+        :param thresh: threshold for filtering calcium region
+        :param dim: dimension param for calcium score integral (whether to integrate slice by slice or plaque by plaque)
+        :return: CAC score for the raw image data given binary mask
+        '''
+        calcium_score = 0.
+        assert self.check_binary_mask(binary_mask), 'binary_mask must only contain 0 or 1'
+
+        if dim == 3:
+            masked_data = sitk.GetImageFromArray(binary_mask)
+            img_data = sitk.GetImageFromArray(image)
+            sitk_binary_mask = sitk.Cast(masked_data, sitk.sitkInt16)
+            masked_img_array = img_data * sitk_binary_mask
+
+            label = sitk.ConnectedComponent(masked_img_array>= thresh)
+            stat = sitk.LabelIntensityStatisticsImageFilter()
+            stat.Execute(label, img_data)
+
+            for i in stat.GetLabels():
+                size = stat.GetSum(i) / stat.GetMean(i) * voxel_volume
+                print ("Calcified Plaque: {0} -> Mean: {1} Size: {2} Max: {3}".format(i, stat.GetMean(i), size, stat.GetMaximum(i)))
+                calcium_score += calcium_cate(stat.GetMaximum(i)) * size / 3.
+            return calcium_score
+
+        elif dim == 2:
+            for i in range(image.shape[-1]):
+                binary_mask_slice = binary_mask[:, :, i]
+                img_slice = image[:, :, i]
+                masked_img_slice = binary_mask_slice * img_slice
+                masked_data_slice = sitk.GetImageFromArray(masked_img_slice)
+                img_data_slice = sitk.GetImageFromArray(img_slice)
+
+                label = sitk.ConnectedComponent(masked_data_slice >= thresh)
+                stat = sitk.LabelIntensityStatisticsImageFilter()
+                stat.Execute(label, img_data_slice)
+
+                for j in stat.GetLabels():
+                    size = stat.GetSum(j) / stat.GetMean(j) * voxel_volume
+                    print ("Calcified Plaque: {0} -> Mean: {1} Size: {2} Max: {3}".format(j, stat.GetMean(j), size, stat.GetMaximum(j)))
+                    calcium_score += calcium_cate(stat.GetMaximum(j)) * size / 3.
+            return calcium_score
+
+
+
 
 
 ########################
