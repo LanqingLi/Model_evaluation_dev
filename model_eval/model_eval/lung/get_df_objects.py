@@ -5,7 +5,7 @@ import sys
 
 from model_eval.tools.data_preprocess import get_instance_number
 
-from objmatch.find_objects import find_objects
+from objmatch.find_objects import find_objects, find_objects_ensemble
 
 # nodule_class = config.CLASSES
 PI = 3.141592654
@@ -28,9 +28,12 @@ def init_df_objects(slice_object_list, key_list, class_key):
                 assert set(key_list) == set(key_list).intersection(set(object.attr_dict.keys())), 'object keyword list must contain the designated(input) keyword list'
                 df_add_row = pd.DataFrame([object.attr_dict])
                 df_objects = df_objects.append(df_add_row, ignore_index=True)
-    df_objects = df_objects.rename(index=str, columns={class_key: 'class', 'sliceId': 'instanceNumber'})
-    df_objects['instanceNumber'] += 1
-    df_objects['instanceNumber'] = df_objects['instanceNumber'].astype(np.int64)
+    if not df_objects.empty:
+        df_objects = df_objects.rename(index=str, columns={class_key: 'class', 'sliceId': 'instanceNumber'})
+        df_objects['instanceNumber'] += 1
+        df_objects['instanceNumber'] = df_objects['instanceNumber'].astype(np.int16)
+    else:
+        df_objects['instanceNumber'] = ''
     return df_objects
 
 def calc_series_minus_priority(list_name, focus_priority_array=None):
@@ -93,7 +96,8 @@ def add_object_to_df(df_objects, object_dict):
 
 def get_object_stat(slice_object_list, prefix, classes, z_threshold, key_list, class_key, matched_key_list,
                     same_box_threshold=np.array([0.8, 0.8]), hu_img_array=None, img_spacing=None, if_dicom=True,
-                    focus_priority_array=None, skip_init=False, score_threshold = 0.8, nodule_cls_weights = {}):
+                    focus_priority_array=None, skip_init=False, score_threshold = 0.8, nodule_cls_weights = {},
+                    if_ensemble=False, model_weight_list=[1], model_conf_list=[1], obj_freq_thresh=1.):
     '''
     调用find_nodules,把结节信息统计进DataFrame
     :param hu_img_array: Honus Value Array，在进行密度计算时会使用
@@ -105,14 +109,36 @@ def get_object_stat(slice_object_list, prefix, classes, z_threshold, key_list, c
     '''
 
     # 初始化框层面DataFrame
-    if skip_init:
-        df_objects = slice_object_list
-    else:
-        df_objects = init_df_objects(slice_object_list, key_list, class_key)
 
-    # 调用find_nodules计算结节和获取结节编号
-    object_info, _ = find_objects(df_objects, SAME_BOX_THRESHOLD=same_box_threshold, Z_THRESHOLD=z_threshold,
-                                          SCORE_THRESHOLD=score_threshold, object_cls_weights=nodule_cls_weights)
+
+    if if_ensemble:
+        if skip_init:
+            df_objects_list = slice_object_list
+            df_objects = pd.DataFrame()
+            for slice_object in slice_object_list:
+                df_objects = df_objects.append(slice_object, ignore_index=True)
+
+        else:
+            df_objects_list = []
+            df_objects = pd.DataFrame()
+            for slice_object in slice_object_list:
+                df_objects_list.append(init_df_objects(slice_object, key_list, class_key))
+                df_objects = df_objects.append(init_df_objects(slice_object, key_list, class_key), ignore_index=True)
+        object_info, _ = find_objects_ensemble(df_objects_list, MODEL_WEIGHT_LIST=model_weight_list,
+                                               MODEL_CONF_LIST=model_conf_list, OBJ_FREQ_THRESH=obj_freq_thresh,
+                                               SAME_BOX_THRESHOLD=same_box_threshold, Z_THRESHOLD=z_threshold,
+                                               SCORE_THRESHOLD=score_threshold,
+                                               object_cls_weights=nodule_cls_weights)
+    else:
+        if skip_init:
+            df_objects = slice_object_list
+        else:
+            df_objects = init_df_objects(slice_object_list, key_list, class_key)
+
+        # 调用find_nodules计算结节和获取结节编号
+        object_info, _ = find_objects(df_objects, SAME_BOX_THRESHOLD=same_box_threshold, Z_THRESHOLD=z_threshold,
+                                      SCORE_THRESHOLD=score_threshold, object_cls_weights=nodule_cls_weights)
+
     # 结节编号排序
     #如果df_boxes已有结节信息，例如ssd的数据，则需要先删掉'nodule'这一列才能添加find_nodules生成的结节信息,对于'minusNamePriority', 'minusProb'亦同理
     try:
@@ -150,28 +176,31 @@ def get_object_stat(slice_object_list, prefix, classes, z_threshold, key_list, c
     object_prob_list = []
     object_diameter_list = []
     object_hu_list = []
+    object_type = "NoType"
     i_row = 0
     len_df = len(df_objects)
     last_object = -1
 
     while i_row <= len_df and len_df > 0:
         if i_row == len_df:
-            try:
-                df_matched_objects = add_object_to_df(df_objects=df_matched_objects,
-                                                      object_dict={'Object Id': cur_object,
-                                                                   'Bndbox List': bndbox_list,
-                                                                   'SliceRange': slice_range,
-                                                                   'Pid': prefix, 'Prob': np.max(object_prob_list),
-                                                                   'Type': object_type,
-                                                                   'Diameter': object_diameter_list[0],
-                                                                   'CT_value': object_hu_list[0]})
-            except:
-                df_matched_objects = add_object_to_df(df_objects=df_matched_objects,
-                                                      object_dict={'Object Id': cur_object,
-                                                                   'Bndbox List': bndbox_list,
-                                                                   'SliceRange': slice_range,
-                                                                   'Pid': prefix, 'Prob': np.max(object_prob_list),
-                                                                   'Type': object_type})
+            if len(object_prob_list) > 0:
+
+                try:
+                    df_matched_objects = add_object_to_df(df_objects=df_matched_objects,
+                                                          object_dict={'Object Id': cur_object,
+                                                                       'Bndbox List': bndbox_list,
+                                                                       'SliceRange': slice_range,
+                                                                       'Pid': prefix, 'Prob': max(object_prob_list),
+                                                                       'Type': object_type,
+                                                                       'Diameter': object_diameter_list[0],
+                                                                       'CT_value': object_hu_list[0]})
+                except:
+                    df_matched_objects = add_object_to_df(df_objects=df_matched_objects,
+                                                          object_dict={'Object Id': cur_object,
+                                                                       'Bndbox List': bndbox_list,
+                                                                       'SliceRange': slice_range,
+                                                                       'Pid': prefix, 'Prob': max(object_prob_list),
+                                                                       'Type': object_type})
             break
         # 判断存储
         row = df_objects.iloc[i_row]
@@ -190,18 +219,20 @@ def get_object_stat(slice_object_list, prefix, classes, z_threshold, key_list, c
                 assert len(set(object_diameter_list)) <= 1, 'all slices of a single object must have the same diameter'
                 assert len(set(object_hu_list)) <= 1, 'all slices of a single object must have the same hu value'
 
-                try:
-                    df_matched_objects = add_object_to_df(df_objects=df_matched_objects,
-                                                      object_dict={'Object Id': cur_object-1, 'Bndbox List': bndbox_list, 'SliceRange': slice_range,
-                                                      'Pid': prefix, 'Prob': np.max(object_prob_list), 'Type': object_type,
-                                                      'Diameter': object_diameter_list[0] , 'CT_value': object_hu_list[0]})
-                except:
-                    df_matched_objects = add_object_to_df(df_objects=df_matched_objects,
-                                                          object_dict={'Object Id': cur_object-1,
-                                                                       'Bndbox List': bndbox_list,
-                                                                       'SliceRange': slice_range,
-                                                                       'Pid': prefix, 'Prob': np.max(object_prob_list),
-                                                                       'Type': object_type})
+                if len(object_prob_list) > 0:
+
+                    try:
+                        df_matched_objects = add_object_to_df(df_objects=df_matched_objects,
+                                                          object_dict={'Object Id': cur_object-1, 'Bndbox List': bndbox_list, 'SliceRange': slice_range,
+                                                          'Pid': prefix, 'Prob': max(object_prob_list), 'Type': object_type,
+                                                          'Diameter': object_diameter_list[0] , 'CT_value': object_hu_list[0]})
+                    except:
+                        df_matched_objects = add_object_to_df(df_objects=df_matched_objects,
+                                                              object_dict={'Object Id': cur_object-1,
+                                                                           'Bndbox List': bndbox_list,
+                                                                           'SliceRange': slice_range,
+                                                                           'Pid': prefix, 'Prob': max(object_prob_list),
+                                                                           'Type': object_type})
             # 新结节统计信息初始化，但要保证不是最后一行
             if i_row == len_df:
                 break

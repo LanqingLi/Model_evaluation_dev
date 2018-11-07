@@ -312,7 +312,7 @@ class CAC_Score(EvalMetric):
 
     def default_risk_cate(self, score):
         if not type(score) == float or score < 0:
-            return TypeError('input argument %s of type %s must be a positive float!' %(score, type(score)))
+            raise TypeError('input argument %s of type %s must be a positive float!' %(score, type(score)))
         elif score == 0:
             return 'Zero'
         elif score < 100:
@@ -327,7 +327,7 @@ class CAC_Score(EvalMetric):
         num_one = np.sum(binary_mask == 1)
         return num_one + num_zero == np.prod(binary_mask.shape)
 
-    def get_CAC_score(self, image, binary_mask, voxel_volume, calcium_cate=default_calcium_cate, thresh=130, dim=2):
+    def get_CAC_score(self, image, binary_mask, voxel_volume, pixel_area, calcium_cate=default_calcium_cate, thresh=130, dim=2):
         '''
         :param image: raw image data, shape = [H, W, D]
         :param binary_mask: binary mask for coronary artery calcium (CAC) region , shape = [H, W, D]
@@ -340,6 +340,7 @@ class CAC_Score(EvalMetric):
         calcium_score = 0.
         assert self.check_binary_mask(binary_mask), 'binary_mask must only contain 0 or 1'
 
+        # find 3D connected components for computation of CAC score
         if dim == 3:
             masked_data = sitk.GetImageFromArray(binary_mask)
             img_data = sitk.GetImageFromArray(image)
@@ -356,6 +357,7 @@ class CAC_Score(EvalMetric):
                 calcium_score += calcium_cate(stat.GetMaximum(i)) * size / 3.
             return calcium_score
 
+        # find 2D connected components (slicewise) for computation of CAC score
         elif dim == 2:
             for i in range(image.shape[-1]):
                 binary_mask_slice = binary_mask[:, :, i]
@@ -370,8 +372,11 @@ class CAC_Score(EvalMetric):
 
                 for j in stat.GetLabels():
                     size = stat.GetSum(j) / stat.GetMean(j) * voxel_volume
+                    area = stat.GetSum(j) / stat.GetMean(j) * pixel_area
                     print ("Calcified Plaque: {0} -> Mean: {1} Size: {2} Max: {3}".format(j, stat.GetMean(j), size, stat.GetMaximum(j)))
-                    calcium_score += calcium_cate(stat.GetMaximum(j)) * size / 3.
+                    # compute lesion
+                    if area >= 1:
+                        calcium_score += calcium_cate(stat.GetMaximum(j)) * size / 3.
             return calcium_score
 
 

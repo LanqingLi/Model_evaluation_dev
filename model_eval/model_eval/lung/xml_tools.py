@@ -70,16 +70,20 @@ def read_xml_anchor(config, xml_path, value_list, key_list, restrict_name_list=N
                                   'calcific nodule', 'pgo', '10-30nodule', 'mass',
                                   '0-5GGN', '5GGN', 'GGN', 'calcific nodule', 'solid nodule',
                                   'pleural nodule', 'quasi-nodule']
-        mapped_name = config.CLASS_DICT[obj.find(config.ANCHOR.CLASS_KEY).text]
-        if mapped_name in restrict_name_list:
-            bbox = obj.find(config.ANCHOR.BNDBOX_KEY)
-            coord_list = [float(bbox.find(key).text) for key in config.ANCHOR.BNDBOX_KEY_LIST]
-            # add 'prob' keyword, the corresponding Anchor.attr_dict['prob'] = 1. for ground truth labels
-            values = coord_list + values + value_list
-            keys = config.ANCHOR.BNDBOX_KEY_LIST + config.ANCHOR.KEY_LIST + key_list
-            anchor = Anchor(coord_list, values, keys)
-            anchor.attr_dict[config.ANCHOR.CLASS_KEY] = config.CLASS_DICT[anchor.attr_dict[config.ANCHOR.CLASS_KEY]]
-            anchor_list.append(anchor)
+        try:
+            mapped_name = config.CLASS_DICT[obj.find(config.ANCHOR.CLASS_KEY).text]
+            if mapped_name in restrict_name_list:
+                bbox = obj.find(config.ANCHOR.BNDBOX_KEY)
+                coord_list = [float(bbox.find(key).text) for key in config.ANCHOR.BNDBOX_KEY_LIST]
+                # add 'prob' keyword, the corresponding Anchor.attr_dict['prob'] = 1. for ground truth labels
+                values = coord_list + values + value_list
+                keys = config.ANCHOR.BNDBOX_KEY_LIST + config.ANCHOR.KEY_LIST + key_list
+                anchor = Anchor(coord_list, values, keys)
+                anchor.attr_dict[config.ANCHOR.CLASS_KEY] = config.CLASS_DICT[anchor.attr_dict[config.ANCHOR.CLASS_KEY]]
+                anchor_list.append(anchor)
+        except:
+            print "config.CLASS_DICT doesn't contain labeled class %s" %(obj.find(config.ANCHOR.CLASS_KEY).text)
+
     return anchor_list
 
 def read_xml_anchor_multi_classes(config, xml_path, value_list, key_list, restrict_name_list=None):

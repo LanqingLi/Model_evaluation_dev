@@ -1,7 +1,9 @@
 # 模型组评分系统说明
 
-目前最新的0.1.6版本涵盖了肺部、脑部两个模块，并修改了common.custom_metric中的ClassificationMetric,将多分类指标
-按类别存成list列表，并兼容了泛化后的objmatch 0.0.2版本
+目前最新的0.2.1 - 0.2.2版本涵盖了肺部、脑部、心脏钙化积分三个模块，并修改了common.custom_metric中的ClassificationMetric,将多分类指标
+按类别存成list列表，并兼容了泛化后的objmatch 0.0.4版本
+
+0.2.3版本涵盖了多模型ensemble预测的功能，通过在evaluator中添加if_ensemble开关实现，对应objmatch　0.0.5版本(由于采用类似模型投票机制，需要修改最底层object匹配算法，故在find_objects.py中添加了find_objects_ensemble函数在if_ensemble=True时替代原有的find_objects函数)
 
 运行肺、心脏、脑部、胸腔等各项目的具体流程请见各项目子文件夹的README.md
 
@@ -9,7 +11,7 @@
 
 objmatch: networkx <= 2.0
 
-model_eval: pandas >= 0.22.0, pandas != 0.23.0, opencv-python >= 3.3.0.10, matplotlib<=2.1.1
+model_eval: pandas >= 0.22.0, pandas != 0.23.0, opencv-python >= 3.3.0.10, matplotlib<=2.1.1，objmatch >= 0.0.5
 
 ## 超参数调整
 
@@ -48,6 +50,5 @@ python ROC_plot.py
 
 ##　注意事项
 
-- 在测试过程中，发现较新的matplotlib(2.2.0)在画图时不允许出现x坐标相同的两个不同点，而目前开发的版本的tools.plot中为了画阶跃的ROC、RP曲线
-是会出现这种情况的，故要求matplotlib版本<=2.1.1
+- 在测试过程中，发现较新的matplotlib(2.2.0)在画图时不允许出现x坐标相同的两个不同点，而目前开发的版本的tools.plot中为了画阶跃的ROC、RP曲线是会出现这种情况的，故要求matplotlib版本<=2.1.1
 

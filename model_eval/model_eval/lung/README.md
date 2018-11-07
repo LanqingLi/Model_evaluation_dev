@@ -1,9 +1,12 @@
 # 模型组评分系统肺部CT模块说明
 
-版本号：0.1.6
+版本号：0.2.3
 
-该模块主要功能是对肺部CT项目的模型输出以及后处理算法(find_nodules, 封装在公司pypi源的objmatch中)进行评估，用以筛选最优模型。目前版本的
-主要功能是针对肺结节检出、分类的模型（Faster RCNN/SSD）,将模型输出的2D层面的框匹配成3D的结节，并统计其分类检出的tp、fp、fscore等指标，画出RP曲线。
+该模块主要功能是对肺部CT项目的模型输出以及后处理算法(find_nodules, 后泛化为find_objects, 封装在公司pypi源的objmatch中)进行评估,
+用以筛选最优模型。目前版本的主要功能是针对肺结节检出、分类的模型（Faster RCNN/SSD）,将模型输出的2D层面的框匹配成3D的结节，并统计其分类检出的
+tp、fp、fscore等指标，画出RP曲线。
+
+最新的0.2.3版本涵盖了多模型ensemble预测的功能，通过在evaluator中添加if_ensemble开关实现，对应objmatch　0.0.5版本(由于采用类似模型投票机制，需要修改最底层object匹配算法，故在find_objects.py中添加了find_objects_ensemble函数在if_ensemble=True时替代原有的find_objects函数)
 
 ## 环境安装
 
@@ -63,8 +66,8 @@
 ## 文件说明
 evaluator.py:　模型评估的主要功能实现 
 
-- 目的：统计多阈值下模型分类检出的效果，并进行综合评分及筛选最优阈值，画出RP曲线；对结节匹配算法find_nodules(已封装在公司内部的pypi源的python package
-objmatch.find_nodules中)进行测试
+- 目的：统计多阈值下模型分类检出的效果，并进行综合评分及筛选最优阈值，画出RP曲线；对结节匹配算法find_objects(已封装在公司内部的pypi源的python package
+objmatch.find_objects中)进行测试
 
 - 具体操作：读取检出模型（Faster-RCNN/SSD）输出的anchor boxes（默认读取格式为.json,可支持的数据文件格式为_predict.json/_predict.npy),以及
 人工标记的ground truth label的.xml文件，经过conf_thresh的阈值筛选后，调用get_df_nodules.py(./post_process/get_df_nodules.py)进行
@@ -99,6 +102,19 @@ config.py: 定义了评估系统相关参数的配置参数类,默认值都是�
     CONF_THRESHOLD:evaluator中筛选检出框/结节的softmax置信度概率阈值
     
 ## 函数说明
+LungNoduleAnchorEvaluatorOffline类（从0.2.0版本开始，为了兼容未来匹配对象(目前仅有2D输出框)更多属性的统计需求(见https://git.infervision.com/T2474)，
+将anchor封装成了一个类，定义在objmatch/object.py中，在评估系统读入数据和预处理时会自动处理anchor所有的关键词(self.key_list)和属性信息(self.attr_dict)，
+避免了针对每一个新的需求都要手动完整修改一遍读入.xml等的io,预处理代码.从0.2.3版本开始，该类的所有函数涵盖了多模型ensemble加权预测的功能，会调用
+objmatch.find_objects.find_objects_ensemble()）
+
+- multi_class_evaluation: 多分类模型评分,先用阈值筛选框之后再进行结节匹配;
+
+- multi_class_evaluation_nodule_threshold: 多分类模型评分，先进行结节匹配再用阈值筛选结节，结节置信度概率为最高层面的概率值;
+
+- binary_class_evaluation: 二分类(检出)模型评分，先用阈值筛选框之后再进行结节匹配
+
+- binary_class_evaluation_nodule_threshold: 二分类(检出)模型评分，先进行结节匹配再用阈值筛选结节，结节置信度概率为最高层面的概率值
+
 LungNoduleEvaluatorOffline类（肺结节模型评估）：
 
 - multi_class_evaluation: 多分类模型评分,先用阈值筛选框之后再进行结节匹配

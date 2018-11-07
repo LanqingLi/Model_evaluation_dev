@@ -51,7 +51,7 @@ class LungNoduleAnchorEvaluatorOffline(object):
                  conf_thresh = np.linspace(0.1, 0.9, num=9).tolist(), fscore_beta = 1.,
                  same_box_threshold_pred = np.array([1.6, 1.6]), same_box_threshold_gt = np.array([0., 0.]),
                  score_threshold_pred = 0.6, score_threshold_gt = 0.4, if_nodule_threshold = False, thickness_thresh = 0.,
-                 key_list = [], class_key = [], matched_key_list = [],
+                 key_list = [], class_key = '', matched_key_list = [],
                  cls_focus_priority_array = {"mass": 6,
                                             "calcific nodule": 5,
                                             "solid nodule": 4,
@@ -67,7 +67,8 @@ class LungNoduleAnchorEvaluatorOffline(object):
                                                 "5GGN": 3,
                                                 "GGN": 3,
                                                 "0-5GGN": 2,
-                                                "0-3nodule": 1}):
+                                                "0-3nodule": 1},
+                 if_ensemble=False, model_weight_list=[1], model_conf_list=[1], obj_freq_thresh=None, model_list=[]):
         self.config = LungConfig(cls_label_xls_path=cls_label_xls_path)
         assert os.path.isdir(data_dir), 'must initialize it with a valid directory of bbox data'
         self.data_dir = data_dir
@@ -109,6 +110,9 @@ class LungNoduleAnchorEvaluatorOffline(object):
         self.z_threshold_gt = self.config.CLASS_Z_THRESHOLD_GT
         self.gt_cls_z_threshold_gt = self.config.GT_CLASS_Z_THRESHOLD_GT
         self.if_nodule_threshold = if_nodule_threshold
+        self.model_weight_list = model_weight_list
+        self.model_cof_list = model_conf_list
+        self.obj_freq_thresh = obj_freq_thresh
 
         self.thickness_thresh = thickness_thresh
         self.nodule_compare_thresh = self.config.TEST.OBJECT_COMPARE_THRESHOLD
@@ -121,15 +125,24 @@ class LungNoduleAnchorEvaluatorOffline(object):
         self.class_key = class_key
         self.matched_key_list = matched_key_list
 
+        # whether make prediction based on output of a model ensemble or a single model
+        self.if_ensemble = if_ensemble
+
+        if len(model_list) == 0:
+            self.model_list = os.listdir(self.data_dir)
+        else:
+            self.model_list = model_list
+
     # 多分类模型评分,每次只选取单类别的检出框，把其余所有类别作为负样本。
     def multi_class_evaluation(self):
 
-        predict_df_boxes_dict, ground_truth_boxes_dict, _ = self.load_data()
         self.count_df = pd.DataFrame(
             columns=['class', 'threshold', 'nodule_count', 'tp_count', 'fp_count', 'fn_count',
                      'accuracy', 'recall', 'precision',
                      'fp/tp', self.score_type])
         self.opt_thresh = {}
+
+        predict_df_boxes_dict, ground_truth_boxes_dict, _ = self.load_data()
 
         # 为了画ROC曲线做模型评分，我们取0.1到1的多个阈值并对predict_df_boxes做筛选
         for thresh in self.conf_thresh:
@@ -146,73 +159,152 @@ class LungNoduleAnchorEvaluatorOffline(object):
                 self.nodule_count = 0.
                 for index, key in enumerate(predict_df_boxes_dict):
                     self.patient_list.append(key)
-                    predict_df_boxes = predict_df_boxes_dict[key]
-                    ground_truth_boxes = ground_truth_boxes_dict[key]
+                    print ('nodule class: %s' % cls)
+                    print ('processing %s' % key)
 
-                    print ('nodule class: %s' %cls)
-                    print ('processing %s' %key)
+                    if self.if_ensemble:
+                        predict_df_boxes_list = predict_df_boxes_dict[key]
+                        ground_truth_boxes = ground_truth_boxes_dict[key]
+                        filtered_predict_boxes_list = []
 
-                    #　筛选probability超过规定阈值且预测为规定类别的框输入get_nodule_stat
-                    if not predict_df_boxes_dict[key].empty:
-                        filtered_predict_boxes = predict_df_boxes[predict_df_boxes["class"] == cls]
-                        print filtered_predict_boxes
-                        filtered_predict_boxes = filtered_predict_boxes[filtered_predict_boxes["prob"] >= thresh]
-                        filtered_predict_boxes = filtered_predict_boxes.reset_index(drop=True)
-                    else:
-                        filtered_predict_boxes = pd.DataFrame({'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                                                 'class': [], 'prob': [], 'mask': []})
+                        for model_idx, _ in enumerate(predict_df_boxes_list):
+                            # 　筛选probability超过规定阈值且预测为规定类别的框输入get_nodule_stat
+                            if not predict_df_boxes_list[model_idx].empty:
+                                filtered_predict_boxes_list.append(predict_df_boxes_list[model_idx][predict_df_boxes_list[model_idx]["class"] == cls])
+                                print filtered_predict_boxes_list[model_idx]
+                                filtered_predict_boxes_list[model_idx] = filtered_predict_boxes_list[model_idx][filtered_predict_boxes_list[model_idx]["prob"] >= thresh]
+                                filtered_predict_boxes_list[model_idx] = filtered_predict_boxes_list[model_idx].reset_index(drop=True)
+                            else:
+                                filtered_predict_boxes_list.append(pd.DataFrame(
+                                    {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
+                                     'class': [], 'prob': [], 'mask': []}))
 
-                    if not ground_truth_boxes_dict[key].empty:
-                        filtered_gt_boxes = ground_truth_boxes[ground_truth_boxes["class"] == cls]
+                        if not ground_truth_boxes_dict[key].empty:
+                            filtered_gt_boxes = ground_truth_boxes[ground_truth_boxes["class"] == cls]
+                            print filtered_gt_boxes
+                            filtered_gt_boxes = filtered_gt_boxes[filtered_gt_boxes["prob"] >= thresh]
+                            filtered_gt_boxes = filtered_gt_boxes.reset_index(drop=True)
+                        else:
+                            filtered_gt_boxes = filtered_gt_boxes.append(pd.DataFrame(
+                                {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
+                                 'class': [], 'prob': [], 'mask': []}))
+
+                        # 将模型预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
+                        print "predict_boxes:"
+                        print filtered_predict_boxes_list
+                        _, cls_predict_df = get_object_stat(
+                            hu_img_array=None,
+                            slice_object_list=filtered_predict_boxes_list,
+                            img_spacing=None,
+                            prefix=key,
+                            classes=self.cls_name,
+                            same_box_threshold=self.same_box_threshold_pred,
+                            score_threshold=self.score_threshold_pred,
+                            z_threshold=self.z_threshold_pred,
+                            nodule_cls_weights=self.nodule_cls_weights,
+                            if_dicom=False,
+                            focus_priority_array=self.cls_focus_priority_array,
+                            skip_init=True,
+                            key_list=self.key_list,
+                            class_key=self.class_key,
+                            matched_key_list=self.matched_key_list,
+                            if_ensemble=self.if_ensemble,
+                            model_weight_list=self.model_weight_list,
+                            model_conf_list=self.model_cof_list,
+                            obj_freq_thresh=self.obj_freq_thresh)
+                        print "predict_nodules:"
+                        print cls_predict_df
+
+                        print "gt_boxes:"
                         print filtered_gt_boxes
-                        filtered_gt_boxes = filtered_gt_boxes[filtered_gt_boxes["prob"] >= thresh]
-                        filtered_gt_boxes = filtered_gt_boxes.reset_index(drop=True)
+                        _, cls_gt_df = get_object_stat(
+                            hu_img_array=None,
+                            slice_object_list=filtered_gt_boxes,
+                            img_spacing=None,
+                            prefix=key,
+                            classes=self.cls_name,
+                            same_box_threshold=self.same_box_threshold_gt,
+                            score_threshold=self.score_threshold_gt,
+                            z_threshold=self.z_threshold_gt,
+                            nodule_cls_weights=self.nodule_cls_weights,
+                            if_dicom=False,
+                            focus_priority_array=self.cls_focus_priority_array,
+                            skip_init=True,
+                            key_list=self.key_list,
+                            class_key=self.class_key,
+                            matched_key_list=self.matched_key_list)
+                        print "gt_nodules:"
+                        print cls_gt_df
+
                     else:
-                        filtered_gt_boxes = pd.DataFrame({'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                                                 'class': [], 'prob': [], 'mask': []})
+                        predict_df_boxes = predict_df_boxes_dict[key]
+                        ground_truth_boxes = ground_truth_boxes_dict[key]
 
-                    #　将模型预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
-                    print "predict_boxes:"
-                    print filtered_predict_boxes
-                    _, cls_predict_df = get_object_stat(
-                                             hu_img_array=None,
-                                             slice_object_list=filtered_predict_boxes,
-                                             img_spacing=None,
-                                             prefix=key,
-                                             classes=self.cls_name,
-                                             same_box_threshold=self.same_box_threshold_pred,
-                                             score_threshold=self.score_threshold_pred,
-                                             z_threshold=self.z_threshold_pred,
-                                             nodule_cls_weights=self.nodule_cls_weights,
-                                             if_dicom=False,
-                                             focus_priority_array=self.cls_focus_priority_array,
-                                             skip_init=True,
-                                             key_list=self.key_list,
-                                             class_key=self.class_key,
-                                             matched_key_list=self.matched_key_list)
-                    print "predict_nodules:"
-                    print cls_predict_df
 
-                    print "gt_boxes:"
-                    print filtered_gt_boxes
-                    _, cls_gt_df = get_object_stat(
-                                                 hu_img_array=None,
-                                                 slice_object_list=filtered_gt_boxes,
-                                                 img_spacing=None,
-                                                 prefix=key,
-                                                 classes=self.cls_name,
-                                                 same_box_threshold=self.same_box_threshold_gt,
-                                                 score_threshold=self.score_threshold_gt,
-                                                 z_threshold=self.z_threshold_gt,
-                                                 nodule_cls_weights=self.nodule_cls_weights,
-                                                 if_dicom=False,
-                                                 focus_priority_array=self.cls_focus_priority_array,
-                                                 skip_init=True,
-                                                 key_list=self.key_list,
-                                                 class_key=self.class_key,
-                                                 matched_key_list=self.matched_key_list)
-                    print "gt_nodules:"
-                    print cls_gt_df
+
+                        # 　筛选probability超过规定阈值且预测为规定类别的框输入get_nodule_stat
+                        if not predict_df_boxes_dict[key].empty:
+                            filtered_predict_boxes = predict_df_boxes[predict_df_boxes["class"] == cls]
+                            print filtered_predict_boxes
+                            filtered_predict_boxes = filtered_predict_boxes[filtered_predict_boxes["prob"] >= thresh]
+                            filtered_predict_boxes = filtered_predict_boxes.reset_index(drop=True)
+                        else:
+                            filtered_predict_boxes = pd.DataFrame(
+                                {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
+                                 'class': [], 'prob': [], 'mask': []})
+
+                        if not ground_truth_boxes_dict[key].empty:
+                            filtered_gt_boxes = ground_truth_boxes[ground_truth_boxes["class"] == cls]
+                            print filtered_gt_boxes
+                            filtered_gt_boxes = filtered_gt_boxes[filtered_gt_boxes["prob"] >= thresh]
+                            filtered_gt_boxes = filtered_gt_boxes.reset_index(drop=True)
+                        else:
+                            filtered_gt_boxes = pd.DataFrame(
+                                {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
+                                 'class': [], 'prob': [], 'mask': []})
+
+                        # 将模型预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
+                        print "predict_boxes:"
+                        print filtered_predict_boxes
+                        _, cls_predict_df = get_object_stat(
+                            hu_img_array=None,
+                            slice_object_list=filtered_predict_boxes,
+                            img_spacing=None,
+                            prefix=key,
+                            classes=self.cls_name,
+                            same_box_threshold=self.same_box_threshold_pred,
+                            score_threshold=self.score_threshold_pred,
+                            z_threshold=self.z_threshold_pred,
+                            nodule_cls_weights=self.nodule_cls_weights,
+                            if_dicom=False,
+                            focus_priority_array=self.cls_focus_priority_array,
+                            skip_init=True,
+                            key_list=self.key_list,
+                            class_key=self.class_key,
+                            matched_key_list=self.matched_key_list)
+                        print "predict_nodules:"
+                        print cls_predict_df
+
+                        print "gt_boxes:"
+                        print filtered_gt_boxes
+                        _, cls_gt_df = get_object_stat(
+                            hu_img_array=None,
+                            slice_object_list=filtered_gt_boxes,
+                            img_spacing=None,
+                            prefix=key,
+                            classes=self.cls_name,
+                            same_box_threshold=self.same_box_threshold_gt,
+                            score_threshold=self.score_threshold_gt,
+                            z_threshold=self.z_threshold_gt,
+                            nodule_cls_weights=self.nodule_cls_weights,
+                            if_dicom=False,
+                            focus_priority_array=self.cls_focus_priority_array,
+                            skip_init=True,
+                            key_list=self.key_list,
+                            class_key=self.class_key,
+                            matched_key_list=self.matched_key_list)
+                        print "gt_nodules:"
+                        print cls_gt_df
 
                     cls_predict_df = cls_predict_df.reset_index(drop=True)
                     cls_predict_df_list.append(json_df_2_df(cls_predict_df))
@@ -223,52 +315,54 @@ class LungNoduleAnchorEvaluatorOffline(object):
                     self.nodule_count += len(cls_predict_df.index)
 
                 # convert pandas dataframe to list of class labels
-                cls_pred_labels, cls_gt_labels = df_to_cls_label(cls_predict_df_list, cls_gt_df_list, self.cls_name, thresh=self.nodule_compare_thresh)
+                cls_pred_labels, cls_gt_labels = df_to_cls_label(cls_predict_df_list, cls_gt_df_list, self.cls_name,
+                                                                 thresh=self.nodule_compare_thresh)
 
                 # initialize ClassificationMetric class and update with ground truth/predict labels
-                cls_metric = ClassificationMetric(cls_num=len(self.cls_name)-1, if_binary=True, pos_cls_fusion=False)
+                cls_metric = ClassificationMetric(cls_num=len(self.cls_name) - 1, if_binary=True,
+                                                  pos_cls_fusion=False)
 
                 cls_metric.update(cls_gt_labels, cls_pred_labels, i_cls)
 
-                if cls_metric.tp[i_cls-1] == 0:
+                if cls_metric.tp[i_cls - 1] == 0:
                     fp_tp = np.nan
                 else:
-                    fp_tp = cls_metric.fp[i_cls-1] / cls_metric.tp[i_cls-1]
+                    fp_tp = cls_metric.fp[i_cls - 1] / cls_metric.tp[i_cls - 1]
 
                 self.count_df = self.count_df.append({'class': cls,
                                                       'threshold': thresh,
                                                       'nodule_count': self.nodule_count,
-                                                      'tp_count': cls_metric.tp[i_cls-1],
-                                                      'fp_count': cls_metric.fp[i_cls-1],
-                                                      'fn_count': cls_metric.fn[i_cls-1],
+                                                      'tp_count': cls_metric.tp[i_cls - 1],
+                                                      'fp_count': cls_metric.fp[i_cls - 1],
+                                                      'fn_count': cls_metric.fn[i_cls - 1],
                                                       'accuracy': cls_metric.get_acc(i_cls),
                                                       'recall': cls_metric.get_rec(i_cls),
                                                       'precision': cls_metric.get_prec(i_cls),
                                                       'fp/tp': fp_tp,
-                                                      self.score_type: cls_metric.get_fscore(cls_label=i_cls, beta=self.fscore_beta)},
-                                                      ignore_index = True)
+                                                      self.score_type: cls_metric.get_fscore(cls_label=i_cls,
+                                                                                             beta=self.fscore_beta)},
+                                                     ignore_index=True)
 
                 # find the optimal threshold
                 if cls not in self.opt_thresh:
 
                     self.opt_thresh[cls] = self.count_df.iloc[-1]
 
-
                     self.opt_thresh[cls]["threshold"] = thresh
 
                 else:
                     # we choose the optimal threshold corresponding to the one that gives the highest model score
                     if self.count_df.iloc[-1][self.score_type] > self.opt_thresh[cls][self.score_type]:
-
                         self.opt_thresh[cls] = self.count_df.iloc[-1]
                         self.opt_thresh[cls]["threshold"] = thresh
 
                 self.cls_value['accuracy'].append(cls_metric.get_acc(i_cls))
                 self.cls_value['recall'].append(cls_metric.get_rec(i_cls))
                 self.cls_value['precision'].append(cls_metric.get_prec(i_cls))
-                self.cls_value[self.score_type].append(cls_metric.get_fscore(cls_label=i_cls, beta=self.fscore_beta))
+                self.cls_value[self.score_type].append(
+                    cls_metric.get_fscore(cls_label=i_cls, beta=self.fscore_beta))
 
-            #增加多类别加权平均的结果
+            # 增加多类别加权平均的结果
             self.count_df = self.count_df.append({'class': 'average',
                                                   'threshold': thresh,
                                                   'tp_count': np.nan,
@@ -276,10 +370,13 @@ class LungNoduleAnchorEvaluatorOffline(object):
                                                   'fn_count': np.nan,
                                                   'accuracy': cls_avg(self.cls_weight, self.cls_value['accuracy']),
                                                   'recall': cls_avg(self.cls_weight, self.cls_value['recall']),
-                                                  'precision': cls_avg(self.cls_weight, self.cls_value['precision']),
+                                                  'precision': cls_avg(self.cls_weight,
+                                                                       self.cls_value['precision']),
                                                   'fp/tp': np.nan,
-                                                  self.score_type: cls_avg(self.cls_weight, self.cls_value[self.score_type])},
-                                                  ignore_index=True)
+                                                  self.score_type: cls_avg(self.cls_weight,
+                                                                           self.cls_value[self.score_type])},
+                                                 ignore_index=True)
+
         self.count_df = self.count_df.sort_values(['class', 'threshold'])
 
         self.cls_weight = []
@@ -334,77 +431,154 @@ class LungNoduleAnchorEvaluatorOffline(object):
                 self.nodule_count = 0.
                 for index, key in enumerate(predict_df_boxes_dict):
                     self.patient_list.append(key)
-                    predict_df_boxes = predict_df_boxes_dict[key]
-                    ground_truth_boxes = ground_truth_boxes_dict[key]
+
 
                     print ('nodule class: %s' % cls)
                     print ('processing %s' % key)
 
-                    # 　筛选probability超过规定阈值且预测为规定类别的框输入get_nodule_stat
-                    if not predict_df_boxes_dict[key].empty:
-                        filtered_predict_boxes = predict_df_boxes[predict_df_boxes["class"] == cls]
-                        print filtered_predict_boxes
-                        filtered_predict_boxes = filtered_predict_boxes.reset_index(drop=True)
-                    else:
-                        filtered_predict_boxes = pd.DataFrame(
-                            {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                             'class': [], 'prob': [], 'mask': []})
+                    if self.if_ensemble:
+                        predict_df_boxes_list = predict_df_boxes_dict[key]
+                        ground_truth_boxes = ground_truth_boxes_dict[key]
+                        filtered_predict_boxes_list = []
 
-                    if not ground_truth_boxes_dict[key].empty:
-                        filtered_gt_boxes = ground_truth_boxes[ground_truth_boxes["class"] == cls]
+                        for model_idx, _ in enumerate(predict_df_boxes_list):
+                            # 　筛选probability超过规定阈值且预测为规定类别的框输入get_nodule_stat
+                            if not predict_df_boxes_list[model_idx].empty:
+                                filtered_predict_boxes_list.append(predict_df_boxes_list[model_idx][predict_df_boxes_list[model_idx]["class"] == cls])
+                                print filtered_predict_boxes_list[model_idx]
+                                #filtered_predict_boxes_list[model_idx] = filtered_predict_boxes_list[model_idx][filtered_predict_boxes_list[model_idx]["prob"] >= thresh]
+                                filtered_predict_boxes_list[model_idx] = filtered_predict_boxes_list[model_idx].reset_index(drop=True)
+                            else:
+                                filtered_predict_boxes_list.append(pd.DataFrame(
+                                    {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
+                                     'class': [], 'prob': [], 'mask': []}))
+
+                        if not ground_truth_boxes_dict[key].empty:
+                            filtered_gt_boxes = ground_truth_boxes[ground_truth_boxes["class"] == cls]
+                            print filtered_gt_boxes
+                            #filtered_gt_boxes = filtered_gt_boxes[filtered_gt_boxes["prob"] >= thresh]
+                            filtered_gt_boxes = filtered_gt_boxes.reset_index(drop=True)
+                        else:
+                            filtered_gt_boxes = filtered_gt_boxes.append(pd.DataFrame(
+                                {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
+                                 'class': [], 'prob': [], 'mask': []}))
+
+                        # 将模型预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
+                        print "predict_boxes:"
+                        print filtered_predict_boxes_list
+                        _, cls_predict_df = get_object_stat(
+                            hu_img_array=None,
+                            slice_object_list=filtered_predict_boxes_list,
+                            img_spacing=None,
+                            prefix=key,
+                            classes=self.cls_name,
+                            same_box_threshold=self.same_box_threshold_pred,
+                            score_threshold=self.score_threshold_pred,
+                            z_threshold=self.z_threshold_pred,
+                            nodule_cls_weights=self.nodule_cls_weights,
+                            if_dicom=False,
+                            focus_priority_array=self.cls_focus_priority_array,
+                            skip_init=True,
+                            key_list=self.key_list,
+                            class_key=self.class_key,
+                            matched_key_list=self.matched_key_list,
+                            if_ensemble=self.if_ensemble,
+                            model_weight_list=self.model_weight_list,
+                            model_conf_list=self.model_cof_list,
+                            obj_freq_thresh=self.obj_freq_thresh)
+                        print "predict_nodules:"
+                        print cls_predict_df
+
+                        print "gt_boxes:"
                         print filtered_gt_boxes
-                        filtered_gt_boxes = filtered_gt_boxes.reset_index(drop=True)
+                        _, cls_gt_df = get_object_stat(
+                            hu_img_array=None,
+                            slice_object_list=filtered_gt_boxes,
+                            img_spacing=None,
+                            prefix=key,
+                            classes=self.cls_name,
+                            same_box_threshold=self.same_box_threshold_gt,
+                            score_threshold=self.score_threshold_gt,
+                            z_threshold=self.z_threshold_gt,
+                            nodule_cls_weights=self.nodule_cls_weights,
+                            if_dicom=False,
+                            focus_priority_array=self.cls_focus_priority_array,
+                            skip_init=True,
+                            key_list=self.key_list,
+                            class_key=self.class_key,
+                            matched_key_list=self.matched_key_list)
+                        print "gt_nodules:"
+                        print cls_gt_df
+
                     else:
-                        filtered_gt_boxes = pd.DataFrame(
-                            {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                             'class': [], 'prob': [], 'mask': []})
-
-                    # 将模型预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
-                    print "predict_boxes:"
-                    print filtered_predict_boxes
-                    _, cls_predict_df = get_object_stat(
-                                                        hu_img_array=None,
-                                                        slice_object_list=filtered_predict_boxes,
-                                                        img_spacing=None,
-                                                        prefix=key,
-                                                        classes=self.cls_name,
-                                                        same_box_threshold=self.same_box_threshold_pred,
-                                                        score_threshold=self.score_threshold_pred,
-                                                        z_threshold=self.z_threshold_pred,
-                                                        nodule_cls_weights=self.nodule_cls_weights,
-                                                        if_dicom=False,
-                                                        focus_priority_array=self.cls_focus_priority_array,
-                                                        skip_init=True,
-                                                        key_list=self.key_list,
-                                                        class_key=self.class_key,
-                                                        matched_key_list=self.matched_key_list)
-
-                    print "predict_nodules:"
-                    print cls_predict_df
-
-                    print "gt_boxes:"
-                    print filtered_gt_boxes
-
-                    _, cls_gt_df = get_object_stat(
-                                                   hu_img_array=None,
-                                                   slice_object_list=filtered_gt_boxes,
-                                                   img_spacing=None,
-                                                   prefix=key,
-                                                   classes=self.cls_name,
-                                                   same_box_threshold=self.same_box_threshold_gt,
-                                                   score_threshold=self.score_threshold_gt,
-                                                   z_threshold=self.z_threshold_gt,
-                                                   nodule_cls_weights=self.nodule_cls_weights,
-                                                   if_dicom=False,
-                                                   focus_priority_array=self.cls_focus_priority_array,
-                                                   skip_init=True,
-                                                   key_list = self.key_list,
-                                                   class_key = self.class_key,
-                                                   matched_key_list=self.matched_key_list)
+                        predict_df_boxes = predict_df_boxes_dict[key]
+                        ground_truth_boxes = ground_truth_boxes_dict[key]
 
 
-                    print "gt_nodules:"
-                    print cls_gt_df
+
+                        # 　筛选probability超过规定阈值且预测为规定类别的框输入get_nodule_stat
+                        if not predict_df_boxes_dict[key].empty:
+                            filtered_predict_boxes = predict_df_boxes[predict_df_boxes["class"] == cls]
+                            print filtered_predict_boxes
+                            #filtered_predict_boxes = filtered_predict_boxes[filtered_predict_boxes["prob"] >= thresh]
+                            filtered_predict_boxes = filtered_predict_boxes.reset_index(drop=True)
+                        else:
+                            filtered_predict_boxes = pd.DataFrame(
+                                {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
+                                 'class': [], 'prob': [], 'mask': []})
+
+                        if not ground_truth_boxes_dict[key].empty:
+                            filtered_gt_boxes = ground_truth_boxes[ground_truth_boxes["class"] == cls]
+                            print filtered_gt_boxes
+                            #filtered_gt_boxes = filtered_gt_boxes[filtered_gt_boxes["prob"] >= thresh]
+                            filtered_gt_boxes = filtered_gt_boxes.reset_index(drop=True)
+                        else:
+                            filtered_gt_boxes = pd.DataFrame(
+                                {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
+                                 'class': [], 'prob': [], 'mask': []})
+
+                        # 将模型预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
+                        print "predict_boxes:"
+                        print filtered_predict_boxes
+                        _, cls_predict_df = get_object_stat(
+                            hu_img_array=None,
+                            slice_object_list=filtered_predict_boxes,
+                            img_spacing=None,
+                            prefix=key,
+                            classes=self.cls_name,
+                            same_box_threshold=self.same_box_threshold_pred,
+                            score_threshold=self.score_threshold_pred,
+                            z_threshold=self.z_threshold_pred,
+                            nodule_cls_weights=self.nodule_cls_weights,
+                            if_dicom=False,
+                            focus_priority_array=self.cls_focus_priority_array,
+                            skip_init=True,
+                            key_list=self.key_list,
+                            class_key=self.class_key,
+                            matched_key_list=self.matched_key_list)
+                        print "predict_nodules:"
+                        print cls_predict_df
+
+                        print "gt_boxes:"
+                        print filtered_gt_boxes
+                        _, cls_gt_df = get_object_stat(
+                            hu_img_array=None,
+                            slice_object_list=filtered_gt_boxes,
+                            img_spacing=None,
+                            prefix=key,
+                            classes=self.cls_name,
+                            same_box_threshold=self.same_box_threshold_gt,
+                            score_threshold=self.score_threshold_gt,
+                            z_threshold=self.z_threshold_gt,
+                            nodule_cls_weights=self.nodule_cls_weights,
+                            if_dicom=False,
+                            focus_priority_array=self.cls_focus_priority_array,
+                            skip_init=True,
+                            key_list=self.key_list,
+                            class_key=self.class_key,
+                            matched_key_list=self.matched_key_list)
+                        print "gt_nodules:"
+                        print cls_gt_df
 
                     cls_predict_df = cls_predict_df[cls_predict_df['Prob'] >= thresh]
                     cls_predict_df = cls_predict_df.reset_index(drop=True)
@@ -525,83 +699,180 @@ class LungNoduleAnchorEvaluatorOffline(object):
             for index, key in enumerate(predict_df_boxes_dict):
 
                 self.patient_list.append(key)
-                predict_df_boxes = predict_df_boxes_dict[key]
-                # gt_df_boxes = gt_df_boxes_dict[key]
 
                 print ('processing %s' % key)
 
-                # 　筛选probability超过规定阈值且预测为规定类别的框输入get_nodule_stat
-                if not predict_df_boxes_dict[key].empty:
-                    filtered_predict_boxes = predict_df_boxes[predict_df_boxes["prob"] >= thresh]
-                    filtered_predict_boxes = filtered_predict_boxes.reset_index(drop=True)
+                if self.if_ensemble:
+                    predict_df_boxes_list = predict_df_boxes_dict[key]
+                    ground_truth_boxes = gt_df_boxes_dict[key]
+                    filtered_predict_boxes_list = []
+
+                    for model_idx, _ in enumerate(predict_df_boxes_list):
+                        # 　筛选probability超过规定阈值且预测为规定类别的框输入get_nodule_stat
+                        if not predict_df_boxes_list[model_idx].empty:
+                            filtered_predict_boxes_list.append(
+                                predict_df_boxes_list[model_idx])
+                            #print filtered_predict_boxes_list[model_idx]
+                            filtered_predict_boxes_list[model_idx] = filtered_predict_boxes_list[model_idx][
+                                filtered_predict_boxes_list[model_idx]["prob"] >= thresh]
+                            filtered_predict_boxes_list[model_idx] = filtered_predict_boxes_list[model_idx].reset_index(
+                                drop=True)
+                        else:
+                            filtered_predict_boxes_list.append(pd.DataFrame(
+                                {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
+                                 'class': [], 'prob': [], 'mask': []}))
+
+                    if not gt_df_boxes_dict[key].empty:
+                        filtered_gt_boxes = ground_truth_boxes
+                        #print filtered_gt_boxes
+                        filtered_gt_boxes = filtered_gt_boxes[filtered_gt_boxes["prob"] >= thresh]
+                        filtered_gt_boxes = filtered_gt_boxes.reset_index(drop=True)
+                    else:
+                        filtered_gt_boxes = filtered_gt_boxes.append(pd.DataFrame(
+                            {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
+                             'class': [], 'prob': [], 'mask': []}))
+
+                    # 将模型预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
+                    print "predict_boxes:"
+                    print filtered_predict_boxes_list
+                    _, predict_df = get_object_stat(
+                        hu_img_array=None,
+                        slice_object_list=filtered_predict_boxes_list,
+                        img_spacing=None,
+                        prefix=key,
+                        classes=self.cls_name,
+                        same_box_threshold=self.same_box_threshold_pred,
+                        score_threshold=self.score_threshold_pred,
+                        z_threshold=self.z_threshold_pred,
+                        nodule_cls_weights=self.nodule_cls_weights,
+                        if_dicom=False,
+                        focus_priority_array=self.cls_focus_priority_array,
+                        skip_init=True,
+                        key_list=self.key_list,
+                        class_key=self.class_key,
+                        matched_key_list=self.matched_key_list,
+                        if_ensemble=self.if_ensemble,
+                        model_weight_list=self.model_weight_list,
+                        model_conf_list=self.model_cof_list,
+                        obj_freq_thresh=self.obj_freq_thresh)
+                    print "predict_nodules:"
+                    print predict_df
+
+                    self.nodule_count += len(predict_df)
+                    predict_df = predict_df.reset_index(drop=True)
+                    predict_df_list.append(json_df_2_df(predict_df))
+
+                    # 统计ground truth 结节信息
+                    gt_df_boxes_multi_classes = gt_df_boxes_multi_classes_dict[key]
+
+                    if not gt_df_boxes_dict[key].empty:
+                        filtered_gt_boxes_multi_classes = gt_df_boxes_multi_classes[
+                            gt_df_boxes_multi_classes["prob"] >= thresh]
+                        filtered_gt_boxes_multi_classes = filtered_gt_boxes_multi_classes.reset_index(drop=True)
+                        print "gt_boxes_multi_classes:"
+                        print filtered_gt_boxes_multi_classes
+                        _, gt_df_multi_classes = get_object_stat(hu_img_array=None,
+                                                                 slice_object_list=filtered_gt_boxes_multi_classes,
+                                                                 img_spacing=None,
+                                                                 prefix=key,
+                                                                 classes=self.gt_cls_name,
+                                                                 same_box_threshold=self.same_box_threshold_gt,
+                                                                 score_threshold=self.score_threshold_gt,
+                                                                 z_threshold=self.gt_cls_z_threshold_gt,
+                                                                 nodule_cls_weights=self.gt_cls_weights,
+                                                                 if_dicom=False,
+                                                                 focus_priority_array=self.gt_cls_focus_priority_array,
+                                                                 skip_init=True,
+                                                                 key_list=self.key_list,
+                                                                 class_key=self.class_key,
+                                                                 matched_key_list=self.matched_key_list)
+                        print 'gt_nodules_multi_classes:'
+                        print gt_df_multi_classes
+                        if len(gt_df_multi_classes) != 8:
+                            self.series_name.append(key)
+
+                    else:
+                        gt_df_multi_classes = pd.DataFrame({'Bndbox List': [], 'Object Id': [], 'Pid': key, 'Type': [],
+                                                            'SliceRange': [], 'Prob': [], 'Diameter': [],
+                                                            'CT_value': []})
+
+                    gt_df_multi_classes = gt_df_multi_classes.reset_index(drop=True)
+                    gt_df_multi_list.append(json_df_2_df(gt_df_multi_classes))
+
                 else:
-                    filtered_predict_boxes = pd.DataFrame(
-                        {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                         'class': [], 'prob': [], 'mask': []})
+                    predict_df_boxes = predict_df_boxes_dict[key]
 
-                # 　将预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
-                print "predict_boxes:"
-                print filtered_predict_boxes
-                _, predict_df = get_object_stat(hu_img_array=None,
-                                                slice_object_list=filtered_predict_boxes,
-                                                img_spacing=None,
-                                                prefix=key,
-                                                classes=self.cls_name,
-                                                same_box_threshold=self.same_box_threshold_pred,
-                                                score_threshold=self.score_threshold_pred,
-                                                z_threshold=self.z_threshold_pred,
-                                                nodule_cls_weights=self.nodule_cls_weights,
-                                                if_dicom=False,
-                                                focus_priority_array=self.cls_focus_priority_array,
-                                                skip_init=True,
-                                                key_list=self.key_list,
-                                                class_key=self.class_key,
-                                                matched_key_list=self.matched_key_list)
-                print "predict_nodules:"
-                print predict_df
+                    # 　筛选probability超过规定阈值且预测为规定类别的框输入get_nodule_stat
+                    if not predict_df_boxes_dict[key].empty:
+                        filtered_predict_boxes = predict_df_boxes.reset_index(drop=True)
+                    else:
+                        filtered_predict_boxes = pd.DataFrame(
+                            {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
+                             'class': [], 'prob': [], 'mask': []})
 
-
-                self.nodule_count += len(predict_df)
-                predict_df = predict_df.reset_index(drop=True)
-                predict_df_list.append(json_df_2_df(predict_df))
-
-
-                #统计ground truth 结节信息
-                gt_df_boxes_multi_classes = gt_df_boxes_multi_classes_dict[key]
-
-                if not gt_df_boxes_dict[key].empty:
-                    filtered_gt_boxes_multi_classes = gt_df_boxes_multi_classes[
-                        gt_df_boxes_multi_classes["prob"] >= thresh]
-                    filtered_gt_boxes_multi_classes = filtered_gt_boxes_multi_classes.reset_index(drop=True)
-                    print "gt_boxes_multi_classes:"
-                    print filtered_gt_boxes_multi_classes
-                    _, gt_df_multi_classes = get_object_stat(hu_img_array=None,
-                                                             slice_object_list=filtered_gt_boxes_multi_classes,
-                                                             img_spacing=None,
-                                                             prefix=key,
-                                                             classes=self.gt_cls_name,
-                                                             same_box_threshold=self.same_box_threshold_gt,
-                                                             score_threshold=self.score_threshold_gt,
-                                                             z_threshold=self.gt_cls_z_threshold_gt,
-                                                             nodule_cls_weights=self.gt_cls_weights,
-                                                             if_dicom=False,
-                                                             focus_priority_array=self.gt_cls_focus_priority_array,
-                                                             skip_init=True,
-                                                             key_list=self.key_list,
-                                                             class_key=self.class_key,
-                                                             matched_key_list=self.matched_key_list)
-                    print 'gt_nodules_multi_classes:'
-                    print gt_df_multi_classes
-                    if len(gt_df_multi_classes) != 8:
-                        self.series_name.append(key)
-
-                else:
-                    gt_df_multi_classes = pd.DataFrame({'Bndbox List': [], 'Object Id': [], 'Pid': key, 'Type': [],
-                               'SliceRange': [], 'Prob': [], 'Diameter': [], 'CT_value': []})
+                    # 　将预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
+                    print "predict_boxes:"
+                    print filtered_predict_boxes
+                    _, predict_df = get_object_stat(hu_img_array=None,
+                                                    slice_object_list=filtered_predict_boxes,
+                                                    img_spacing=None,
+                                                    prefix=key,
+                                                    classes=self.cls_name,
+                                                    same_box_threshold=self.same_box_threshold_pred,
+                                                    score_threshold=self.score_threshold_pred,
+                                                    z_threshold=self.z_threshold_pred,
+                                                    nodule_cls_weights=self.nodule_cls_weights,
+                                                    if_dicom=False,
+                                                    focus_priority_array=self.cls_focus_priority_array,
+                                                    skip_init=True,
+                                                    key_list=self.key_list,
+                                                    class_key=self.class_key,
+                                                    matched_key_list=self.matched_key_list)
+                    print "predict_nodules:"
+                    print predict_df
 
 
-                gt_df_multi_classes=gt_df_multi_classes.reset_index(drop=True)
-                gt_df_multi_list.append(json_df_2_df(gt_df_multi_classes))
+                    self.nodule_count += len(predict_df)
+                    predict_df = predict_df.reset_index(drop=True)
+                    predict_df_list.append(json_df_2_df(predict_df))
+
+
+                    #统计ground truth 结节信息
+                    gt_df_boxes_multi_classes = gt_df_boxes_multi_classes_dict[key]
+
+                    if not gt_df_boxes_dict[key].empty:
+                        filtered_gt_boxes_multi_classes = gt_df_boxes_multi_classes[
+                            gt_df_boxes_multi_classes["prob"] >= thresh]
+                        filtered_gt_boxes_multi_classes = filtered_gt_boxes_multi_classes.reset_index(drop=True)
+                        print "gt_boxes_multi_classes:"
+                        print filtered_gt_boxes_multi_classes
+                        _, gt_df_multi_classes = get_object_stat(hu_img_array=None,
+                                                                 slice_object_list=filtered_gt_boxes_multi_classes,
+                                                                 img_spacing=None,
+                                                                 prefix=key,
+                                                                 classes=self.gt_cls_name,
+                                                                 same_box_threshold=self.same_box_threshold_gt,
+                                                                 score_threshold=self.score_threshold_gt,
+                                                                 z_threshold=self.gt_cls_z_threshold_gt,
+                                                                 nodule_cls_weights=self.gt_cls_weights,
+                                                                 if_dicom=False,
+                                                                 focus_priority_array=self.gt_cls_focus_priority_array,
+                                                                 skip_init=True,
+                                                                 key_list=self.key_list,
+                                                                 class_key=self.class_key,
+                                                                 matched_key_list=self.matched_key_list)
+                        print 'gt_nodules_multi_classes:'
+                        print gt_df_multi_classes
+                        if len(gt_df_multi_classes) != 8:
+                            self.series_name.append(key)
+
+                    else:
+                        gt_df_multi_classes = pd.DataFrame({'Bndbox List': [], 'Object Id': [], 'Pid': key, 'Type': [],
+                                   'SliceRange': [], 'Prob': [], 'Diameter': [], 'CT_value': []})
+
+
+                    gt_df_multi_classes=gt_df_multi_classes.reset_index(drop=True)
+                    gt_df_multi_list.append(json_df_2_df(gt_df_multi_classes))
 
             summary_count_df = df_to_xlsx_file(predict_df_list,gt_df_multi_list,thresh=self.nodule_compare_thresh)
 
@@ -615,7 +886,9 @@ class LungNoduleAnchorEvaluatorOffline(object):
 
             recall = float(tp_count) / (tp_count + fn_count) if tp_count!=0 else 0
             fp_tp = float(fp_count) / tp_count if tp_count!=0 else np.nan
-            precision=float(tp_count)/(tp_count+fp_count) if tp_count!=0 else 0
+            precision = float(tp_count)/(tp_count+fp_count) if tp_count!=0 else 0
+            fscore = (1+self.fscore_beta**2)*recall*precision/(self.fscore_beta**2*precision+recall) \
+                        if (recall != 0 or precision != 0) else 0
 
             self.count_df = self.count_df.append({'class': 'nodule',
                                                   'threshold': thresh,
@@ -627,7 +900,7 @@ class LungNoduleAnchorEvaluatorOffline(object):
                                                   'recall': recall,
                                                   'precision': precision,
                                                   'fp/tp': fp_tp,
-                                                  self.score_type: (1+self.fscore_beta**2)*recall*precision/(self.fscore_beta**2*precision+recall)},
+                                                  self.score_type: fscore},
                                                  ignore_index=True)
 
             #统计不同结节的信息
@@ -695,6 +968,7 @@ class LungNoduleAnchorEvaluatorOffline(object):
         self.opt_thresh = {}
         self.summary_count_df = {}
         self.nodule_count = [0 for _ in self.conf_thresh]
+        self.series_name = []
 
         predict_df_list = []
         gt_df_multi_list = []
@@ -702,72 +976,155 @@ class LungNoduleAnchorEvaluatorOffline(object):
         for index, key in enumerate(predict_df_boxes_dict):
 
             self.patient_list.append(key)
-            predict_df_boxes = predict_df_boxes_dict[key]
 
             print ('processing %s' % key)
 
-            # 　筛选probability超过规定阈值且预测为规定类别的框输入get_nodule_stat
-            if not predict_df_boxes_dict[key].empty:
-                filtered_predict_boxes =predict_df_boxes.reset_index(drop=True)
+            if self.if_ensemble:
+                predict_df_boxes_list = predict_df_boxes_dict[key]
+                ground_truth_boxes = gt_df_boxes_dict[key]
+                filtered_predict_df_boxes_list = []
+
+                for model_idx, _ in enumerate(predict_df_boxes_list):
+                    # 　筛选probability超过规定阈值且预测为规定类别的框输入get_nodule_stat
+                    if not predict_df_boxes_list[model_idx].empty:
+                        filtered_predict_df_boxes_list.append(
+                            predict_df_boxes_list[model_idx])
+                        # print filtered_predict_boxes_list[model_idx]
+                        filtered_predict_df_boxes_list[model_idx] = filtered_predict_df_boxes_list[model_idx].reset_index(
+                            drop=True)
+                    else:
+                        filtered_predict_df_boxes_list.append(pd.DataFrame(
+                            {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
+                             'class': [], 'prob': [], 'mask': []}))
+
+                # if not gt_df_boxes_dict[key].empty:
+                #     # print filtered_gt_boxes
+                #     filtered_gt_boxes = ground_truth_boxes.reset_index(drop=True)
+                # else:
+                #     filtered_gt_boxes = pd.DataFrame(
+                #         {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
+                #          'class': [], 'prob': [], 'mask': []})
+
+                # 将模型预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
+                print "predict_boxes:"
+                print predict_df_boxes_list
+                _, predict_df = get_object_stat(
+                    hu_img_array=None,
+                    slice_object_list=filtered_predict_df_boxes_list,
+                    img_spacing=None,
+                    prefix=key,
+                    classes=self.cls_name,
+                    same_box_threshold=self.same_box_threshold_pred,
+                    score_threshold=self.score_threshold_pred,
+                    z_threshold=self.z_threshold_pred,
+                    nodule_cls_weights=self.nodule_cls_weights,
+                    if_dicom=False,
+                    focus_priority_array=self.cls_focus_priority_array,
+                    skip_init=True,
+                    key_list=self.key_list,
+                    class_key=self.class_key,
+                    matched_key_list=self.matched_key_list,
+                    if_ensemble=self.if_ensemble,
+                    model_weight_list=self.model_weight_list,
+                    model_conf_list=self.model_cof_list,
+                    obj_freq_thresh=self.obj_freq_thresh)
+                print "predict_nodules:"
+                print predict_df
+                for i, thresh in enumerate(self.conf_thresh):
+                    self.nodule_count[i] += len(predict_df[predict_df['Prob'] >= thresh])
+                predict_df = predict_df.reset_index(drop=True)
+                predict_df_list.append(json_df_2_df(predict_df))
+
+                # 统计ground truth 结节信息
+                gt_df_boxes_multi_classes = gt_df_boxes_multi_classes_dict[key]
+
+                if not gt_df_boxes_dict[key].empty:
+                    gt_df_boxes_multi_classes = gt_df_boxes_multi_classes.reset_index(drop=True)
+                    print "gt_df_boxes_multi_classes:"
+                    print gt_df_boxes_multi_classes
+                    _, gt_df_multi_classes = get_object_stat(hu_img_array=None,
+                                                             slice_object_list=gt_df_boxes_multi_classes,
+                                                             img_spacing=None,
+                                                             prefix=key,
+                                                             classes=self.gt_cls_name,
+                                                             same_box_threshold=self.same_box_threshold_gt,
+                                                             score_threshold=self.score_threshold_gt,
+                                                             z_threshold=self.gt_cls_z_threshold_gt,
+                                                             nodule_cls_weights=self.gt_cls_weights,
+                                                             if_dicom=False,
+                                                             focus_priority_array=self.gt_cls_focus_priority_array,
+                                                             skip_init=True,
+                                                             key_list=self.key_list,
+                                                             class_key=self.class_key,
+                                                             matched_key_list=self.matched_key_list)
+                    print 'gt_nodules_multi_classes:'
+                    print gt_df_multi_classes
+                    if len(gt_df_multi_classes) != 8:
+                        self.series_name.append(key)
             else:
-                filtered_predict_boxes = pd.DataFrame(
-                    {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
-                     'class': [], 'prob': [], 'mask': []})
+                predict_df_boxes = predict_df_boxes_dict[key]
+                # 　筛选probability超过规定阈值且预测为规定类别的框输入get_nodule_stat
+                if not predict_df_boxes_dict[key].empty:
+                    filtered_predict_boxes =predict_df_boxes.reset_index(drop=True)
+                else:
+                    filtered_predict_boxes = pd.DataFrame(
+                        {'instanceNumber': [], 'xmin': [], 'ymin': [], 'xmax': [], 'ymax': [],
+                         'class': [], 'prob': [], 'mask': []})
 
-            # 　将预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
-            print "predict_boxes:"
-            print filtered_predict_boxes
-            _, predict_df = get_object_stat(hu_img_array=None,
-                                            slice_object_list=filtered_predict_boxes,
-                                            img_spacing=None,
-                                            prefix=key,
-                                            classes=self.cls_name,
-                                            same_box_threshold=self.same_box_threshold_pred,
-                                            score_threshold=self.score_threshold_pred,
-                                            z_threshold=self.z_threshold_pred,
-                                            nodule_cls_weights=self.nodule_cls_weights,
-                                            if_dicom=False,
-                                            focus_priority_array=self.cls_focus_priority_array,
-                                            skip_init=True,
-                                            key_list=self.key_list,
-                                            class_key=self.class_key,
-                                            matched_key_list=self.matched_key_list)
-            print "predict_nodules:"
-            print predict_df
-            for i, thresh in enumerate(self.conf_thresh):
-                self.nodule_count[i] += len(predict_df[predict_df['Prob'] >= thresh])
-            predict_df = predict_df.reset_index(drop=True)
-            predict_df_list.append(json_df_2_df(predict_df))
+                # 　将预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
+                print "predict_boxes:"
+                print filtered_predict_boxes
+                _, predict_df = get_object_stat(hu_img_array=None,
+                                                slice_object_list=filtered_predict_boxes,
+                                                img_spacing=None,
+                                                prefix=key,
+                                                classes=self.cls_name,
+                                                same_box_threshold=self.same_box_threshold_pred,
+                                                score_threshold=self.score_threshold_pred,
+                                                z_threshold=self.z_threshold_pred,
+                                                nodule_cls_weights=self.nodule_cls_weights,
+                                                if_dicom=False,
+                                                focus_priority_array=self.cls_focus_priority_array,
+                                                skip_init=True,
+                                                key_list=self.key_list,
+                                                class_key=self.class_key,
+                                                matched_key_list=self.matched_key_list)
+                print "predict_nodules:"
+                print predict_df
+                for i, thresh in enumerate(self.conf_thresh):
+                    self.nodule_count[i] += len(predict_df[predict_df['Prob'] >= thresh])
+                predict_df = predict_df.reset_index(drop=True)
+                predict_df_list.append(json_df_2_df(predict_df))
 
-            # 统计ground truth 结节信息
-            gt_df_boxes_multi_classes = gt_df_boxes_multi_classes_dict[key]
+                # 统计ground truth 结节信息
+                gt_df_boxes_multi_classes = gt_df_boxes_multi_classes_dict[key]
 
-            if not gt_df_boxes_dict[key].empty:
-                filtered_gt_boxes_multi_classes = gt_df_boxes_multi_classes.reset_index(drop=True)
-                print "gt_boxes_multi_classes:"
-                print filtered_gt_boxes_multi_classes
-                _, gt_df_multi_classes = get_object_stat(
-                                                         hu_img_array=None,
-                                                         slice_object_list=filtered_gt_boxes_multi_classes,
-                                                         img_spacing=None,
-                                                         prefix=key,
-                                                         classes=self.gt_cls_name,
-                                                         same_box_threshold=self.same_box_threshold_gt,
-                                                         score_threshold=self.score_threshold_gt,
-                                                         z_threshold=self.gt_cls_z_threshold_gt,
-                                                         nodule_cls_weights=self.gt_cls_weights,
-                                                         if_dicom=False,
-                                                         focus_priority_array=self.gt_cls_focus_priority_array,
-                                                         skip_init=True,
-                                                         key_list=self.key_list,
-                                                         class_key=self.class_key,
-                                                         matched_key_list=self.matched_key_list
-                                                         )
-                print 'gt_df_multi_classes:'
-                print gt_df_multi_classes
-            else:
-                gt_df_multi_classes = pd.DataFrame({'Bndbox List': [], 'Object Id': [], 'Pid': key, 'Type': [],
-                                                    'SliceRange': [], 'Prob': [], 'Diameter': [], 'CT_value': []})
+                if not gt_df_boxes_dict[key].empty:
+                    filtered_gt_boxes_multi_classes = gt_df_boxes_multi_classes.reset_index(drop=True)
+                    print "gt_boxes_multi_classes:"
+                    print filtered_gt_boxes_multi_classes
+                    _, gt_df_multi_classes = get_object_stat(
+                                                             hu_img_array=None,
+                                                             slice_object_list=filtered_gt_boxes_multi_classes,
+                                                             img_spacing=None,
+                                                             prefix=key,
+                                                             classes=self.gt_cls_name,
+                                                             same_box_threshold=self.same_box_threshold_gt,
+                                                             score_threshold=self.score_threshold_gt,
+                                                             z_threshold=self.gt_cls_z_threshold_gt,
+                                                             nodule_cls_weights=self.gt_cls_weights,
+                                                             if_dicom=False,
+                                                             focus_priority_array=self.gt_cls_focus_priority_array,
+                                                             skip_init=True,
+                                                             key_list=self.key_list,
+                                                             class_key=self.class_key,
+                                                             matched_key_list=self.matched_key_list
+                                                             )
+                    print 'gt_df_multi_classes:'
+                    print gt_df_multi_classes
+                else:
+                    gt_df_multi_classes = pd.DataFrame({'Bndbox List': [], 'Object Id': [], 'Pid': key, 'Type': [],
+                                                        'SliceRange': [], 'Prob': [], 'Diameter': [], 'CT_value': []})
 
             gt_df_multi_classes = gt_df_multi_classes.reset_index(drop=True)
             gt_df_multi_list.append(json_df_2_df(gt_df_multi_classes))
@@ -799,7 +1156,8 @@ class LungNoduleAnchorEvaluatorOffline(object):
             recall = float(tp_count) / (tp_count + fn_count) if tp_count != 0 else 0
             fp_tp = float(fp_count) / tp_count if tp_count != 0 else np.nan
             precision = float(tp_count) / (tp_count + fp_count) if tp_count != 0 else 0
-
+            fscore = (1 + self.fscore_beta ** 2) * recall * precision / (self.fscore_beta ** 2 * precision + recall) \
+                if (recall != 0 or precision != 0) else 0
 
             self.count_df = self.count_df.append({'class': 'nodule',
                                                   'threshold': thresh,
@@ -811,9 +1169,8 @@ class LungNoduleAnchorEvaluatorOffline(object):
                                                   'recall': recall,
                                                   'precision': precision,
                                                   'fp/tp': fp_tp,
-                                                  self.score_type: (1 + self.fscore_beta ** 2) * recall * precision / (
-                                                              self.fscore_beta ** 2 * precision + recall)},
-                                                 ignore_index=True)
+                                                  self.score_type: fscore},
+                                                  ignore_index=True)
 
             # 统计不同结节的信息
             for i_gt_cls, gt_cls in enumerate(self.gt_cls_name):
@@ -882,62 +1239,134 @@ class LungNoduleAnchorEvaluatorOffline(object):
         predict_df_anchors_dict = {}
         ground_truth_anchors_dict = {}
         ground_truth_anchors_multi_classes_dict = {}
-        # 将所有预测病人的json/npy文件(包含所有层面所有种类的框)转换为DataFrame
-        for PatientID in os.listdir(self.data_dir):
-            if self.data_type == 'json':
-                predict_json_path = os.path.join(self.data_dir, PatientID, PatientID + '_predict.json')
-                try:
-                    predict_df_anchors = pd.read_json(predict_json_path).T
-                    predict_df_anchors = predict_df_anchors.rename(index=str, columns={'nodule_class': 'class'})
-                except:
-                    print ("broken directory structure, maybe no prediction json file found: %s" % predict_json_path)
-                    raise NameError
-                try:
-                    check_insnum_sliceid(predict_df_anchors)
-                except:
-                    logging.exception('%s has inconsistent instanceNumber and sliceId' %PatientID)
-            elif self.data_type == 'npy':
-                predict_npy_path = os.path.join(self.data_dir, PatientID, PatientID + '_predict.npy')
-                try:
-                    predict_anchors = np.load(predict_npy_path)
-                except:
-                    print ("broken directory structure, maybe no prediction npy file found: %s" % predict_npy_path)
-                    raise NameError
-                predict_df_anchors = init_df_objects(slice_object_list=predict_anchors, key_list=self.key_list,
-                                                     class_key=self.class_key)
-                predict_df_anchors = predict_df_anchors.sort_values(by=['prob'])
-                predict_df_anchors = predict_df_anchors.reset_index(drop=True)
-            else:
-                # 　尚未考虑其他数据存储格式，有需要的话日后添加
-                raise NotImplemented
+        #　若为多模型ensemble评估,上述字典的每个病人号关键词对应一个列表,列表中每个元素为一个模型对该病人的预测结果,格式为pandas.Dataframe
+        if self.if_ensemble:
+            for model_idx, model_id in enumerate(self.model_list):
+                # 将所有预测病人的json/npy文件(包含所有层面所有种类的框)转换为DataFrame
+                for PatientID in os.listdir(os.path.join(self.data_dir, model_id)):
+                    if model_idx == 0:
+                        predict_df_anchors_dict[PatientID] = []
+                        ground_truth_anchors_dict[PatientID] = []
+                        ground_truth_anchors_multi_classes_dict[PatientID] = []
+                    if self.data_type == 'json':
+                        predict_json_path = os.path.join(self.data_dir, model_id, PatientID, PatientID + '_predict.json')
+                        try:
+                            predict_df_anchors = pd.read_json(predict_json_path).T
+                            predict_df_anchors = predict_df_anchors.rename(index=str, columns={'nodule_class': 'class'})
+                        except:
+                            print (
+                            "broken directory structure, maybe no prediction json file found: %s" % predict_json_path)
+                            raise NameError
+                        try:
+                            check_insnum_sliceid(predict_df_anchors)
+                        except:
+                            logging.exception('%s has inconsistent instanceNumber and sliceId' % PatientID)
+                    elif self.data_type == 'npy':
+                        predict_npy_path = os.path.join(self.data_dir, model_id, PatientID, PatientID + '_predict.npy')
+                        try:
+                            predict_anchors = np.load(predict_npy_path)
+                        except:
+                            print ("broken directory structure, maybe no prediction npy file found: %s" % predict_npy_path)
+                            raise NameError
+                        predict_df_anchors = init_df_objects(slice_object_list=predict_anchors, key_list=self.key_list,
+                                                             class_key=self.class_key)
+                        predict_df_anchors = predict_df_anchors.sort_values(by=['prob'])
+                        predict_df_anchors = predict_df_anchors.reset_index(drop=True)
+                    else:
+                        # 　尚未考虑其他数据存储格式，有需要的话日后添加
+                        raise NotImplemented
 
-            ground_truth_path = os.path.join(self.anno_dir, PatientID)
-            # 对于ground truth boxes,我们直接读取其xml标签。因为几乎所有CT图像少于2000个层，故我们在这里选择2000
-            ground_truth_anchors = xml_to_anchorlist(config=self.config, xml_dir=ground_truth_path)
-            # except:
-            #     print ("broken directory structure, maybe no ground truth xml file found: %s" % ground_truth_path)
-            #     ground_truth_anchors = []
+                    if model_idx == 0:
+                        ground_truth_path = os.path.join(self.anno_dir, PatientID)
+                        # 对于ground truth boxes,我们直接读取其xml标签。因为几乎所有CT图像少于2000个层，故我们在这里选择2000
+                        ground_truth_anchors = xml_to_anchorlist(config=self.config, xml_dir=ground_truth_path)
+                        # except:
+                        #     print ("broken directory structure, maybe no ground truth xml file found: %s" % ground_truth_path)
+                        #     ground_truth_anchors = []
 
 
-                # 对于ground truth boxes,我们直接读取其xml标签,并保留原始的结节细分类别。因为几乎所有CT图像少于2000个层，故我们在这里选择2000
-            ground_truth_anchors_multi_classes = xml_to_anchorlist_multi_classes(config=self.config, xml_dir=ground_truth_path)
-            # except:
-            #     print ("broken directory structure, maybe no ground truth xml file found: %s" % ground_truth_path)
-            #     ground_truth_anchors_multi_classes = []
+                        # 对于ground truth boxes,我们直接读取其xml标签,并保留原始的结节细分类别。因为几乎所有CT图像少于2000个层，故我们在这里选择2000
+                        ground_truth_anchors_multi_classes = xml_to_anchorlist_multi_classes(config=self.config,
+                                                                                             xml_dir=ground_truth_path)
+                        # except:
+                        #     print ("broken directory structure, maybe no ground truth xml file found: %s" % ground_truth_path)
+                        #     ground_truth_anchors_multi_classes = []
 
-            ground_truth_anchors = init_df_objects(slice_object_list=ground_truth_anchors, key_list=self.key_list,
-                                                     class_key=self.class_key)
-            ground_truth_anchors = ground_truth_anchors.sort_values(by=['instanceNumber'])
-            ground_truth_anchors = ground_truth_anchors.reset_index(drop=True)
-
-            ground_truth_anchors_multi_classes = init_df_objects(slice_object_list=ground_truth_anchors_multi_classes, key_list=self.key_list,
+                        ground_truth_anchors = init_df_objects(slice_object_list=ground_truth_anchors, key_list=self.key_list,
                                                                class_key=self.class_key)
-            ground_truth_anchors_multi_classes = ground_truth_anchors_multi_classes.sort_values(by=['instanceNumber'])
-            ground_truth_anchors_multi_classes = ground_truth_anchors_multi_classes.reset_index(drop=True)
+                        ground_truth_anchors = ground_truth_anchors.sort_values(by=['instanceNumber'])
+                        ground_truth_anchors = ground_truth_anchors.reset_index(drop=True)
 
-            predict_df_anchors_dict[PatientID] = predict_df_anchors
-            ground_truth_anchors_dict[PatientID] = ground_truth_anchors
-            ground_truth_anchors_multi_classes_dict[PatientID] = ground_truth_anchors_multi_classes
+                        ground_truth_anchors_multi_classes = init_df_objects(
+                            slice_object_list=ground_truth_anchors_multi_classes, key_list=self.key_list,
+                            class_key=self.class_key)
+
+                        ground_truth_anchors_multi_classes = ground_truth_anchors_multi_classes.sort_values(
+                            by=['instanceNumber'])
+                        ground_truth_anchors_multi_classes = ground_truth_anchors_multi_classes.reset_index(drop=True)
+
+                        ground_truth_anchors_dict[PatientID] = ground_truth_anchors
+                        ground_truth_anchors_multi_classes_dict[PatientID] = ground_truth_anchors_multi_classes
+
+                    predict_df_anchors_dict[PatientID].append(predict_df_anchors)
+
+        else:
+            # 将所有预测病人的json/npy文件(包含所有层面所有种类的框)转换为DataFrame
+            for PatientID in os.listdir(self.data_dir):
+                if self.data_type == 'json':
+                    predict_json_path = os.path.join(self.data_dir, PatientID, PatientID + '_predict.json')
+                    try:
+                        predict_df_anchors = pd.read_json(predict_json_path).T
+                        predict_df_anchors = predict_df_anchors.rename(index=str, columns={'nodule_class': 'class'})
+                    except:
+                        print ("broken directory structure, maybe no prediction json file found: %s" % predict_json_path)
+                        raise NameError
+                    try:
+                        check_insnum_sliceid(predict_df_anchors)
+                    except:
+                        logging.exception('%s has inconsistent instanceNumber and sliceId' %PatientID)
+                elif self.data_type == 'npy':
+                    predict_npy_path = os.path.join(self.data_dir, PatientID, PatientID + '_predict.npy')
+                    try:
+                        predict_anchors = np.load(predict_npy_path)
+                    except:
+                        print ("broken directory structure, maybe no prediction npy file found: %s" % predict_npy_path)
+                        raise NameError
+                    predict_df_anchors = init_df_objects(slice_object_list=predict_anchors, key_list=self.key_list,
+                                                         class_key=self.class_key)
+                    predict_df_anchors = predict_df_anchors.sort_values(by=['prob'])
+                    predict_df_anchors = predict_df_anchors.reset_index(drop=True)
+                else:
+                    # 　尚未考虑其他数据存储格式，有需要的话日后添加
+                    raise NotImplemented
+
+                ground_truth_path = os.path.join(self.anno_dir, PatientID)
+                # 对于ground truth boxes,我们直接读取其xml标签。因为几乎所有CT图像少于2000个层，故我们在这里选择2000
+                ground_truth_anchors = xml_to_anchorlist(config=self.config, xml_dir=ground_truth_path)
+                # except:
+                #     print ("broken directory structure, maybe no ground truth xml file found: %s" % ground_truth_path)
+                #     ground_truth_anchors = []
+
+
+                    # 对于ground truth boxes,我们直接读取其xml标签,并保留原始的结节细分类别。因为几乎所有CT图像少于2000个层，故我们在这里选择2000
+                ground_truth_anchors_multi_classes = xml_to_anchorlist_multi_classes(config=self.config, xml_dir=ground_truth_path)
+                # except:
+                #     print ("broken directory structure, maybe no ground truth xml file found: %s" % ground_truth_path)
+                #     ground_truth_anchors_multi_classes = []
+
+                ground_truth_anchors = init_df_objects(slice_object_list=ground_truth_anchors, key_list=self.key_list,
+                                                         class_key=self.class_key)
+                ground_truth_anchors = ground_truth_anchors.sort_values(by=['instanceNumber'])
+                ground_truth_anchors = ground_truth_anchors.reset_index(drop=True)
+
+                ground_truth_anchors_multi_classes = init_df_objects(slice_object_list=ground_truth_anchors_multi_classes, key_list=self.key_list,
+                                                                   class_key=self.class_key)
+                ground_truth_anchors_multi_classes = ground_truth_anchors_multi_classes.sort_values(by=['instanceNumber'])
+                ground_truth_anchors_multi_classes = ground_truth_anchors_multi_classes.reset_index(drop=True)
+
+                predict_df_anchors_dict[PatientID] = predict_df_anchors
+                ground_truth_anchors_dict[PatientID] = ground_truth_anchors
+                ground_truth_anchors_multi_classes_dict[PatientID] = ground_truth_anchors_multi_classes
         return predict_df_anchors_dict, ground_truth_anchors_dict, ground_truth_anchors_multi_classes_dict
 
     # 由predict出的框和ground truth anno生成_nodules.json和_gt.json
