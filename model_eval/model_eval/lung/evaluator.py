@@ -57,7 +57,8 @@ class LungNoduleAnchorEvaluatorOffline(object):
                                             "solid nodule": 4,
                                             "GGN": 3,
                                             "0-3nodule": 2,
-                                            "nodule": 1},
+                                            "nodule": 1,
+                                            "pleural nodule": 3},
                  gt_cls_focus_priority_array = {"mass": 9,
                                                 "10-30nodule": 8,
                                                 "6-10nodule": 7,
@@ -68,7 +69,7 @@ class LungNoduleAnchorEvaluatorOffline(object):
                                                 "GGN": 3,
                                                 "0-5GGN": 2,
                                                 "0-3nodule": 1},
-                 if_ensemble=False, model_weight_list=[1], model_conf_list=[1], obj_freq_thresh=None, model_list=[]):
+                 if_ensemble=False, if_stacking=False, model_weight_list=[1], model_conf_list=[1], obj_freq_thresh=None, model_list=[]):
         self.config = LungConfig(cls_label_xls_path=cls_label_xls_path)
         assert os.path.isdir(data_dir), 'must initialize it with a valid directory of bbox data'
         self.data_dir = data_dir
@@ -127,6 +128,8 @@ class LungNoduleAnchorEvaluatorOffline(object):
 
         # whether make prediction based on output of a model ensemble or a single model
         self.if_ensemble = if_ensemble
+        # whether use full stacking (model voting plus nms) method for model ensemble
+        self.if_stacking = if_stacking
 
         if len(model_list) == 0:
             self.model_list = os.listdir(self.data_dir)
@@ -192,6 +195,8 @@ class LungNoduleAnchorEvaluatorOffline(object):
                         # 将模型预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
                         print "predict_boxes:"
                         print filtered_predict_boxes_list
+
+
                         _, cls_predict_df = get_object_stat(
                             hu_img_array=None,
                             slice_object_list=filtered_predict_boxes_list,
@@ -209,6 +214,7 @@ class LungNoduleAnchorEvaluatorOffline(object):
                             class_key=self.class_key,
                             matched_key_list=self.matched_key_list,
                             if_ensemble=self.if_ensemble,
+                            if_stacking=self.if_stacking,
                             model_weight_list=self.model_weight_list,
                             model_conf_list=self.model_cof_list,
                             obj_freq_thresh=self.obj_freq_thresh)
@@ -483,6 +489,7 @@ class LungNoduleAnchorEvaluatorOffline(object):
                             class_key=self.class_key,
                             matched_key_list=self.matched_key_list,
                             if_ensemble=self.if_ensemble,
+                            if_stacking=self.if_stacking,
                             model_weight_list=self.model_weight_list,
                             model_conf_list=self.model_cof_list,
                             obj_freq_thresh=self.obj_freq_thresh)
@@ -734,6 +741,7 @@ class LungNoduleAnchorEvaluatorOffline(object):
 
                     # 将模型预测出来的框(filtered_predict_boxes)与标记的ground truth框(filtered_gt_boxes)输入get_nodule_stat进行结节匹配
                     print "predict_boxes:"
+                    print key
                     print filtered_predict_boxes_list
                     _, predict_df = get_object_stat(
                         hu_img_array=None,
@@ -752,6 +760,7 @@ class LungNoduleAnchorEvaluatorOffline(object):
                         class_key=self.class_key,
                         matched_key_list=self.matched_key_list,
                         if_ensemble=self.if_ensemble,
+                        if_stacking=self.if_stacking,
                         model_weight_list=self.model_weight_list,
                         model_conf_list=self.model_cof_list,
                         obj_freq_thresh=self.obj_freq_thresh)
@@ -1025,6 +1034,7 @@ class LungNoduleAnchorEvaluatorOffline(object):
                     class_key=self.class_key,
                     matched_key_list=self.matched_key_list,
                     if_ensemble=self.if_ensemble,
+                    if_stacking=self.if_stacking,
                     model_weight_list=self.model_weight_list,
                     model_conf_list=self.model_cof_list,
                     obj_freq_thresh=self.obj_freq_thresh)

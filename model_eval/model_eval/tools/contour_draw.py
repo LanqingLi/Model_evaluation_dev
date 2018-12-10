@@ -34,6 +34,27 @@ def contour_and_draw_rainbow(image,label_map, color_num, color_range, n_class=2,
             cv2.drawContours(image, contours, -1, (0, (255 - color_step * (color_num - (color_range*3/4))), 255), 2)
     return image, all_contours
 
+def contour_and_draw_multicls_rainbow(image, label_map, color_range, n_class, shape=(512, 512)):
+    #image should be (512,512,3), label_map should be (512,512)
+    all_contours=[]
+    for c_id in range(1, n_class):
+        one_channel = np.zeros(shape, dtype=np.uint8)
+        one_channel[label_map == c_id] = 1
+        _, contours, hierarchy = cv2.findContours(one_channel, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        all_contours.append(contours)
+        color_step = (255 * 4) / color_range
+        color_num = c_id - 1
+        assert color_num < color_range, 'color_num should be less than or equal to color_range'
+        if color_num < color_range / 4:
+            cv2.drawContours(image, contours, -1, (255, color_step * color_num, 0), 1)
+        elif color_num < color_range / 2:
+            cv2.drawContours(image, contours, -1, (255 - color_step * (color_num - color_range/4) , 255, 0), 1)
+        elif color_num < (color_range * 3 / 4):
+            cv2.drawContours(image, contours, -1, (0, 255, color_step * (color_num - color_range/2)), 1)
+        else:
+            cv2.drawContours(image, contours, -1, (0, (255 - color_step * (color_num - (color_range*3/4))), 255), 1)
+    return image, all_contours
+
 def contour_and_draw_brainRegion(image,label_map, n_class=4, shape=(512, 512)):
     #image should be (512,512,3), label_map should be (cls_num,512,512)
     all_contours=[]

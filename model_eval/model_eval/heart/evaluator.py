@@ -8,7 +8,7 @@ import pandas as pd
 #from config import config
 from config import HeartConfig
 import nrrd, cv2
-from model_eval.tools.contour_draw import contour_and_draw, contour_and_draw_rainbow
+from model_eval.tools.contour_draw import contour_and_draw, contour_and_draw_rainbow, contour_and_draw_multicls_rainbow
 from model_eval.tools.data_postprocess import save_xlsx_json
 from model_eval.tools.data_preprocess import window_convert, window_convert_light
 from model_eval.common.custom_metric import ClassificationMetric, CAC_Score
@@ -41,8 +41,8 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
             }
     predictor: a predictor function which performs inference, it generates a np.ndarray, with shape = (batch size, num of classes, 512, 512)
     '''
-    def __init__(self, cls_label_xls_path, data_iter, predict_key, gt_key, img_key, patient_key, voxel_vol_key, predictor, window_center=90,
-                 window_width=750, post_processor=default_post_processor,
+    def __init__(self, cls_label_xls_path, data_iter, predict_key, gt_key, img_key, patient_key, voxel_vol_key, pixel_area_key,
+                 predictor, pixel_area_thresh=1., window_center=90, window_width=750, post_processor=default_post_processor,
                  if_post_process = False, img_save_dir=os.path.join(os.getcwd(), 'HeartSemanticSegEvaluation_contour'),
                  mask_save_dir=os.path.join(os.getcwd(), 'HeartSemanticSegEvaluation_mask'), if_save_mask = False,
                  score_type='fscore', result_save_dir=os.path.join(os.getcwd(), 'HeartSemanticSegEvaluation_result'),
@@ -57,6 +57,7 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
         self.img_key = img_key
         self.patient_key = patient_key
         self.voxel_vol_key = voxel_vol_key
+        self.pixel_area_key = pixel_area_key
         # a predictor function to read data and generate predicted result
         self.predictor = predictor
         self.post_processor = post_processor
@@ -72,8 +73,10 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
         self.result_df = pd.DataFrame(
             columns=['PatientID', 'class', 'threshold', 'tp_count', 'tn_count', 'fp_count', 'fn_count',
                      'accuracy', 'recall', 'precision', 'fp/tp', 'dice', 'gt_vol', 'pred_vol', 'gt_phys_vol/mm^3',
-                     'pred_phys_vol/mm^3', 'phys_vol_diff/mm^3', 'CAC_score_gt', 'CAC_score_pred', 'CAC_risk_gt', 'CAC_risk_pred',
-                     self.score_type, 'Correct_CAC_Number', 'Patient_Number', 'Correct_CAC_Rate'])
+                     'pred_phys_vol/mm^3', 'phys_vol_diff/mm^3', 'CAC_score_gt', 'CAC_score_pred', 'CAC_score_gt_filter',
+                     'CAC_score_pred_filter', 'CAC_risk_gt', 'CAC_risk_pred', 'CAC_risk_gt_filter', 'CAC_risk_pred_filter',
+                     self.score_type, 'Correct_CAC_Number', 'Correct_CAC_filter_Number', 'Patient_Number',
+                     'Correct_CAC_Rate', 'Correct_CAC_filter_Rate'])
         self.result_save_dir = result_save_dir
         self.xlsx_name = xlsx_name
         self.json_name = json_name
@@ -88,6 +91,9 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
         self.window_center = window_center
         self.window_width = window_width
         self.calcium_thresh = config.CALCIUM_THRESH
+        # parameters used in func get_CAC_score()
+        # whether to compute CAC score only for lesion with area >= pixel_area_thresh, usually 1mm^2 by default
+        self.pixel_area_thresh = pixel_area_thresh
         # save predicted mask as .npy when if_save_mask=True
         if if_save_mask:
             if not os.path.exists(self.mask_save_dir):
@@ -265,6 +271,88 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                 cv2.imwrite(os.path.join(self.img_save_dir, PatientID + '-' + str(fig_num).zfill(2) + 'multi_thresh.jpg'),
                             to_show)
 
+    def multi_class_contour_plot_single_thresh(self):
+        self.data_iter.reset()
+        if not os.path.exists(self.img_save_dir):
+            os.mkdir(self.img_save_dir)
+
+        for data in self.data_iter:
+            if data is None:
+                break
+            if data[self.predict_key] is None:
+                continue
+            predict_label = self.predictor(data[self.predict_key])
+            # the input ground truth label had shape (batch size(figure number), 512, 512), we need to transpose
+            # to shape (512, 512, figure number)
+            gt_label = data[self.gt_key].transpose(1, 2, 0)
+            # the input raw data (images) have shape (figure number, 3(RGB channel), 512, 512), we need to transpose
+            # to shape (512, 512, figure number, 3(RGB channel))
+            raw_img = data[self.img_key].transpose(2, 3, 0, 1)
+            PatientID = data[self.patient_key]
+            # dim of the raw image
+            dim = [raw_img.shape[0], raw_img.shape[1]]
+
+            print ('processing PatientID: %s' % PatientID)
+            assert predict_label.shape[
+                       1] == 2, 'the number of classes %s in predict labels should be 2 for binary classification' % (
+                predict_label.shape[1])
+            # transpose the predict_data to be shape = [512, 512, figure number, cls_num]
+            # one has to make a copy of part of predict_data, otherwise it will implicitly convert float to int
+            predict_label_cpy = predict_label.copy()
+            predict_label_cpy = predict_label_cpy.transpose((2, 3, 0, 1))
+            # check if the predict and ground truth labels have the same shape
+            if not predict_label_cpy[..., 0].shape == gt_label.shape:
+                raise Exception("predict and ground truth labels must have the same shape")
+
+            for fig_num in range(predict_label_cpy.shape[-1]):
+                raw_img_slice = raw_img[:, :, fig_num, :].copy()
+                raw_img_slice = window_convert_light(raw_img_slice, self.window_center, self.window_width)
+                gt_label_slice = gt_label[:, :, fig_num].copy()
+                predict_label_slice = predict_label_cpy[:, :, fig_num, :]
+                rgb_img1 = cv2.cvtColor(raw_img_slice, cv2.COLOR_BGR2RGB)
+                rgb_img2 = cv2.cvtColor(raw_img_slice, cv2.COLOR_BGR2RGB)
+                rgb_img3 = cv2.cvtColor(raw_img_slice, cv2.COLOR_BGR2RGB)
+                gt_label_img, _ = contour_and_draw(rgb_img1, gt_label_slice)
+                binary_pmap = np.argmax(predict_label_slice, axis=2)
+                # superimpose contour images for multiple classes
+
+                if self.if_post_process:
+                    # transpose data[self.predict_key] shape = (figure number, 3(RGB channel), 512, 512) to
+                    # shape = (512, 512, figure number, 3(RGB channel))
+                    # img_data = ((data[self.predict_key].copy()).transpose(2, 3, 0, 1))[:, :, fig_num, :]
+                    # select binary mask pixels where the original hu value is equal to or greater than calcium threshold (130 by default)
+
+                    raw_img_greyscale = raw_img[:, :, fig_num, 0].copy()
+                    binary_pmap_pp = self.post_processor(raw_img_greyscale, binary_pmap, self.calcium_thresh)
+                    # print 'histogram:'
+                    # print np.histogram(binary_pmap_pp - binary_pmap)
+                    pred_label_img, _ = contour_and_draw_multicls_rainbow(rgb_img2, binary_pmap,
+                                                                 color_range=len(self.cls_name - 1),
+                                                                 n_class=len(self.cls_name))
+                    pred_label_img_pp, _ = contour_and_draw_rainbow(rgb_img3, binary_pmap_pp,
+                                                                    color_range=len(self.cls_name - 1),
+                                                                    n_class=len(self.cls_name))
+                    to_show = np.zeros(shape=(dim[0], dim[1] * 3, 3), dtype=np.uint8)
+                    to_show[:, :dim[1], :] = pred_label_img.transpose(1, 0, 2)
+                    to_show[:, dim[1]:2 * dim[1], :] = pred_label_img_pp.transpose(1, 0, 2)
+                    to_show[:, 2 * dim[1]:, :] = gt_label_img.transpose(1, 0, 2)
+
+                else:
+                    pred_label_img, _ = contour_and_draw_multicls_rainbow(rgb_img2, binary_pmap,
+                                                                 color_range=len(self.cls_name - 1),
+                                                                 n_class=len(self.cls_name))
+
+                    # prob = predict_map[:, :, np.newaxis] * 255
+                    # prob = np.array(np.repeat(prob, axis=2, repeats=3), dtype=np.uint8)
+
+                    to_show = np.zeros(shape=(dim[0], dim[1] * 2, 3), dtype=np.uint8)
+                    to_show[:, :dim[1], :] = pred_label_img.transpose(1, 0, 2)
+                    to_show[:, dim[1]:, :] = gt_label_img.transpose(1, 0, 2)
+
+                cv2.imwrite(
+                    os.path.join(self.img_save_dir, PatientID + '-' + str(fig_num).zfill(2) + 'multi_cls.png'),
+                    to_show)
+
     # 多分类分割模型通用评分,用阈值筛选正类别，并在其中选取最大值作为one-hot label
     def multi_class_evaluation(self):
 
@@ -276,11 +364,10 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
             # the pictures are arranged in the same order
 
             # initialize ClassificationMetric class for total stat (all patients) and update with ground truth/predict labels
-            cls_metric = ClassificationMetric(cls_num=len(self.cls_name)-1, if_binary=True, pos_cls_fusion=False)
+            cls_metric = ClassificationMetric(cls_num=len(self.cls_name)-1, if_binary=False, pos_cls_fusion=False)
             gt_tot_phys_vol = [0. for _ in range(len(self.cls_name) - 1)]
             pred_tot_phys_vol = [0. for _ in range(len(self.cls_name) - 1)]
             self.patient_num = 0.
-            correct_cac_num = [0. for _ in range(len(self.cls_name) - 1)]
 
             for data in self.data_iter:
                 if data is None:
@@ -294,6 +381,7 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                 gt_nrrd = data[self.gt_key].transpose(1, 2, 0)
                 PatientID = data[self.patient_key]
                 voxel_vol = data[self.voxel_vol_key]
+                pixel_area = data[self.pixel_area_key]
                 img_array = data[self.img_key].transpose(2, 3, 0, 1)[:, :, :, 0]
                 print ('processing PatientID: %s' % PatientID)
                 # one has to make a copy of part of predict_data, otherwise it will implicitly convert float to int
@@ -349,7 +437,7 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                 # voxel_vol = np.linalg.det(space_matrix)
 
                 # initialize ClassificationMetric class for each patient and update with ground truth/predict labels
-                patient_metric = ClassificationMetric(cls_num=len(self.cls_name)-1, if_binary=True, pos_cls_fusion=False)
+                patient_metric = ClassificationMetric(cls_num=len(self.cls_name)-1, if_binary=False, pos_cls_fusion=False)
 
                 pred_mask = predict_data_cpy.copy()
                 predict_label_max_array = np.asarray(predict_label_max_list).transpose(1, 2, 0)
@@ -371,20 +459,6 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                     else:
                         fp_tp = patient_metric.fp[cls_label-1] / patient_metric.tp[cls_label-1]
 
-                    # mask for calculating CAC score
-                    gt_binary_mask = gt_nrrd.copy()
-                    gt_binary_mask[gt_binary_mask != cls_label] = 0.
-                    gt_binary_mask[gt_binary_mask == cls_label] = 1.
-
-                    calcium_score = CAC_Score()
-                    gt_CAC_score = calcium_score.get_CAC_score(img_array, gt_binary_mask, voxel_vol,
-                                                                 dim=self.CAC_dim)
-                    pred_CAC_score = calcium_score.get_CAC_score(img_array, pred_binary_mask[:, :, :, cls_label], voxel_vol,
-                                                                   dim=self.CAC_dim)
-                    gt_CAC_risk = calcium_score.default_risk_cate(float(gt_CAC_score))
-                    pred_CAC_risk = calcium_score.default_risk_cate(float(pred_CAC_score))
-
-
                     self.result_df = self.result_df.append({'PatientID': PatientID,
                                                             'class': self.cls_name[cls_label],
                                                             'threshold': thresh,
@@ -403,18 +477,11 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                                                             'pred_phys_vol/mm^3': patient_metric.get_pred_vol(cls_label) * voxel_vol,
                                                             'phys_vol_diff/mm^3': patient_metric.get_gt_vol(cls_label) * voxel_vol -
                                                                                   patient_metric.get_pred_vol(cls_label) * voxel_vol,
-                                                            'CAC_score_gt': gt_CAC_score,
-                                                            'CAC_score_pred': pred_CAC_score,
-                                                            'CAC_risk_gt': gt_CAC_risk,
-                                                            'CAC_risk_pred': pred_CAC_risk,
                                                             self.score_type: patient_metric.get_fscore(
                                                                 cls_label=cls_label, beta=self.fscore_beta)},
                                                             ignore_index=True)
                     gt_tot_phys_vol[cls_label-1] += patient_metric.get_gt_vol(cls_label) * voxel_vol
                     pred_tot_phys_vol[cls_label-1] += patient_metric.get_pred_vol(cls_label) * voxel_vol
-                    # calculate the number of patient whose predicted CAC risk category is the same as ground truth
-                    if gt_CAC_risk == pred_CAC_risk:
-                        correct_cac_num[cls_label - 1] += 1
 
             for cls_label in range(len(self.cls_name)):
                 if self.cls_name[cls_label] == '__background__':
@@ -444,9 +511,7 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                                                         'phys_vol_diff/mm^3': gt_tot_phys_vol[cls_label-1] - pred_tot_phys_vol[cls_label-1],
                                                         self.score_type: cls_metric.get_fscore(
                                                             cls_label=cls_label, beta=self.fscore_beta),
-                                                        'Correct_CAC_Number': correct_cac_num[cls_label-1],
-                                                        'Patient_Number': self.patient_num,
-                                                        'Correct_CAC_Rate': correct_cac_num[cls_label-1]/self.patient_num},
+                                                        'Patient_Number': self.patient_num},
                                                         ignore_index=True)
                 self.result_df = self.result_df.append({'PatientID': 'average',
                                                         'class': self.cls_name[cls_label],
@@ -495,8 +560,9 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
     def multi_class_evaluation_light(self):
         cls_metric_list = []
         gt_tot_phys_vol = []
+        gt_tot_phys_vol_filter = []
         pred_tot_phys_vol = []
-        correct_cac_num = []
+
         self.data_iter.reset()
         for thresh in self.conf_thresh:
             print ('threshold = %s' % thresh)
@@ -504,10 +570,11 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
             # the pictures are arranged in the same order
 
             # initialize ClassificationMetric class for total stat (all patients) and update with ground truth/predict labels
-            cls_metric_list.append(ClassificationMetric(cls_num=len(self.cls_name) - 1, if_binary=True, pos_cls_fusion=False))
+            cls_metric_list.append(ClassificationMetric(cls_num=len(self.cls_name) - 1, if_binary=False, pos_cls_fusion=False))
             gt_tot_phys_vol.append([0. for _ in range(len(self.cls_name) - 1)])
+            gt_tot_phys_vol_filter.append([0. for _ in range(len(self.cls_name) - 1)])
             pred_tot_phys_vol.append([0. for _ in range(len(self.cls_name) - 1)])
-            correct_cac_num.append([0. for _ in range(len(self.cls_name) - 1)])
+
 
         self.patient_num = 0.
 
@@ -523,6 +590,7 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
             gt_nrrd = data[self.gt_key].transpose(1, 2, 0)
             PatientID = data[self.patient_key]
             voxel_vol = data[self.voxel_vol_key]
+            pixel_area = data[self.pixel_area_key]
 
             img_array = data[self.img_key].transpose(2, 3, 0, 1)[:, :, :, 0]
             print ('processing PatientID: %s' % PatientID)
@@ -586,7 +654,7 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                 pred_binary_mask[(pred_mask == predict_label_max_array) * (pred_mask > 0)] = 1
 
                 # initialize ClassificationMetric class for each patient and update with ground truth/predict labels
-                patient_metric = ClassificationMetric(cls_num=len(self.cls_name) - 1, if_binary=True,
+                patient_metric = ClassificationMetric(cls_num=len(self.cls_name) - 1, if_binary=False,
                                                       pos_cls_fusion=False)
                 for cls_label in range(len(self.cls_name)):
                     if self.cls_name[cls_label] == '__background__':
@@ -601,18 +669,6 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                     else:
                         fp_tp = patient_metric.fp[cls_label - 1] / patient_metric.tp[cls_label - 1]
 
-                    # mask for calculating CAC score
-                    gt_binary_mask = gt_nrrd.copy()
-                    gt_binary_mask[gt_binary_mask != cls_label] = 0.
-                    gt_binary_mask[gt_binary_mask == cls_label] = 1.
-
-                    calcium_score = CAC_Score()
-                    gt_CAC_score = calcium_score.get_CAC_score(img_array, gt_binary_mask, voxel_vol,
-                                                                 dim=self.CAC_dim)
-                    pred_CAC_score = calcium_score.get_CAC_score(img_array, pred_binary_mask[:, :, :, cls_label], voxel_vol,
-                                                                   dim=self.CAC_dim)
-                    gt_CAC_risk = calcium_score.default_risk_cate(float(gt_CAC_score))
-                    pred_CAC_risk = calcium_score.default_risk_cate(float(pred_CAC_score))
 
                     self.result_df = self.result_df.append({'PatientID': PatientID,
                                                             'class': self.cls_name[cls_label],
@@ -636,18 +692,12 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                                                                                 cls_label) * voxel_vol -
                                                                                   patient_metric.get_pred_vol(
                                                                                 cls_label) * voxel_vol,
-                                                            'CAC_score_gt': gt_CAC_score,
-                                                            'CAC_score_pred': pred_CAC_score,
-                                                            'CAC_risk_gt': gt_CAC_risk,
-                                                            'CAC_risk_pred': pred_CAC_risk,
                                                             self.score_type: patient_metric.get_fscore(
                                                                 cls_label=cls_label, beta=self.fscore_beta)},
                                                            ignore_index=True)
                     gt_tot_phys_vol[index][cls_label - 1] += patient_metric.get_gt_vol(cls_label) * voxel_vol
                     pred_tot_phys_vol[index][cls_label - 1] += patient_metric.get_pred_vol(cls_label) * voxel_vol
-                    # calculate the number of patient whose predicted CAC risk category is the same as ground truth
-                    if gt_CAC_risk == pred_CAC_risk:
-                        correct_cac_num[index][cls_label - 1] += 1
+
 
         for index, thresh in enumerate(self.conf_thresh):
             for cls_label in range(len(self.cls_name)):
@@ -678,10 +728,7 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                                                         'phys_vol_diff/mm^3': gt_tot_phys_vol[index][cls_label - 1] -
                                                                               pred_tot_phys_vol[index][cls_label - 1],
                                                         self.score_type: cls_metric_list[index].get_fscore(
-                                                            cls_label=cls_label, beta=self.fscore_beta),
-                                                        'Correct_CAC_Number': correct_cac_num[index][cls_label - 1],
-                                                        'Patient_Number': self.patient_num,
-                                                        'Correct_CAC_Rate': correct_cac_num[index][cls_label - 1]/self.patient_num},
+                                                            cls_label=cls_label, beta=self.fscore_beta)},
                                                         ignore_index=True)
                 self.result_df = self.result_df.append({'PatientID': 'average',
                                                         'class': self.cls_name[cls_label],
@@ -740,6 +787,7 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
             gt_tot_phys_vol = [0.]
             pred_tot_phys_vol = [0.]
             correct_cac_num = [0.]
+            correct_cac_num_filter = [0.]
             self.patient_num = 0.
 
             for data in self.data_iter:
@@ -754,6 +802,7 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                 gt_nrrd = data[self.gt_key].transpose(1, 2, 0)
                 PatientID = data[self.patient_key]
                 voxel_vol = data[self.voxel_vol_key]
+                pixel_area = data[self.pixel_area_key]
 
                 img_array = data[self.img_key].transpose(2, 3, 0, 1)[:, :, :, 0]
                 print ('processing PatientID: %s' % PatientID)
@@ -823,10 +872,30 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                 pred_binary_mask[pred_binary_mask >= thresh] = 1.
 
                 calcium_score = CAC_Score()
-                gt_CAC_score = calcium_score.get_CAC_score(img_array, gt_binary_mask, voxel_vol, dim=self.CAC_dim)
-                pred_CAC_score = calcium_score.get_CAC_score(img_array, pred_binary_mask, voxel_vol, dim=self.CAC_dim)
+                gt_CAC_score = calcium_score.get_CAC_score(img_array, gt_binary_mask,
+                                                           voxel_volume=voxel_vol,
+                                                           pixel_area=pixel_area,
+                                                           if_pixel_area_filter=False,
+                                                           dim=self.CAC_dim)
+                gt_CAC_score_filter = calcium_score.get_CAC_score(img_array, gt_binary_mask,
+                                                                  voxel_volume=voxel_vol,
+                                                                  pixel_area=pixel_area,
+                                                                  pixel_area_thresh=self.pixel_area_thresh,
+                                                                  dim=self.CAC_dim)
+                pred_CAC_score = calcium_score.get_CAC_score(img_array, pred_binary_mask,
+                                                             voxel_volume=voxel_vol,
+                                                             pixel_area=pixel_area,
+                                                             if_pixel_area_filter=False,
+                                                             dim=self.CAC_dim)
+                pred_CAC_score_filter = calcium_score.get_CAC_score(img_array, pred_binary_mask,
+                                                                    voxel_volume=voxel_vol,
+                                                                    pixel_area=pixel_area,
+                                                                    pixel_area_thresh=self.pixel_area_thresh,
+                                                                    dim=self.CAC_dim)
                 gt_CAC_risk = calcium_score.default_risk_cate(float(gt_CAC_score))
+                gt_CAC_risk_filter = calcium_score.default_risk_cate(float(gt_CAC_score_filter))
                 pred_CAC_risk = calcium_score.default_risk_cate(float(pred_CAC_score))
+                pred_CAC_risk_filter = calcium_score.default_risk_cate(float(pred_CAC_score_filter))
 
                 # initialize ClassificationMetric class for each patient and update with ground truth/predict labels
                 patient_metric = ClassificationMetric(cls_num=1, if_binary=True,
@@ -864,8 +933,12 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                                                             cls_label=1) * voxel_vol,
                                                         'CAC_score_gt': gt_CAC_score,
                                                         'CAC_score_pred': pred_CAC_score,
+                                                        'CAC_score_gt_filter': gt_CAC_score_filter,
+                                                        'CAC_score_pred_filter': pred_CAC_score_filter,
                                                         'CAC_risk_gt': gt_CAC_risk,
                                                         'CAC_risk_pred': pred_CAC_risk,
+                                                        'CAC_risk_gt_filter': gt_CAC_risk_filter,
+                                                        'CAC_risk_pred_filter': pred_CAC_risk_filter,
                                                         self.score_type: patient_metric.get_fscore(
                                                             cls_label=1, beta=self.fscore_beta)},
                                                        ignore_index=True)
@@ -874,6 +947,8 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                 # calculate the number of patient whose predicted CAC risk category is the same as ground truth
                 if gt_CAC_risk == pred_CAC_risk:
                     correct_cac_num[0] += 1
+                if gt_CAC_risk_filter == pred_CAC_risk_filter:
+                    correct_cac_num_filter[0] += 1
 
 
             if cls_metric.tp[0] == 0:
@@ -898,11 +973,13 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                                                     'gt_phys_vol/mm^3': gt_tot_phys_vol[0],
                                                     'pred_phys_vol/mm^3': pred_tot_phys_vol[0],
                                                     'phys_vol_diff/mm^3': gt_tot_phys_vol[0] - pred_tot_phys_vol[0],
-                                                    self.score_type: cls_metric.get_fscore(
+                                                     self.score_type: cls_metric.get_fscore(
                                                         cls_label=1, beta=self.fscore_beta),
                                                     'Correct_CAC_Number': correct_cac_num[0],
+                                                    'Correct_CAC_filter_Number': correct_cac_num_filter[0],
                                                     'Patient_Number': self.patient_num,
-                                                    'Correct_CAC_Rate': correct_cac_num[0]/self.patient_num},
+                                                    'Correct_CAC_Rate': correct_cac_num[0]/self.patient_num,
+                                                    'Correct_CAC_filter_Rate': correct_cac_num_filter[0]/self.patient_num},
                                                     ignore_index=True)
             self.result_df = self.result_df.append({'PatientID': 'average',
                                                     'class': 'positive sample',
@@ -921,10 +998,10 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                                                     'gt_phys_vol/mm^3': gt_tot_phys_vol[0]/self.patient_num,
                                                     'pred_phys_vol/mm^3': pred_tot_phys_vol[0]/self.patient_num,
                                                     'phys_vol_diff/mm^3': (gt_tot_phys_vol[0] - pred_tot_phys_vol[0])/self.patient_num,
-                                                    self.score_type: cls_metric.get_fscore(
+                                                     self.score_type: cls_metric.get_fscore(
                                                         cls_label=1, beta=self.fscore_beta),
                                                     'Patient_Number': self.patient_num},
-                                                   ignore_index=True)
+                                                    ignore_index=True)
 
             # find the optimal threshold
             if 'positive sample' not in self.opt_thresh:
@@ -951,6 +1028,7 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
         gt_tot_phys_vol = []
         pred_tot_phys_vol = []
         correct_cac_num = []
+        correct_cac_num_filter = []
         self.data_iter.reset()
         for thresh in self.conf_thresh:
             # reset data iterator, otherwise we cannot perform new iteration
@@ -964,6 +1042,7 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
             gt_tot_phys_vol.append([0.])
             pred_tot_phys_vol.append([0.])
             correct_cac_num.append([0.])
+            correct_cac_num_filter.append([0.])
 
         self.patient_num = 0.
 
@@ -979,6 +1058,7 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
             gt_nrrd = data[self.gt_key].transpose(1, 2, 0)
             PatientID = data[self.patient_key]
             voxel_vol = data[self.voxel_vol_key]
+            pixel_area = data[self.pixel_area_key]
             # the input raw data (images) have shape (figure number, 3(RGB channel), 512, 512), we need to transpose
             # to shape (512, 512, figure number, 3(RGB channel))
 
@@ -1045,10 +1125,30 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                 pred_binary_mask[pred_binary_mask >= thresh] = 1.
 
                 calcium_score = CAC_Score()
-                gt_CAC_score = calcium_score.get_CAC_score(img_array, gt_binary_mask, voxel_vol, dim=self.CAC_dim)
-                pred_CAC_score = calcium_score.get_CAC_score(img_array, pred_binary_mask, voxel_vol, dim=self.CAC_dim)
+                gt_CAC_score = calcium_score.get_CAC_score(img_array, gt_binary_mask,
+                                                           voxel_volume=voxel_vol,
+                                                           pixel_area=pixel_area,
+                                                           if_pixel_area_filter=False,
+                                                           dim=self.CAC_dim)
+                gt_CAC_score_filter = calcium_score.get_CAC_score(img_array, gt_binary_mask,
+                                                                  voxel_volume=voxel_vol,
+                                                                  pixel_area=pixel_area,
+                                                                  pixel_area_thresh=self.pixel_area_thresh,
+                                                                  dim=self.CAC_dim)
+                pred_CAC_score = calcium_score.get_CAC_score(img_array, pred_binary_mask,
+                                                             voxel_volume=voxel_vol,
+                                                             pixel_area=pixel_area,
+                                                             if_pixel_area_filter=False,
+                                                             dim=self.CAC_dim)
+                pred_CAC_score_filter = calcium_score.get_CAC_score(img_array, pred_binary_mask,
+                                                                    voxel_volume=voxel_vol,
+                                                                    pixel_area=pixel_area,
+                                                                    pixel_area_thresh=self.pixel_area_thresh,
+                                                                    dim=self.CAC_dim)
                 gt_CAC_risk = calcium_score.default_risk_cate(float(gt_CAC_score))
+                gt_CAC_risk_filter = calcium_score.default_risk_cate(float(gt_CAC_score_filter))
                 pred_CAC_risk = calcium_score.default_risk_cate(float(pred_CAC_score))
+                pred_CAC_risk_filter = calcium_score.default_risk_cate(float(pred_CAC_score_filter))
 
                 # initialize ClassificationMetric class for each patient and update with ground truth/predict labels
                 patient_metric = ClassificationMetric(cls_num=1, if_binary=True,
@@ -1087,8 +1187,12 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                                                             cls_label=1) * voxel_vol,
                                                         'CAC_score_gt': gt_CAC_score,
                                                         'CAC_score_pred': pred_CAC_score,
+                                                        'CAC_score_gt_filter': gt_CAC_score_filter,
+                                                        'CAC_score_pred_filter': pred_CAC_score_filter,
                                                         'CAC_risk_gt': gt_CAC_risk,
                                                         'CAC_risk_pred': pred_CAC_risk,
+                                                        'CAC_risk_gt_filter': gt_CAC_risk_filter,
+                                                        'CAC_risk_pred_filter': pred_CAC_risk_filter,
                                                         self.score_type: patient_metric.get_fscore(
                                                             cls_label=1, beta=self.fscore_beta)},
                                                        ignore_index=True)
@@ -1097,6 +1201,8 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                 # calculate the number of patient whose predicted CAC risk category is the same as ground truth
                 if gt_CAC_risk == pred_CAC_risk:
                     correct_cac_num[index][0] += 1
+                if gt_CAC_risk_filter == pred_CAC_risk_filter:
+                    correct_cac_num_filter[index][0] += 1
 
         for index, thresh in enumerate(self.conf_thresh):
             if cls_metric_list[index].tp[0] == 0:
@@ -1124,8 +1230,10 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                                                     self.score_type: cls_metric_list[index].get_fscore(
                                                         cls_label=1, beta=self.fscore_beta),
                                                     'Correct_CAC_Number': correct_cac_num[index][0],
+                                                    'Correct_CAC_filter_Number': correct_cac_num_filter[index][0],
                                                     'Patient_Number': self.patient_num,
-                                                    'Correct_CAC_Rate': correct_cac_num[index][0]/self.patient_num},
+                                                    'Correct_CAC_Rate': correct_cac_num[index][0]/self.patient_num,
+                                                    'Correct_CAC_filter_Rate': correct_cac_num_filter[index][0]/self.patient_num},
                                                    ignore_index=True)
             self.result_df = self.result_df.append({'PatientID': 'average',
                                                     'class': 'positive sample',

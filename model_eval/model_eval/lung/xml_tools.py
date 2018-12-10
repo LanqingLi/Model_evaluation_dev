@@ -288,21 +288,25 @@ def xml_to_anchorlist_multi_classes(config, xml_dir):
         # 读取xml，找到对应层面，存入对应种类的list
         xml_names = os.listdir(xml_dir)
 
-    for xml_name in xml_names:
-        slice_id = int(xml_name.split("_")[-1].split(".")[0]) - 1
-        slice_id_list.append(slice_id)
+    if len(xml_names) > 0:
+        for xml_name in xml_names:
+            slice_id = int(xml_name.split("_")[-1].split(".")[0]) - 1
+            slice_id_list.append(slice_id)
 
-    slice_id_max = max(slice_id_list)
+        slice_id_max = max(slice_id_list)
 
-    for i_row in range(slice_id_max + 1):
-        return_anchors_list.append([])
+        for i_row in range(slice_id_max + 1):
+            return_anchors_list.append([])
 
-    for xml_name in xml_names:
-        slice_id = int(xml_name.split("_")[-1].split(".")[0]) - 1
-        xml_path = os.path.join(xml_dir, xml_name)
-        anchors = read_xml_anchor_multi_classes(config, xml_path, config.ANCHOR.ADD_VALUE + [slice_id], config.ANCHOR.ADD_KW + ['sliceId'])
-        return_anchors_list[slice_id] = anchors
-    return return_anchors_list
+        for xml_name in xml_names:
+            slice_id = int(xml_name.split("_")[-1].split(".")[0]) - 1
+            xml_path = os.path.join(xml_dir, xml_name)
+            anchors = read_xml_anchor_multi_classes(config, xml_path, config.ANCHOR.ADD_VALUE + [slice_id], config.ANCHOR.ADD_KW + ['sliceId'])
+            return_anchors_list[slice_id] = anchors
+        return return_anchors_list
+    else:
+        return
+
 
 def xml_to_anchorlist(config, xml_dir):
     '''
@@ -317,21 +321,25 @@ def xml_to_anchorlist(config, xml_dir):
         # 读取xml，找到对应层面，存入对应种类的list
         xml_names = os.listdir(xml_dir)
 
-    for xml_name in xml_names:
-        slice_id = int(xml_name.split("_")[-1].split(".")[0]) - 1
-        slice_id_list.append(slice_id)
+    if len(xml_names) > 0:
+        for xml_name in xml_names:
+            slice_id = int(xml_name.split("_")[-1].split(".")[0]) - 1
+            slice_id_list.append(slice_id)
 
-    slice_id_max = max(slice_id_list)
+        slice_id_max = max(slice_id_list)
 
-    for i_row in range(slice_id_max + 1):
-        return_boxes_list.append([])
+        for i_row in range(slice_id_max + 1):
+            return_boxes_list.append([])
 
-    for xml_name in xml_names:
-        slice_id = int(xml_name.split("_")[-1].split(".")[0]) - 1
-        xml_path = os.path.join(xml_dir, xml_name)
-        anchors = read_xml_anchor(config, xml_path, config.ANCHOR.ADD_VALUE + [slice_id], config.ANCHOR.ADD_KW + ['sliceId'])
-        return_boxes_list[slice_id] = anchors
-    return return_boxes_list
+        for xml_name in xml_names:
+            slice_id = int(xml_name.split("_")[-1].split(".")[0]) - 1
+            xml_path = os.path.join(xml_dir, xml_name)
+            anchors = read_xml_anchor(config, xml_path, config.ANCHOR.ADD_VALUE + [slice_id], config.ANCHOR.ADD_KW + ['sliceId'])
+            return_boxes_list[slice_id] = anchors
+        return return_boxes_list
+
+    else:
+        return
 
 def xml_to_boxeslist_multi_classes(config, xml_dir, box_length):
     '''

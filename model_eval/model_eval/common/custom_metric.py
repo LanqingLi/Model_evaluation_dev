@@ -327,7 +327,8 @@ class CAC_Score(EvalMetric):
         num_one = np.sum(binary_mask == 1)
         return num_one + num_zero == np.prod(binary_mask.shape)
 
-    def get_CAC_score(self, image, binary_mask, voxel_volume, pixel_area, calcium_cate=default_calcium_cate, thresh=130, dim=2):
+    def get_CAC_score(self, image, binary_mask, voxel_volume, pixel_area=1., pixel_area_thresh=1., if_pixel_area_filter=True,
+                      calcium_cate=default_calcium_cate, thresh=130, dim=2):
         '''
         :param image: raw image data, shape = [H, W, D]
         :param binary_mask: binary mask for coronary artery calcium (CAC) region , shape = [H, W, D]
@@ -353,7 +354,7 @@ class CAC_Score(EvalMetric):
 
             for i in stat.GetLabels():
                 size = stat.GetSum(i) / stat.GetMean(i) * voxel_volume
-                print ("Calcified Plaque: {0} -> Mean: {1} Size: {2} Max: {3}".format(i, stat.GetMean(i), size, stat.GetMaximum(i)))
+                print ("Calcified Plaque: {0} -> Mean: {1} Volume: {2} Max: {3}".format(i, stat.GetMean(i), size, stat.GetMaximum(i)))
                 calcium_score += calcium_cate(stat.GetMaximum(i)) * size / 3.
             return calcium_score
 
@@ -373,9 +374,12 @@ class CAC_Score(EvalMetric):
                 for j in stat.GetLabels():
                     size = stat.GetSum(j) / stat.GetMean(j) * voxel_volume
                     area = stat.GetSum(j) / stat.GetMean(j) * pixel_area
-                    print ("Calcified Plaque: {0} -> Mean: {1} Size: {2} Max: {3}".format(j, stat.GetMean(j), size, stat.GetMaximum(j)))
-                    # compute lesion
-                    if area >= 1:
+                    print ("Calcified Plaque: {0} -> Mean: {1} Volume: {2} Area: {3} Max: {4}".format(j, stat.GetMean(j), size, area, stat.GetMaximum(j)))
+                    # if if_pixel_area_filter=True, compute lesion whose area is greater than or equal to 1mm^2
+                    if if_pixel_area_filter:
+                        if area >= pixel_area_thresh:
+                            calcium_score += calcium_cate(stat.GetMaximum(j)) * size / 3.
+                    else:
                         calcium_score += calcium_cate(stat.GetMaximum(j)) * size / 3.
             return calcium_score
 

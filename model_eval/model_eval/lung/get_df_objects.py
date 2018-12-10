@@ -5,7 +5,7 @@ import sys
 
 from model_eval.tools.data_preprocess import get_instance_number
 
-from objmatch.find_objects import find_objects, find_objects_ensemble
+from objmatch.find_objects import find_objects, find_objects_ensemble, find_objects_ensemble_stacking
 
 # nodule_class = config.CLASSES
 PI = 3.141592654
@@ -97,7 +97,7 @@ def add_object_to_df(df_objects, object_dict):
 def get_object_stat(slice_object_list, prefix, classes, z_threshold, key_list, class_key, matched_key_list,
                     same_box_threshold=np.array([0.8, 0.8]), hu_img_array=None, img_spacing=None, if_dicom=True,
                     focus_priority_array=None, skip_init=False, score_threshold = 0.8, nodule_cls_weights = {},
-                    if_ensemble=False, model_weight_list=[1], model_conf_list=[1], obj_freq_thresh=1.):
+                    if_ensemble=False, if_stacking=False, model_weight_list=[1], model_conf_list=[1], obj_freq_thresh=1.,):
     '''
     调用find_nodules,把结节信息统计进DataFrame
     :param hu_img_array: Honus Value Array，在进行密度计算时会使用
@@ -124,7 +124,15 @@ def get_object_stat(slice_object_list, prefix, classes, z_threshold, key_list, c
             for slice_object in slice_object_list:
                 df_objects_list.append(init_df_objects(slice_object, key_list, class_key))
                 df_objects = df_objects.append(init_df_objects(slice_object, key_list, class_key), ignore_index=True)
-        object_info, _ = find_objects_ensemble(df_objects_list, MODEL_WEIGHT_LIST=model_weight_list,
+        if if_stacking:
+            object_info, _ = find_objects_ensemble_stacking(df_objects_list, MODEL_WEIGHT_LIST=model_weight_list,
+                                                   MODEL_CONF_LIST=model_conf_list, OBJ_THRESH=obj_freq_thresh,
+                                                   SAME_BOX_THRESHOLD=same_box_threshold, Z_THRESHOLD=z_threshold,
+                                                   SCORE_THRESHOLD=score_threshold,
+                                                   OBJECT_CLS_WEIGHTS=nodule_cls_weights,
+                                                   CLS_PRIORITY_DICT=focus_priority_array)
+        else:
+            object_info, _ = find_objects_ensemble(df_objects_list, MODEL_WEIGHT_LIST=model_weight_list,
                                                MODEL_CONF_LIST=model_conf_list, OBJ_FREQ_THRESH=obj_freq_thresh,
                                                SAME_BOX_THRESHOLD=same_box_threshold, Z_THRESHOLD=z_threshold,
                                                SCORE_THRESHOLD=score_threshold,

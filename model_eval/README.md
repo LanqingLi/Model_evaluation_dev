@@ -5,6 +5,8 @@
 
 0.2.3版本涵盖了多模型ensemble预测的功能，通过在evaluator中添加if_ensemble开关实现，对应objmatch　0.0.5版本(由于采用类似模型投票机制，需要修改最底层object匹配算法，故在find_objects.py中添加了find_objects_ensemble函数在if_ensemble=True时替代原有的find_objects函数)
 
+0.2.5版本加入了对３D 冠脉分割的多分类评估
+
 运行肺、心脏、脑部、胸腔等各项目的具体流程请见各项目子文件夹的README.md
 
 ## python库的版本依赖
