@@ -94,6 +94,7 @@ find_nodules_new_1000nodules/
 **/*.xlsx
 **/*.ods
 **/*.nrrd
+**/*.jpg
 .vscode/
 log/*
 mxnet/
