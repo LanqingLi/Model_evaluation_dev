@@ -195,6 +195,45 @@ class AnchorMetric(object):
         long_side = np.max(np.stack((box1[1] - box1[0], box2[1] - box2[0])), axis=0) / 2.
         return math.sqrt(np.sum(((center1 - center2)/long_side) ** 2))
 
+    def nms(self, bndbox_list, weight_list, cls_list, cls_priority_dict):
+        '''
+        merge multiple anchors according to their coordinates, probabilities and class info
+        :param bndbox_list: list of bndboxes, each bndbox is an np.array of shape (1, 2 * self.dim)
+        :param prob_list: list of the corresponding weights for bndbox_list
+        :param cls_list: list of the corresponding cls info for bndbox_list
+        :param cls_priority_dict: a dict containing priority score for all possible bndbox classes
+        :return: a single bndbox with specified prob and cls info after nms
+        '''
+        assert len(bndbox_list) == len(weight_list) and len(weight_list) == len(cls_list), \
+            'the bndbox_list, weight_list and cls_list must have the same size'
+        if not len(bndbox_list):
+            print 'No bndbox to be merged!'
+            return
+        elif len(bndbox_list) == 1:
+            print 'Only one bndbox to be merged return itself'
+            return bndbox_list[0], weight_list[0], cls_list[0]
+
+        cls_score = []
+        # the final class of the merged box will be the class in cls_list with the highest priority
+        for cls in cls_list:
+            cls_score.append(cls_priority_dict[cls])
+        # the final weight of the merged box will be the sum of the elements in the weight list
+        merged_cls = cls_list[cls_score.index(max(cls_score))]
+        merged_bndbox = np.zeros(bndbox_list[0].shape)
+        merged_weight = sum(weight_list)
+        # calculate the weighted average coordinates of the bndboxes
+        for idx, (bndbox, weight) in enumerate(zip(bndbox_list, weight_list)):
+            self.check_box(bndbox)
+            merged_bndbox += bndbox * weight
+            if idx == len(bndbox_list) - 1:
+                merged_bndbox /= sum(weight_list)
+        return merged_bndbox, merged_weight, merged_cls
+
+
+
+
+
+
 # if __name__ == '__main__':
 #     test_cls = AnchorMetric(dim=2)
 #     box1 = np.asarray([[1.,2,4,7]])

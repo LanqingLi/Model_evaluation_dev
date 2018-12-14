@@ -8,6 +8,7 @@ import pandas as pd
 #from config import config
 from config import HeartConfig
 import nrrd, cv2
+import SimpleITK as sitk
 from model_eval.tools.contour_draw import contour_and_draw, contour_and_draw_rainbow, contour_and_draw_multicls_rainbow
 from model_eval.tools.data_postprocess import save_xlsx_json
 from model_eval.tools.data_preprocess import window_convert, window_convert_light
@@ -42,7 +43,7 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
     predictor: a predictor function which performs inference, it generates a np.ndarray, with shape = (batch size, num of classes, 512, 512)
     '''
     def __init__(self, cls_label_xls_path, data_iter, predict_key, gt_key, img_key, patient_key, voxel_vol_key, pixel_area_key,
-                 predictor, pixel_area_thresh=1., window_center=90, window_width=750, post_processor=default_post_processor,
+                 predictor, data_dir, pixel_area_thresh=1., window_center=90, window_width=750, post_processor=default_post_processor,
                  if_post_process = False, img_save_dir=os.path.join(os.getcwd(), 'HeartSemanticSegEvaluation_contour'),
                  mask_save_dir=os.path.join(os.getcwd(), 'HeartSemanticSegEvaluation_mask'), if_save_mask = False,
                  score_type='fscore', result_save_dir=os.path.join(os.getcwd(), 'HeartSemanticSegEvaluation_result'),
@@ -105,8 +106,13 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                     continue
                 if not os.path.exists(os.path.join(self.mask_save_dir, data['pid'])):
                     os.mkdir(os.path.join(self.mask_save_dir, data['pid']))
+                sitk_img = sitk.ReadImage(os.path.join(data_dir, data['pid'], 'img.nrrd'))
                 predict_data = self.predictor(data[self.predict_key])
-                np.save(os.path.join(self.mask_save_dir, data['pid'], data['pid'] + '.npy'), predict_data)
+                predict_label = np.argmax(predict_data, axis=1).astype('uint8').transpose(0, 2, 1)
+                sitk_img_label = sitk.GetImageFromArray(predict_label)
+                sitk_img_label.CopyInformation(sitk_img)
+                sitk.WriteImage(sitk_img_label, os.path.join(self.mask_save_dir, data['pid'], 'predict_label.nrrd'))
+                # np.save(os.path.join(self.mask_save_dir, data['pid'], data['pid'] + '.npy'), predict_data)
             self.data_iter.reset()
 
 
@@ -294,8 +300,8 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
 
             print ('processing PatientID: %s' % PatientID)
             assert predict_label.shape[
-                       1] == 2, 'the number of classes %s in predict labels should be 2 for binary classification' % (
-                predict_label.shape[1])
+                       1] == len(self.cls_name), 'the number of classes %s in predict labels should be %s for multi classification' % (
+                predict_label.shape[1], len(self.cls_name))
             # transpose the predict_data to be shape = [512, 512, figure number, cls_num]
             # one has to make a copy of part of predict_data, otherwise it will implicitly convert float to int
             predict_label_cpy = predict_label.copy()
@@ -304,7 +310,7 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
             if not predict_label_cpy[..., 0].shape == gt_label.shape:
                 raise Exception("predict and ground truth labels must have the same shape")
 
-            for fig_num in range(predict_label_cpy.shape[-1]):
+            for fig_num in range(predict_label_cpy.shape[-2]):
                 raw_img_slice = raw_img[:, :, fig_num, :].copy()
                 raw_img_slice = window_convert_light(raw_img_slice, self.window_center, self.window_width)
                 gt_label_slice = gt_label[:, :, fig_num].copy()
@@ -312,7 +318,9 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                 rgb_img1 = cv2.cvtColor(raw_img_slice, cv2.COLOR_BGR2RGB)
                 rgb_img2 = cv2.cvtColor(raw_img_slice, cv2.COLOR_BGR2RGB)
                 rgb_img3 = cv2.cvtColor(raw_img_slice, cv2.COLOR_BGR2RGB)
-                gt_label_img, _ = contour_and_draw(rgb_img1, gt_label_slice)
+                gt_label_img, _ = contour_and_draw_multicls_rainbow(rgb_img1, gt_label_slice, color_range=len(self.cls_name)-1,
+                                                                    n_class=len(self.cls_name))
+                predict_label_slice[predict_label_slice < self.thresh] = 0
                 binary_pmap = np.argmax(predict_label_slice, axis=2)
                 # superimpose contour images for multiple classes
 
@@ -327,10 +335,10 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                     # print 'histogram:'
                     # print np.histogram(binary_pmap_pp - binary_pmap)
                     pred_label_img, _ = contour_and_draw_multicls_rainbow(rgb_img2, binary_pmap,
-                                                                 color_range=len(self.cls_name - 1),
+                                                                 color_range=len(self.cls_name) - 1,
                                                                  n_class=len(self.cls_name))
-                    pred_label_img_pp, _ = contour_and_draw_rainbow(rgb_img3, binary_pmap_pp,
-                                                                    color_range=len(self.cls_name - 1),
+                    pred_label_img_pp, _ = contour_and_draw_multicls_rainbow(rgb_img3, binary_pmap_pp,
+                                                                    color_range=len(self.cls_name) - 1,
                                                                     n_class=len(self.cls_name))
                     to_show = np.zeros(shape=(dim[0], dim[1] * 3, 3), dtype=np.uint8)
                     to_show[:, :dim[1], :] = pred_label_img.transpose(1, 0, 2)
@@ -339,7 +347,7 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
 
                 else:
                     pred_label_img, _ = contour_and_draw_multicls_rainbow(rgb_img2, binary_pmap,
-                                                                 color_range=len(self.cls_name - 1),
+                                                                 color_range=len(self.cls_name) - 1,
                                                                  n_class=len(self.cls_name))
 
                     # prob = predict_map[:, :, np.newaxis] * 255
@@ -621,9 +629,8 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                     predict_score = predict_data_cpy[:, :, fig_num, :].copy()
                     for cls in range(predict_data_cpy.shape[-1]):
                         if self.cls_name[cls] == '__background__':
-                            predict_score[:, :, cls] = 0.
                             continue
-                        predict_score[predict_data_cpy[:, :, fig_num, cls] < thresh] = 0.
+                        predict_score[..., cls][predict_score[...,  cls] < thresh] = 0.
                     # return the predict label as the index of the maximum value across all classes, the __background__
                     # class should be the first one, so if none of the positive class score is greater than zero, the
                     # pixel is classified as the background
@@ -637,7 +644,8 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
                 # list-to-array-to-list conversion for calculating the overall stat (each patient)
                 predict_list = [np.asarray(predict_label_list)]
                 gt_list = [np.asarray(gt_label_list)]
-
+                print 'gt_list is: ', np.histogram(gt_list[0])
+                print 'predict_list is: ', np.histogram(predict_list[0])
                 # # calculate physical volume using space directions info stored in .nrrd
                 # space_matrix = np.zeros((3, 3))
                 # space_matrix[0] = np.asarray(gt_nrrd[1]['space directions'][0]).astype('float32')
@@ -648,7 +656,9 @@ class HeartSemanticSegEvaluatorOnlineIter(object):
 
 
                 pred_mask = predict_data_cpy.copy()
+                # predict_label_max_array shape = (512, 512, fig_num) after transpose
                 predict_label_max_array = np.asarray(predict_label_max_list).transpose(1, 2, 0)
+                # predict_label_max_array shape = (512, 512, fig_num, cls_num) after repeat
                 predict_label_max_array = np.repeat(predict_label_max_array[:,:,:,np.newaxis], axis=3, repeats=predict_data_cpy.shape[-1]) # 512*512*fig_num*cls_num
                 pred_binary_mask = np.zeros_like(pred_mask)
                 pred_binary_mask[(pred_mask == predict_label_max_array) * (pred_mask > 0)] = 1
